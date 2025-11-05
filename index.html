@@ -8,6 +8,8 @@ Copied!
 e="viewport" content="width=device-width, initial-scale=1">
   <!-- Font Awesome for sidebar icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <!-- Socket.IO for online multiplayer -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <style>
     body {
       margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #181926; color: #fff;
@@ -129,7 +131,13 @@ e="viewport" content="width=device-width, initial-scale=1">
   </style>
 </head>
 <body>
-  <header>High Wizardry</header>
+  <header>
+    <span>High Wizardry</span>
+    <span style="font-size: 14px; color: #3fb950; margin-left: 20px;">
+      <i class="fa-solid fa-circle" style="font-size: 8px;"></i> 
+      <span id="online-count">0</span> Players Online
+    </span>
+  </header>
   <div class="container">
     <!-- Sidebar fixed left -->
     <nav class="sidebar">
@@ -137,7 +145,9 @@ e="viewport" content="width=device-width, initial-scale=1">
       <div class="stats">
         <div class="stats-row"><b id="username">Con-source</b></div>
         <div class="stats-row">Lvl <span id="level">1</span> | <span id="xp">0</span> xp</div>
-        <div class="stats-row">Net Worth: <span id="networth">0</span> gold</div>
+        <div class="stats-row">💰 <span id="gold">0</span>g <span id="silver">0</span>s</div>
+        <div class="stats-row">😊 Happiness: <span id="happiness">50</span>/100</div>
+        <div class="stats-row">🔪 Crime: <span id="crime">0</span>/100</div>
         <div class="stats-row"><i class="fa-solid fa-bolt"></i> Energy: <span id="energy">100</span></div>
         <div class="stats-row"><i class="fa-solid fa-droplet"></i> Mana: <span id="mana">5</span></div>
         <div class="stats-row"><i class="fa-solid fa-heart"></i> Health: <span id="health">10</span></div>
@@ -155,8 +165,17 @@ e="viewport" content="width=device-width, initial-scale=1">
         <button class="menu-btn" onclick="showSection('market', this)">
           <i class="fa-solid fa-store"></i> Marketplace
         </button>
-        <button class="menu-btn" onclick="showSection('trader', this)">
-          <i class="fa-solid fa-user-tie"></i> Trader
+        <button class="menu-btn" onclick="showSection('weapontrader', this)">
+          <i class="fa-solid fa-sword"></i> Weapon Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('armortrader', this)">
+          <i class="fa-solid fa-shield"></i> Armor Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('housetrader', this)">
+          <i class="fa-solid fa-home"></i> House Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('bar', this)">
+          <i class="fa-solid fa-martini-glass"></i> Bar
         </button>
         <button class="menu-btn" onclick="showSection('arena', this)">
           <i class="fa-solid fa-shield-halved"></i> Arena
@@ -166,6 +185,12 @@ e="viewport" content="width=device-width, initial-scale=1">
         </button>
         <button class="menu-btn" onclick="showSection('inventory', this)">
           <i class="fa-solid fa-box-open"></i> Inventory
+        </button>
+        <button class="menu-btn" onclick="showSection('newspaper', this)">
+          <i class="fa-solid fa-newspaper"></i> Newspaper
+        </button>
+        <button class="menu-btn" onclick="showSection('forum', this)">
+          <i class="fa-solid fa-comments"></i> Forum
         </button>
       </div>
     </nav>
@@ -195,27 +220,122 @@ e="viewport" content="width=device-width, initial-scale=1">
           </p>
         </div>
         <div class="content-box" id="market-section" style="display:none;">
-          <h2>Marketplace</h2>
-          <p>Buy and sell rare magical items, herbs, and potions.</p>
+          <h2>🏪 Player Marketplace</h2>
+          <p>Buy and sell items with other players! No daily limits. 10% listing fee applies.</p>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:20px;">📦 Sell Your Items</h3>
+          <div style="background:#0d1117; padding:15px; border-radius:6px; margin:10px 0;">
+            <p>List your items for sale (10% fee deducted on listing):</p>
+            <select id="sell-item-select" style="padding:8px; margin:5px; background:#161b22; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px;">
+              <option value="">Select item to sell</option>
+              <option value="potion">Potion</option>
+              <option value="herb">Herb</option>
+            </select>
+            <input type="number" id="sell-price" placeholder="Price (gold)" min="1" style="padding:8px; margin:5px; background:#161b22; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:120px;">
+            <button onclick="listItemForSale()" class="btn">List Item</button>
+          </div>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:20px;">🛒 Player Listings</h3>
           <table class="inv-table">
-            <tr><th>Item</th><th>Price</th><th>Action</th></tr>
-            <tr><td>Potion</td><td>10 Gold</td>
-              <td><button onclick="buyItem('potion',10)">Buy</button></td></tr>
-            <tr><td>Herb</td><td>5 Gold</td>
-              <td><button onclick="buyItem('herb',5)">Buy</button></td></tr>
+            <tr><th>Seller</th><th>Item</th><th>Price</th><th>Action</th></tr>
+            <tbody id="market-listings">
+              <tr><td colspan="4" style="text-align:center; color:#8b949e;">No items listed yet. Be the first!</td></tr>
+            </tbody>
           </table>
         </div>
-        <div class="content-box" id="trader-section" style="display:none;">
-          <h2>Trader</h2>
-          <p>Trade rare goods and magical ingredients with NPC traders.</p>
+        <div class="content-box" id="weapontrader-section" style="display:none;">
+          <h2>⚔️ Weapon Trader</h2>
+          <p>Buy powerful weapons to increase your combat power!</p>
+          <table class="inv-table">
+            <tr><th>Weapon</th><th>Damage</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Wooden Staff</td><td>+5</td><td>50s</td>
+              <td><button onclick="buyWeapon('Wooden Staff',0,50,5)">Buy</button></td></tr>
+            <tr><td>Iron Wand</td><td>+10</td><td>1g 20s</td>
+              <td><button onclick="buyWeapon('Iron Wand',1,20,10)">Buy</button></td></tr>
+            <tr><td>Steel Sword</td><td>+25</td><td>5g 0s</td>
+              <td><button onclick="buyWeapon('Steel Sword',5,0,25)">Buy</button></td></tr>
+            <tr><td>Legendary Blade</td><td>+50</td><td>20g 0s</td>
+              <td><button onclick="buyWeapon('Legendary Blade',20,0,50)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="armortrader-section" style="display:none;">
+          <h2>🛡️ Armor Trader</h2>
+          <p>Buy protective armor to defend yourself in battle!</p>
+          <table class="inv-table">
+            <tr><th>Armor</th><th>Defense</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Cloth Robe</td><td>+3</td><td>80s</td>
+              <td><button onclick="buyArmor('Cloth Robe',0,80,3)">Buy</button></td></tr>
+            <tr><td>Leather Vest</td><td>+6</td><td>1g 50s</td>
+              <td><button onclick="buyArmor('Leather Vest',1,50,6)">Buy</button></td></tr>
+            <tr><td>Leather Armor</td><td>+8</td><td>2g 0s</td>
+              <td><button onclick="buyArmor('Leather Armor',2,0,8)">Buy</button></td></tr>
+            <tr><td>Chainmail</td><td>+15</td><td>5g 0s</td>
+              <td><button onclick="buyArmor('Chainmail',5,0,15)">Buy</button></td></tr>
+            <tr><td>Iron Armor</td><td>+20</td><td>7g 50s</td>
+              <td><button onclick="buyArmor('Iron Armor',7,50,20)">Buy</button></td></tr>
+            <tr><td>Steel Plate</td><td>+30</td><td>15g 0s</td>
+              <td><button onclick="buyArmor('Steel Plate',15,0,30)">Buy</button></td></tr>
+            <tr><td>Dragon Scale</td><td>+40</td><td>25g 0s</td>
+              <td><button onclick="buyArmor('Dragon Scale',25,0,40)">Buy</button></td></tr>
+            <tr><td>Mythril Armor</td><td>+55</td><td>50g 0s</td>
+              <td><button onclick="buyArmor('Mythril Armor',50,0,55)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="housetrader-section" style="display:none;">
+          <h2>🏠 House Trader</h2>
+          <p>Buy a home to boost your happiness! The more happy you are, the better your gym gains.</p>
+          <table class="inv-table">
+            <tr><th>House</th><th>Happiness Bonus</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Tent</td><td>+2</td><td>2g 0s</td>
+              <td><button onclick="buyHouse('Tent',2,0,2)">Buy</button></td></tr>
+            <tr><td>Small Shack</td><td>+5</td><td>5g 0s</td>
+              <td><button onclick="buyHouse('Small Shack',5,0,5)">Buy</button></td></tr>
+            <tr><td>Cottage</td><td>+10</td><td>15g 0s</td>
+              <td><button onclick="buyHouse('Cottage',15,0,10)">Buy</button></td></tr>
+            <tr><td>Apartment</td><td>+15</td><td>25g 0s</td>
+              <td><button onclick="buyHouse('Apartment',25,0,15)">Buy</button></td></tr>
+            <tr><td>Town House</td><td>+20</td><td>40g 0s</td>
+              <td><button onclick="buyHouse('Town House',40,0,20)">Buy</button></td></tr>
+            <tr><td>Villa</td><td>+28</td><td>70g 0s</td>
+              <td><button onclick="buyHouse('Villa',70,0,28)">Buy</button></td></tr>
+            <tr><td>Manor</td><td>+35</td><td>100g 0s</td>
+              <td><button onclick="buyHouse('Manor',100,0,35)">Buy</button></td></tr>
+            <tr><td>Castle</td><td>+45</td><td>200g 0s</td>
+              <td><button onclick="buyHouse('Castle',200,0,45)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="bar-section" style="display:none;">
+          <h2>🍺 The Wizard's Bar</h2>
+          <p>Drink alcohol to increase your crime bar! Higher crime = more dangerous activities unlocked.</p>
+          <table class="inv-table">
+            <tr><th>Drink</th><th>Crime Increase</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Beer</td><td>+5</td><td>50s</td>
+              <td><button onclick="buyAlcohol('Beer',0,50,5)">Buy & Drink</button></td></tr>
+            <tr><td>Wine</td><td>+8</td><td>1g 0s</td>
+              <td><button onclick="buyAlcohol('Wine',1,0,8)">Buy & Drink</button></td></tr>
+            <tr><td>Whiskey</td><td>+12</td><td>2g 50s</td>
+              <td><button onclick="buyAlcohol('Whiskey',2,50,12)">Buy & Drink</button></td></tr>
+            <tr><td>Rum</td><td>+15</td><td>3g 0s</td>
+              <td><button onclick="buyAlcohol('Rum',3,0,15)">Buy & Drink</button></td></tr>
+            <tr><td>Absinthe</td><td>+20</td><td>5g 0s</td>
+              <td><button onclick="buyAlcohol('Absinthe',5,0,20)">Buy & Drink</button></td></tr>
+            <tr><td>Dragon's Breath</td><td>+30</td><td>10g 0s</td>
+              <td><button onclick="buyAlcohol('Dragon Breath',10,0,30)">Buy & Drink</button></td></tr>
+          </table>
+          <p style="color:#f85149; margin-top:15px;">⚠️ Warning: High crime may attract unwanted attention!</p>
         </div>
         <div class="content-box" id="arena-section" style="display:none;">
           <h2>Arena</h2>
           <p>Challenge other wizards in magical duels for rewards and glory!</p>
         </div>
         <div class="content-box" id="gym-section" style="display:none;">
-          <h2>Gym</h2>
-          <p>Train your stats: Magic, Alchemy, Strength, and more.</p>
+          <h2>💪 Gym</h2>
+          <p>Work out to gain strength! The happier you are, the more gains you get per 5 energy.</p>
+          <p><b>Your Strength:</b> <span id="strength">10</span></p>
+          <p><b>Happiness Multiplier:</b> <span id="gym-multiplier">1.5x</span></p>
+          <p><b>Next Workout Gains:</b> <span id="gym-gains">3</span> strength</p>
+          <button onclick="gymWorkout()" style="font-size:18px; padding:15px 30px;">💪 Work Out (5 Energy)</button>
+          <p id="gym-message" style="color:#aaf; margin-top:15px;"></p>
         </div>
         <div class="content-box" id="inventory-section" style="display:none;">
           <h2>Inventory</h2>
@@ -233,10 +353,88 @@ e="viewport" content="width=device-width, initial-scale=1">
               <td id="inv-potions">0</td>
             </tr>
             <tr>
-              <td>Gold Bars</td>
-              <td id="inv-goldb">0</td>
+              <td>Weapons</td>
+              <td id="inv-weapons">None</td>
+            </tr>
+            <tr>
+              <td>Armor</td>
+              <td id="inv-armor">None</td>
+            </tr>
+            <tr>
+              <td>Houses</td>
+              <td id="inv-houses">None</td>
             </tr>
           </table>
+        </div>
+        <div class="content-box" id="newspaper-section" style="display:none;">
+          <h2>📰 The Daily Wizard</h2>
+          <p style="color:#8b949e; font-style:italic;">Latest news from around the magical world!</p>
+          
+          <div style="border-left:3px solid #58a6ff; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#58a6ff; margin:0 0 10px 0;">🔥 BREAKING: Dragon Spotted Near Castle District</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 2 hours ago</p>
+            <p>Local wizards report sightings of a massive dragon circling the Castle district. Authorities advise residents to stay indoors and avoid provoking the creature. Dragon Scale armor sales have tripled in the past hour.</p>
+          </div>
+          
+          <div style="border-left:3px solid #3fb950; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#3fb950; margin:0 0 10px 0;">💰 Market Watch: Potion Prices Surge</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 5 hours ago</p>
+            <p>The player marketplace has seen a 40% increase in potion prices this week. Traders attribute the spike to increased arena activity and gym training.</p>
+          </div>
+          
+          <div style="border-left:3px solid #f0883e; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#f0883e; margin:0 0 10px 0;">🏆 Guild Rankings Updated</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 8 hours ago</p>
+            <p>The monthly guild rankings have been updated. Check the Guild Hall to see if your guild made the top 10! New rewards available for top performers.</p>
+          </div>
+          
+          <div style="border-left:3px solid #8b949e; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#8b949e; margin:0 0 10px 0;">⚠️ Crime Wave: City Guards on Alert</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 1 day ago</p>
+            <p>Reports of increased criminal activity have prompted city guards to increase patrols. Players with high crime ratings are advised to lay low for a while.</p>
+          </div>
+        </div>
+        <div class="content-box" id="forum-section" style="display:none;">
+          <h2>💬 Community Forums</h2>
+          <p>Discuss, trade, and connect with other wizards!</p>
+          
+          <div style="margin:20px 0;">
+            <div onclick="showForumCategory('general')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #58a6ff;">
+              <h3 style="color:#58a6ff; margin:0;">📢 General Discussion</h3>
+              <p style="margin:5px 0; color:#8b949e;">Talk about anything wizard-related</p>
+              <p style="font-size:12px; color:#58a6ff;">1,234 posts • Latest: 2 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('trade')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #3fb950;">
+              <h3 style="color:#3fb950; margin:0;">💰 Trade Forum</h3>
+              <p style="margin:5px 0; color:#8b949e;">Buy, sell, and negotiate trades</p>
+              <p style="font-size:12px; color:#3fb950;">892 posts • Latest: 5 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('help')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #f0883e;">
+              <h3 style="color:#f0883e; margin:0;">❓ Help & Guides</h3>
+              <p style="margin:5px 0; color:#8b949e;">Get help and share tips</p>
+              <p style="font-size:12px; color:#f0883e;">567 posts • Latest: 12 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('guild')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #a371f7;">
+              <h3 style="color:#a371f7; margin:0;">👥 Guild Recruitment</h3>
+              <p style="margin:5px 0; color:#8b949e;">Find or advertise guilds</p>
+              <p style="font-size:12px; color:#a371f7;">345 posts • Latest: 20 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('pvp')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #f85149;">
+              <h3 style="color:#f85149; margin:0;">⚔️ PvP & Arena</h3>
+              <p style="margin:5px 0; color:#8b949e;">Discuss battles and strategies</p>
+              <p style="font-size:12px; color:#f85149;">678 posts • Latest: 30 minutes ago</p>
+            </div>
+          </div>
+          
+          <div id="forum-posts" style="display:none; margin-top:20px; background:#0d1117; padding:20px; border-radius:6px;">
+            <button onclick="document.getElementById('forum-posts').style.display='none'" style="margin-bottom:15px;">← Back to Categories</button>
+            <h3 id="forum-category-title" style="color:#58a6ff;"></h3>
+            <p style="color:#8b949e;">Forum posts will appear here. (Online functionality coming soon!)</p>
+          </div>
         </div>
       </div>
     </main>
@@ -289,26 +487,105 @@ e="viewport" content="width=device-width, initial-scale=1">
     </div>
   </div>
   <script>
+    // Socket.IO connection
+    let socket = null;
+    let isOnline = false;
+    
+    // Initialize Socket.IO connection
+    function initSocket() {
+      try {
+        socket = io('http://localhost:3000');
+        
+        socket.on('connect', () => {
+          console.log('Connected to server');
+          isOnline = true;
+          // Send player data to server
+          socket.emit('player:join', player);
+        });
+        
+        socket.on('disconnect', () => {
+          console.log('Disconnected from server');
+          isOnline = false;
+        });
+        
+        socket.on('players:count', (count) => {
+          document.getElementById('online-count').textContent = count;
+        });
+        
+        socket.on('chat:global', (message) => {
+          addChatMessageToUI('global-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:trade', (message) => {
+          addChatMessageToUI('trade-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:guild', (message) => {
+          addChatMessageToUI('guild-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:newplayer', (message) => {
+          addChatMessageToUI('player-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('activity:feed', (activity) => {
+          console.log('Activity:', activity.message);
+        });
+      } catch (error) {
+        console.log('Running in offline mode');
+        isOnline = false;
+      }
+    }
+    
+    function addChatMessageToUI(elementId, username, message) {
+      let messages = document.getElementById(elementId);
+      if (messages) {
+        let msg = document.createElement('div');
+        msg.innerHTML = `<b>${username}:</b>${message}`;
+        messages.appendChild(msg);
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Keep only last 50 messages
+        while (messages.children.length > 50) {
+          messages.removeChild(messages.firstChild);
+        }
+      }
+    }
+    
     // Player object — for demo, replace with live data
     let player = {
       username: "Con-source",
       level: 1,
       xp: 0,
-      gold: 0,
-      networth: 0,
+      gold: 10,
+      silver: 50,
       energy: 100,
       mana: 5,
       health: 10,
+      maxHealth: 10,
+      happiness: 50,
+      crime: 0,
+      strength: 10,
       guild: "None",
       guildPoints: 0,
       herbs: 0,
       potions: 0,
-      goldbar: 0,
+      weapons: [],
+      armor: [],
+      houses: [],
+      npcPurchasesToday: 0,
+      lastPurchaseDate: new Date().toDateString(),
     };
+    
+    // Global marketplace listings
+    let marketListings = [];
     function updateStats() {
       document.getElementById("username").textContent = player.username;
       document.getElementById("level").textContent = player.level;
-      document.getElementById("networth").textContent = player.gold;
+      document.getElementById("gold").textContent = player.gold;
+      document.getElementById("silver").textContent = player.silver;
+      document.getElementById("happiness").textContent = player.happiness;
+      document.getElementById("crime").textContent = player.crime;
       document.getElementById("energy").textContent = player.energy;
       document.getElementById("mana").textContent = player.mana;
       document.getElementById("health").textContent = player.health;
@@ -317,13 +594,25 @@ e="viewport" content="width=device-width, initial-scale=1">
       document.getElementById("guild-points").textContent = player.guildPoints;
       document.getElementById("inv-herbs").textContent = player.herbs;
       document.getElementById("inv-potions").textContent = player.potions;
-      document.getElementById("inv-goldb").textContent = player.goldbar;
+      document.getElementById("inv-weapons").textContent = player.weapons.length > 0 ? player.weapons.join(", ") : "None";
+      document.getElementById("inv-armor").textContent = player.armor.length > 0 ? player.armor.join(", ") : "None";
+      document.getElementById("inv-houses").textContent = player.houses.length > 0 ? player.houses.join(", ") : "None";
+      if(document.getElementById("strength")) document.getElementById("strength").textContent = player.strength;
+      if(document.getElementById("gym-multiplier")) {
+        let mult = 1 + (player.happiness / 100);
+        document.getElementById("gym-multiplier").textContent = mult.toFixed(2) + "x";
+      }
+      if(document.getElementById("gym-gains")) {
+        let mult = 1 + (player.happiness / 100);
+        let gains = Math.floor(2 * mult);
+        document.getElementById("gym-gains").textContent = gains;
+      }
       let percent = Math.min(100, Math.round(player.xp / 100 * 100));
       document.querySelector(".bar-inner").style.width = percent + "%";
     }
     function showSection(section, btn) {
       [
-        "home","town","guild","market","trader","arena","gym","inventory"
+        "home","town","guild","market","weapontrader","armortrader","housetrader","bar","arena","gym","inventory","newspaper","forum"
       ].forEach(id=>{
         document.getElementById(id + "-section").style.display = "none";
       });
@@ -335,7 +624,6 @@ e="viewport" content="width=device-width, initial-scale=1">
     function buyItem(item, price){
       if(player.gold >= price){
         player.gold -= price;
-        player.networth = player.gold;
         if(item === "potion") player.potions++;
         if(item === "herb") player.herbs++;
         updateStats();
@@ -343,7 +631,348 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("Not enough gold!");
       }
     }
+    function spendMoney(goldCost, silverCost) {
+      let totalCostInSilver = (goldCost * 100) + silverCost;
+      let totalMoney = (player.gold * 100) + player.silver;
+      if (totalMoney >= totalCostInSilver) {
+        let remaining = totalMoney - totalCostInSilver;
+        player.gold = Math.floor(remaining / 100);
+        player.silver = remaining % 100;
+        return true;
+      }
+      return false;
+    }
+    function checkDailyLimit() {
+      let today = new Date().toDateString();
+      if (player.lastPurchaseDate !== today) {
+        player.npcPurchasesToday = 0;
+        player.lastPurchaseDate = today;
+      }
+      return player.npcPurchasesToday < 100;
+    }
+    
+    function buyWeapon(name, goldCost, silverCost, damage) {
+      if (!checkDailyLimit()) {
+        alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
+        return;
+      }
+      if (spendMoney(goldCost, silverCost)) {
+        player.npcPurchasesToday++;
+        player.weapons.push(name);
+        player.happiness = Math.min(100, player.happiness + 5);
+        alert(`✅ Purchased ${name}! (+${damage} damage, +5 happiness)`);
+        
+        // Broadcast to server if online
+        if (isOnline && socket) {
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    function buyArmor(name, goldCost, silverCost, defense) {
+      if (!checkDailyLimit()) {
+        alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
+        return;
+      }
+      if (spendMoney(goldCost, silverCost)) {
+        player.npcPurchasesToday++;
+        player.armor.push(name);
+        player.happiness = Math.min(100, player.happiness + 5);
+        alert(`✅ Purchased ${name}! (+${defense} defense, +5 happiness)`);
+        
+        // Broadcast to server if online
+        if (isOnline && socket) {
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    function buyHouse(name, goldCost, silverCost, happinessBonus) {
+      if (!checkDailyLimit()) {
+        alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
+        return;
+      }
+      if (spendMoney(goldCost, silverCost)) {
+        player.npcPurchasesToday++;
+        player.houses.push(name);
+        player.happiness = Math.min(100, player.happiness + happinessBonus);
+        alert(`✅ Purchased ${name}! +${happinessBonus} happiness!`);
+        
+        // Broadcast to server if online
+        if (isOnline && socket) {
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    function buyAlcohol(name, goldCost, silverCost, crimeIncrease) {
+      if (!checkDailyLimit()) {
+        alert("❌ Daily NPC purchase limit reached! (100 items per day)");
+        return;
+      }
+      if (spendMoney(goldCost, silverCost)) {
+        player.npcPurchasesToday++;
+        player.crime = Math.min(100, player.crime + crimeIncrease);
+        alert(`🍺 Drank ${name}! Crime increased by ${crimeIncrease}. Current crime: ${player.crime}/100`);
+        
+        // Broadcast to server if online
+        if (isOnline && socket) {
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name + ' (Drink)'
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    function gymWorkout() {
+      if (player.energy < 5) {
+        document.getElementById("gym-message").textContent = "❌ Not enough energy! You need at least 5 energy.";
+        return;
+      }
+      player.energy -= 5;
+      let happinessMultiplier = 1 + (player.happiness / 100);
+      let baseGain = 2;
+      let actualGain = Math.floor(baseGain * happinessMultiplier);
+      player.strength += actualGain;
+      player.xp += 3;
+      
+      // Check for level up
+      checkLevelUp();
+      
+      document.getElementById("gym-message").textContent = `✅ Workout complete! Gained ${actualGain} strength (${happinessMultiplier.toFixed(2)}x multiplier)`;
+      
+      // Broadcast to server if online
+      if (isOnline && socket) {
+        socket.emit('gym:workout', {
+          username: player.username,
+          gains: actualGain
+        });
+        socket.emit('player:update', player);
+      }
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function checkLevelUp() {
+      let xpNeeded = player.level * 100;
+      if (player.xp >= xpNeeded) {
+        player.level++;
+        player.xp = 0;
+        
+        // Every 5 levels, increase max health by 10%
+        if (player.level % 5 === 0) {
+          let healthIncrease = Math.floor(player.maxHealth * 0.10);
+          player.maxHealth += healthIncrease;
+          player.health = player.maxHealth; // Fully heal on level up
+          alert(`🎉 Level Up! You are now level ${player.level}!\n💚 Max Health increased by ${healthIncrease} (10%)! New max: ${player.maxHealth}`);
+        } else {
+          alert(`🎉 Level Up! You are now level ${player.level}!`);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      }
+    }
+    
+    // Local storage functions
+    function saveToLocalStorage() {
+      localStorage.setItem('highWizardryPlayer', JSON.stringify(player));
+    }
+    
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('highWizardryPlayer');
+      if (saved) {
+        const savedPlayer = JSON.parse(saved);
+        Object.assign(player, savedPlayer);
+      }
+    }
+    
+    // Initialize game
+    loadFromLocalStorage();
     updateStats();
+    initSocket();
+    
+    // Auto-save every 30 seconds
+    setInterval(saveToLocalStorage, 30000);
+    
+    // Update player on server every minute if online
+    setInterval(() => {
+      if (isOnline && socket) {
+        socket.emit('player:update', player);
+      }
+    }, 60000);
+    
+    // Auto-regenerate energy every 10 minutes
+    setInterval(() => {
+      if (player.energy < 100) {
+        player.energy = Math.min(100, player.energy + 10);
+        updateStats();
+        saveToLocalStorage();
+        console.log('Energy regenerated! Current energy:', player.energy);
+      }
+    }, 600000); // 10 minutes = 600,000 milliseconds
+    
+    // Auto-regenerate happiness every 10 minutes
+    setInterval(() => {
+      if (player.happiness < 100) {
+        player.happiness = Math.min(100, player.happiness + 5);
+        updateStats();
+        saveToLocalStorage();
+        console.log('Happiness increased! Current happiness:', player.happiness);
+      }
+    }, 600000); // 10 minutes = 600,000 milliseconds
+    
+    // MARKETPLACE FUNCTIONS
+    function listItemForSale() {
+      let itemSelect = document.getElementById('sell-item-select');
+      let priceInput = document.getElementById('sell-price');
+      let itemType = itemSelect.value;
+      let price = parseInt(priceInput.value);
+      
+      if (!itemType) {
+        alert('Please select an item to sell!');
+        return;
+      }
+      
+      if (!price || price < 1) {
+        alert('Please enter a valid price!');
+        return;
+      }
+      
+      // Check if player has the item
+      if (itemType === 'potion' && player.potions < 1) {
+        alert('You don\'t have any potions to sell!');
+        return;
+      }
+      if (itemType === 'herb' && player.herbs < 1) {
+        alert('You don\'t have any herbs to sell!');
+        return;
+      }
+      
+      // Calculate 10% listing fee
+      let fee = Math.floor(price * 0.10);
+      if (player.gold < fee) {
+        alert(`Not enough gold for listing fee! Fee: ${fee}g (10% of ${price}g)`);
+        return;
+      }
+      
+      // Deduct item and fee
+      if (itemType === 'potion') player.potions--;
+      if (itemType === 'herb') player.herbs--;
+      player.gold -= fee;
+      
+      // Add to marketplace
+      marketListings.push({
+        id: Date.now(),
+        seller: player.username,
+        item: itemType,
+        price: price
+      });
+      
+      alert(`✅ Listed ${itemType} for ${price}g! (Listing fee: ${fee}g)`);
+      updateMarketListings();
+      updateStats();
+      saveToLocalStorage();
+      
+      // Clear form
+      itemSelect.value = '';
+      priceInput.value = '';
+    }
+    
+    function updateMarketListings() {
+      let tbody = document.getElementById('market-listings');
+      if (marketListings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8b949e;">No items listed yet. Be the first!</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      marketListings.forEach(listing => {
+        let row = `<tr>
+          <td>${listing.seller}</td>
+          <td>${listing.item.charAt(0).toUpperCase() + listing.item.slice(1)}</td>
+          <td>${listing.price}g</td>
+          <td><button class="btn" onclick="buyFromMarket(${listing.id})">Buy</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+    
+    function buyFromMarket(listingId) {
+      let listing = marketListings.find(l => l.id === listingId);
+      if (!listing) {
+        alert('Item no longer available!');
+        return;
+      }
+      
+      if (player.username === listing.seller) {
+        alert('You can\'t buy your own listing!');
+        return;
+      }
+      
+      if (player.gold < listing.price) {
+        alert('Not enough gold!');
+        return;
+      }
+      
+      // Complete purchase
+      player.gold -= listing.price;
+      if (listing.item === 'potion') player.potions++;
+      if (listing.item === 'herb') player.herbs++;
+      
+      // Remove from marketplace
+      marketListings = marketListings.filter(l => l.id !== listingId);
+      
+      alert(`✅ Purchased ${listing.item} for ${listing.price}g from ${listing.seller}!`);
+      updateMarketListings();
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    // FORUM FUNCTIONS
+    function showForumCategory(category) {
+      let categoryNames = {
+        'general': '📢 General Discussion',
+        'trade': '💰 Trade Forum',
+        'help': '❓ Help & Guides',
+        'guild': '👥 Guild Recruitment',
+        'pvp': '⚔️ PvP & Arena'
+      };
+      
+      document.getElementById('forum-category-title').textContent = categoryNames[category] || category;
+      document.getElementById('forum-posts').style.display = 'block';
+    }
 
     // --- CHAT DOCK LOGIC WITH MESSAGING ---
     function toggleChat(id){
@@ -357,10 +986,25 @@ e="viewport" content="width=device-width, initial-scale=1">
       let messages = document.getElementById(chatId + '-messages');
       if(input.value.trim() !== "") {
         let username = player.username || "You";
-        let msg = document.createElement('div');
-        msg.innerHTML = `<b>${username}:</b> ` + input.value;
-        messages.appendChild(msg);
-        messages.scrollTop = messages.scrollHeight;
+        let message = input.value;
+        
+        // Send to server if online
+        if (isOnline && socket) {
+          let channel = chatId.replace('-chat', '');
+          if (channel === 'player') channel = 'newplayer';
+          socket.emit('chat:message', {
+            channel: channel,
+            message: message,
+            username: username
+          });
+        } else {
+          // Offline mode - just add locally
+          let msg = document.createElement('div');
+          msg.innerHTML = `<b>${username}:</b>${message}`;
+          messages.appendChild(msg);
+          messages.scrollTop = messages.scrollHeight;
+        }
+        
         input.value = "";
       }
       return false; // Prevent form submit
