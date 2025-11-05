@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Wizardry</title>
+<style>
+body { margin:0; font-family: Arial; background:#1e1e2f; color:#fff;}
+header { background:#3e3e5f; padding:10px; text-align:center; font-size:24px;}
+.container { display:flex; flex-wrap:wrap; }
+.panel { padding:10px; margin:5px; border:1px solid #555; border-radius:5px; background:#2e2e4f; flex:1 1 300px; min-width:280px; }
+button { margin:5px; padding:10px; background:#4e4e7f; color:white; border:none; border-radius:5px; }
+.timer { font-size:14px; color:#aaf; }
+.chat-box { height:120px; overflow-y:auto; border:1px solid #666; padding:5px; background:#262646; margin-top:5px;}
+.inventory-item { margin-right:10px; }
+table { width:100%; border-collapse:collapse;}
+th, td { border:1px solid #555; padding:5px; text-align:center;}
+</style>
+</head>
+<body>
+
+<header>High Wizardry</header>
+
+<div class="container">
+
+ <!-- Left Panel: Stats & Energy -->
+ <div class="panel" id="stats-panel">
+ <h3>Stats & Level</h3>
+ <p>Level: <span id="level">1</span> | XP: <span id="xp">0</span>/100</p>
+ <p>Magic: <span id="magic">1</span> | Alchemy: <span id="alchemy">1</span> | Health: <span id="health">10</span> | Mana: <span id="mana">5</span> | Reputation: <span id="rep">0</span></p>
+ <h4>Energy: <span id="energy">100</span>/100</h4>
+ <p class="timer">Next energy in <span id="energy-timer">10</span>s</p>
+ </div>
+
+ <!-- Center Panel: Actions, Inventory, Marketplace -->
+ <div class="panel" id="center-panel">
+ <h3>Actions</h3>
+ <button onclick="performAction('grow')"> Grow Herb (-10)</button>
+ <button onclick="performAction('brew')"> Brew Potion (-15)</button>
+ <button onclick="performAction('train')"> Train Magic (-20)</button>
+ <button onclick="performAction('quest')"> Quest (-25)</button>
+ <p class="timer" id="action-timer"></p>
+
+ <h3>Inventory</h3>
+ <p>
+ Herbs: <span id="herbs">0</span> |
+ Potions: <span id="potions">0</span> |
+ Gold: <span id="gold">0</span>
+ </p>
+
+ <h3>Marketplace</h3>
+ <table id="market-table">
+ <tr><th>Item</th><th>Price</th><th>Buy</th></tr>
+ <tr><td> Potion</td><td>10 Gold</td><td><button onclick="buyItem('potion')">Buy</button></td></tr>
+ <tr><td> Herb</td><td>5 Gold</td><td><button onclick="buyItem('herb')">Buy</button></td></tr>
+ </table>
+ </div>
+
+ <!-- Right Panel: Guild & Chats -->
+ <div class="panel" id="right-panel">
+ <h3>Guild</h3>
+ <p>Name: <span id="guild-name">None</span></p>
+ <p>Guild Points: <span id="guild-points">0</span></p>
+
+ <h3>Player Chat</h3>
+ <div class="chat-box" id="player-chat"></div>
+
+ <h3>Trade Chat</h3>
+ <div class="chat-box" id="trade-chat"></div>
+
+ <h3>Guild Chat</h3>
+ <div class="chat-box" id="guild-chat"></div>
+ </div>
+
+</div>
+
+<script>
+// Player data
+let player = {
+ energy:100, maxEnergy:100, energyTimer:10,
+ xp:0, level:1, magic:1, alchemy:1, health:10, mana:5, rep:0,
+ herbs:0, potions:0, gold:0, guildPoints:0, guildName:"None"
+};
+
+// Load saved data
+if(localStorage.getItem('highWizardry')) {
+ player = JSON.parse(localStorage.getItem('highWizardry'));
+ updateUI();
+}
+
+// Energy regen every second
+setInterval(()=>{
+ if(player.energy < player.maxEnergy){
+ player.energyTimer--;
+ if(player.energyTimer<=0){ player.energy++; player.energyTimer=10;}
+ }
+ document.getElementById('energy-timer').innerText = player.energyTimer;
+ updateUI();
+},1000);
+
+// Actions
+function performAction(act){
+ let cost=0, xpGain=0;
+ switch(act){
+ case 'grow': cost=10; xpGain=5; player.herbs++; break;
+ case 'brew': cost=15; xpGain=10; if(player.herbs>0){player.herbs--;player.potions++;} break;
+ case 'train': cost=20; xpGain=15; player.magic++; player.alchemy++; break;
+ case 'quest': cost=25; xpGain=25; player.gold+=10; break;
+ }
+ if(player.energy>=cost){
+ player.energy-=cost;
+ player.xp+=xpGain;
+ document.getElementById('action-timer').innerText = `Next action ready in ${cost/5}s`;
+ checkLevelUp();
+ updateUI();
+ saveGame();
+ } else { alert("Not enough energy!"); }
+}
+
+// Level up
+function checkLevelUp(){
+ let xpNeeded = player.level*100;
+ if(player.xp>=xpNeeded){
+ player.level++; player.xp=0; player.maxEnergy+=10; player.energy=player.maxEnergy;
+ alert(`Level Up! You are now level ${player.level}`);
+ }
+}
+
+// Buy items from market
+function buyItem(item){
+ if(item==='potion' && player.gold>=10){player.potions++; player.gold-=10;}
+ if(item==='herb' && player.gold>=5){player.herbs++; player.gold-=5;}
+ updateUI(); saveGame();
+}
+
+// Update UI
+function updateUI(){
+ document.getElementById('energy').innerText=player.energy;
+ document.getElementById('xp').innerText=player.xp;
+ document.getElementById('level').innerText=player.level;
+ document.getElementById('magic').innerText=player.magic;
+ document.getElementById('alchemy').innerText=player.alchemy;
+ document.getElementById('health').innerText=player.health;
+ document.getElementById('mana').innerText=player.mana;
+ document.getElementById('rep').innerText=player.rep;
+ document.getElementById('herbs').innerText=player.herbs;
+ document.getElementById('potions').innerText=player.potions;
+ document.getElementById('gold').innerText=player.gold;
+ document.getElementById('guild-points').innerText=player.guildPoints;
+ document.getElementById('guild-name').innerText=player.guildName;
+}
+
+// Save progress
+function saveGame(){ localStorage.setItem('highWizardry',JSON.stringify(player)); }
+
+// Simulated chats
+let npcMessages = [
+ " Buying herbs soon!", " Selling potions!", " Training magic!", " Going on a quest!"
+];
+function addChatMessages(){
+ let pChat = document.getElementById('player-chat');
+ let tChat = document.getElementById('trade-chat');
+ let gChat = document.getElementById('guild-chat');
+
+ pChat.innerHTML += `<p>${npcMessages[Math.floor(Math.random()*npcMessages.length)]}</p>`;
+ tChat.innerHTML += `<p>${npcMessages[Math.floor(Math.random()*npcMessages.length)]}</p>`;
+ gChat.innerHTML += `<p>${npcMessages[Math.floor(Math.random()*npcMessages.length)]}</p>`;
+
+ pChat.scrollTop = pChat.scrollHeight;
+ tChat.scrollTop = tChat.scrollHeight;
+ gChat.scrollTop = gChat.scrollHeight;
+}
+setInterval(addChatMessages,5000);
+
+</script>
+</body>
+</html>
