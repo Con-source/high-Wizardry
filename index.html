@@ -377,12 +377,234 @@ e="viewport" content="width=device-width, initial-scale=1">
             </tbody>
           </table>
           
-          <div id="guild-management" style="display:none; margin-top:30px; background:#0d1117; padding:20px; border-radius:6px; border-left:3px solid #ffd33d;">
-            <h3 style="color:#ffd33d; margin:0 0 15px 0;">⚙️ Guild Management</h3>
-            <p><b>Guild Name:</b> <span id="current-guild-name">Your Guild</span></p>
-            <p><b>Your Role:</b> <span id="guild-role">Member</span></p>
-            <button onclick="donateToGuild()" style="padding:8px 15px; margin:5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Donate 10g</button>
-            <button onclick="leaveGuild()" style="padding:8px 15px; margin:5px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Leave Guild</button>
+          <!-- GUILD MANAGEMENT PANEL -->
+          <div id="guild-management" style="display:none; margin-top:30px;">
+            
+            <!-- Quick Actions -->
+            <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #ffd33d;">
+              <h3 style="color:#ffd33d; margin:0 0 15px 0;">⚡ Quick Actions</h3>
+              <button onclick="showGuildTab('overview')" style="padding:10px 20px; margin:5px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">📊 Overview</button>
+              <button onclick="showGuildTab('bank')" style="padding:10px 20px; margin:5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">🏦 Guild Bank</button>
+              <button onclick="showGuildTab('upgrades')" style="padding:10px 20px; margin:5px; background:#a371f7; color:#fff; border:none; border-radius:4px; cursor:pointer;">⬆️ Upgrades</button>
+              <button onclick="showGuildTab('battles')" style="padding:10px 20px; margin:5px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">⚔️ Battles</button>
+              <button onclick="showGuildTab('members')" style="padding:10px 20px; margin:5px; background:#d2a8ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">👥 Members</button>
+              <button onclick="leaveGuild()" style="padding:10px 20px; margin:5px; background:#8b949e; color:#fff; border:none; border-radius:4px; cursor:pointer;">🚪 Leave Guild</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="guild-tab-overview" class="guild-tab" style="background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#58a6ff; margin:0 0 15px 0;">📊 Guild Overview</h3>
+              <p><b>Guild Name:</b> <span id="current-guild-name">Your Guild</span></p>
+              <p><b>Guild Type:</b> <span id="current-guild-type">⚔️ Combat</span></p>
+              <p><b>Your Role:</b> <span id="guild-role">Member</span></p>
+              <p><b>Guild Level:</b> <span id="current-guild-level">1</span></p>
+              <p><b>Total Power:</b> <span id="guild-power">0</span></p>
+              <p><b>Next Battle:</b> <span id="next-guild-battle">Ready</span></p>
+              
+              <h4 style="color:#ffd33d; margin:20px 0 10px 0;">📈 Rank Progression System</h4>
+              <p style="font-size:14px; color:#8b949e;">Contribute to climb the ranks!</p>
+              <ul style="font-size:14px; line-height:1.8;">
+                <li><b style="color:#8b949e;">Recruit</b> - 0 GP (Starting rank)</li>
+                <li><b style="color:#58a6ff;">Member</b> - 100 GP (+5% guild XP bonus)</li>
+                <li><b style="color:#3fb950;">Veteran</b> - 500 GP (+10% guild XP, can use bank)</li>
+                <li><b style="color:#ffd33d;">Elite</b> - 1,500 GP (+15% guild XP, can upgrade guild)</li>
+                <li><b style="color:#f85149;">Officer</b> - 3,000 GP (+20% guild XP, view permissions)</li>
+                <li><b style="color:#d2a8ff;">Co-Leader</b> - 5,000 GP (+25% guild XP, full permissions)</li>
+                <li><b style="color:#a371f7;">Guild Master</b> - Founder only (all permissions)</li>
+              </ul>
+            </div>
+            
+            <!-- Bank Tab -->
+            <div id="guild-tab-bank" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#3fb950; margin:0 0 15px 0;">🏦 Guild Bank</h3>
+              <p style="color:#8b949e;">Store items and gold for your guild members to borrow!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#ffd33d; margin:0 0 10px 0;">💰 Deposit to Treasury</h4>
+                <input type="number" id="deposit-gold-amount" placeholder="Amount (gold)" min="1" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:120px;">
+                <button onclick="depositToBank('gold')" style="padding:8px 15px; margin:5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Deposit Gold</button>
+                <p style="font-size:12px; color:#8b949e; margin-top:5px;">Earn 1 GP per gold deposited</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#58a6ff; margin:0 0 10px 0;">📦 Donate Items</h4>
+                <select id="donate-item-select" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px;">
+                  <option value="">Select item</option>
+                  <option value="potion">Potion</option>
+                  <option value="herb">Herb</option>
+                </select>
+                <input type="number" id="donate-item-amount" placeholder="Quantity" min="1" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:100px;">
+                <button onclick="donateItemToBank()" style="padding:8px 15px; margin:5px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Donate</button>
+                <p style="font-size:12px; color:#8b949e; margin-top:5px;">Earn 5 GP per item donated</p>
+              </div>
+              
+              <h4 style="color:#d2a8ff; margin:20px 0 10px 0;">🎁 Available Resources</h4>
+              <table class="inv-table">
+                <tr><th>Resource</th><th>Amount</th><th>Action</th></tr>
+                <tbody id="guild-bank-items">
+                  <tr><td>Gold</td><td><span id="bank-gold">0</span>g</td>
+                    <td><button onclick="borrowFromBank('gold')">Borrow 10g</button></td></tr>
+                  <tr><td>Potions</td><td><span id="bank-potions">0</span></td>
+                    <td><button onclick="borrowFromBank('potion')">Borrow 1</button></td></tr>
+                  <tr><td>Herbs</td><td><span id="bank-herbs">0</span></td>
+                    <td><button onclick="borrowFromBank('herb')">Borrow 1</button></td></tr>
+                </tbody>
+              </table>
+              <p style="color:#f85149; font-size:12px; margin-top:10px;">⚠️ Requires Veteran rank or higher to borrow</p>
+            </div>
+            
+            <!-- Upgrades Tab -->
+            <div id="guild-tab-upgrades" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#a371f7; margin:0 0 15px 0;">⬆️ Guild Upgrades</h3>
+              <p style="color:#8b949e;">Upgrade your guild to unlock powerful bonuses!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #58a6ff;">
+                <h4 style="color:#58a6ff; margin:0 0 10px 0;">🏛️ Guild Hall Level <span id="guild-hall-level">1</span></h4>
+                <p style="font-size:14px;">Increases max members: <span id="max-members">10</span></p>
+                <p style="font-size:14px;">Cost: <span id="hall-upgrade-cost">500</span>g from treasury</p>
+                <button onclick="upgradeGuild('hall')" style="padding:8px 15px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Hall</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #3fb950;">
+                <h4 style="color:#3fb950; margin:0 0 10px 0;">💰 Treasury Size <span id="treasury-level">1</span></h4>
+                <p style="font-size:14px;">Max storage: <span id="max-treasury">1,000</span>g</p>
+                <p style="font-size:14px;">Cost: <span id="treasury-upgrade-cost">300</span>g from treasury</p>
+                <button onclick="upgradeGuild('treasury')" style="padding:8px 15px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Treasury</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+                <h4 style="color:#f85149; margin:0 0 10px 0;">⚔️ Battle Power <span id="battle-power-level">1</span></h4>
+                <p style="font-size:14px;">Guild battle bonus: <span id="battle-bonus">+5</span>%</p>
+                <p style="font-size:14px;">Cost: <span id="power-upgrade-cost">400</span>g from treasury</p>
+                <button onclick="upgradeGuild('power')" style="padding:8px 15px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Power</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+            </div>
+            
+            <!-- Battles Tab -->
+            <div id="guild-tab-battles" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#f85149; margin:0 0 15px 0;">⚔️ Guild Battles</h3>
+              <p style="color:#8b949e;">Challenge other guilds for glory and rewards!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#ffd33d; margin:0 0 10px 0;">🏆 Your Guild's Power</h4>
+                <p><b>Total Power:</b> <span id="battle-guild-power">0</span></p>
+                <p style="font-size:12px; color:#8b949e;">Power = (Guild Level × 100) + (Members × 50) + Upgrades</p>
+              </div>
+              
+              <h4 style="color:#58a6ff; margin:20px 0 10px 0;">🎯 Challenge Guilds</h4>
+              <table class="inv-table">
+                <tr><th>Guild Name</th><th>Power</th><th>Reward</th><th>Action</th></tr>
+                <tr><td>Novice Raiders</td><td>250</td><td>50g, 100 GP</td>
+                  <td><button onclick="challengeGuild('Novice Raiders',250,50,100)">Challenge</button></td></tr>
+                <tr><td>Iron Brotherhood</td><td>500</td><td>100g, 200 GP</td>
+                  <td><button onclick="challengeGuild('Iron Brotherhood',500,100,200)">Challenge</button></td></tr>
+                <tr><td>Mystic Order</td><td>1000</td><td>200g, 400 GP</td>
+                  <td><button onclick="challengeGuild('Mystic Order',1000,200,400)">Challenge</button></td></tr>
+                <tr><td>Dragon Legion</td><td>2000</td><td>400g, 800 GP</td>
+                  <td><button onclick="challengeGuild('Dragon Legion',2000,400,800)">Challenge</button></td></tr>
+                <tr><td>Immortal Empire</td><td>5000</td><td>1000g, 2000 GP</td>
+                  <td><button onclick="challengeGuild('Immortal Empire',5000,1000,2000)">Challenge</button></td></tr>
+              </table>
+              <p style="color:#f85149; font-size:12px; margin-top:10px;">⚠️ Battles can only be fought once per day. Win = full reward, Loss = 50% reward</p>
+            </div>
+            
+            <!-- Members Tab with Guild Master Controls -->
+            <div id="guild-tab-members" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#d2a8ff; margin:0 0 15px 0;">👥 Guild Members</h3>
+              
+              <!-- Guild Master Controls -->
+              <div id="guild-master-controls" style="display:none; background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #a371f7;">
+                <h4 style="color:#a371f7; margin:0 0 10px 0;">👑 Guild Master Controls</h4>
+                <p style="font-size:14px; color:#8b949e;">Manage member ranks and permissions</p>
+                
+                <div style="margin-top:15px;">
+                  <h5 style="color:#ffd33d; margin:10px 0;">⚙️ Global Permissions</h5>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-all-deposit" checked onchange="toggleGuildPermission('deposit')"> 
+                    Allow all members to deposit to treasury
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-all-donate" checked onchange="toggleGuildPermission('donate')"> 
+                    Allow all members to donate items
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-veteran-borrow" checked onchange="toggleGuildPermission('borrow')"> 
+                    Allow Veteran+ to borrow from bank
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-elite-upgrade" checked onchange="toggleGuildPermission('upgrade')"> 
+                    Allow Elite+ to upgrade guild
+                  </label>
+                </div>
+                
+                <div style="margin-top:20px;">
+                  <h5 style="color:#58a6ff; margin:10px 0;">🎖️ Promote/Demote Members</h5>
+                  <p style="font-size:13px; color:#8b949e;">Select a member and assign their rank manually</p>
+                  <select id="member-select" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:180px;">
+                    <option value="">Select member</option>
+                    <option value="MysticMage">MysticMage</option>
+                    <option value="ShadowKnight">ShadowKnight</option>
+                    <option value="CrystalWizard">CrystalWizard</option>
+                    <option value="DarkSorcerer">DarkSorcerer</option>
+                  </select>
+                  <select id="rank-assign" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:150px;">
+                    <option value="">Assign rank</option>
+                    <option value="Recruit">Recruit</option>
+                    <option value="Member">Member</option>
+                    <option value="Veteran">Veteran</option>
+                    <option value="Elite">Elite</option>
+                    <option value="Officer">Officer</option>
+                    <option value="Co-Leader">Co-Leader</option>
+                  </select>
+                  <button onclick="assignMemberRank()" style="padding:8px 15px; margin:5px; background:#a371f7; color:#fff; border:none; border-radius:4px; cursor:pointer;">Assign Rank</button>
+                </div>
+                
+                <div style="margin-top:20px;">
+                  <h5 style="color:#f85149; margin:10px 0;">🚫 Member Management</h5>
+                  <select id="member-kick" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:180px;">
+                    <option value="">Select member</option>
+                    <option value="MysticMage">MysticMage</option>
+                    <option value="ShadowKnight">ShadowKnight</option>
+                    <option value="CrystalWizard">CrystalWizard</option>
+                    <option value="DarkSorcerer">DarkSorcerer</option>
+                  </select>
+                  <button onclick="kickMember()" style="padding:8px 15px; margin:5px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Kick Member</button>
+                  <p style="font-size:12px; color:#f85149; margin-top:5px;">⚠️ This will remove the member from the guild permanently</p>
+                </div>
+              </div>
+              
+              <!-- Officer/Co-Leader Controls -->
+              <div id="officer-controls" style="display:none; background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+                <h4 style="color:#f85149; margin:0 0 10px 0;">⚔️ Officer Controls</h4>
+                <p style="font-size:14px; color:#8b949e;">View guild permissions</p>
+                
+                <div style="margin-top:15px;">
+                  <h5 style="color:#58a6ff; margin:10px 0;">📊 Current Guild Permissions</h5>
+                  <p style="font-size:13px;">Deposits: <span id="officer-view-deposit" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Donations: <span id="officer-view-donate" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Borrowing: <span id="officer-view-borrow" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Upgrades: <span id="officer-view-upgrade" style="color:#3fb950;">Enabled</span></p>
+                </div>
+              </div>
+              
+              <h4 style="color:#ffd33d; margin:20px 0 10px 0;">📋 Member List</h4>
+              <table class="inv-table">
+                <tr><th>Username</th><th>Rank</th><th>Contribution</th><th>Power</th><th>Status</th></tr>
+                <tbody id="guild-members-list">
+                  <tr><td>You</td><td><span id="your-rank-display">Recruit</span></td><td><span id="your-contribution">0</span> GP</td><td>100</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>MysticMage</td><td>Veteran</td><td>650 GP</td><td>250</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>ShadowKnight</td><td>Elite</td><td>1,800 GP</td><td>420</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>CrystalWizard</td><td>Member</td><td>340 GP</td><td>180</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>DarkSorcerer</td><td>Officer</td><td>3,200 GP</td><td>580</td><td style="color:#3fb950;">Active</td></tr>
+                </tbody>
+              </table>
+              
+              <p style="font-size:12px; color:#8b949e; margin-top:15px;">💡 Guild Master and Co-Leaders can manage all aspects of the guild</p>
+            </div>
+            
           </div>
         </div>
         <div class="content-box" id="market-section" style="display:none;">
@@ -1011,7 +1233,24 @@ e="viewport" content="width=device-width, initial-scale=1">
       charisma: 10,
       dexterity: 10,
       guild: "None",
+      guildType: null,
+      guildLevel: 0,
+      guildRank: "N/A",
       guildPoints: 0,
+      guildTreasury: 0,
+      guildBankGold: 0,
+      guildBankPotions: 0,
+      guildBankHerbs: 0,
+      guildHallLevel: 1,
+      guildTreasuryLevel: 1,
+      guildPowerLevel: 1,
+      lastGuildBattle: null,
+      guildPermissions: {
+        deposit: true,
+        donate: true,
+        borrow: true,
+        upgrade: true
+      },
       currentJob: "None",
       jobPoints: 0,
       workedToday: false,
@@ -1295,7 +1534,7 @@ e="viewport" content="width=device-width, initial-scale=1">
       
       alert(`🎉 Congratulations!\nYou've been hired by ${jobName}!\n\nYou'll receive your first payout at 6:00 PM UK time today.`);
       
-      updateJobDisplay();
+      updateGuildDisplay();
       updateStats();
       saveToLocalStorage();
     }
@@ -1404,12 +1643,16 @@ e="viewport" content="width=device-width, initial-scale=1">
       
       player.gold -= 100;
       player.guild = guildName;
+      player.guildType = guildType;
+      player.guildLevel = 1;
+      player.guildRank = 'Guild Master';
       player.guildPoints = 0;
+      player.guildTreasury = 0;
+      player.guildBankGold = 0;
+      player.guildBankPotions = 0;
+      player.guildBankHerbs = 0;
       
-      document.getElementById('guild-name').textContent = guildName;
-      document.getElementById('guild-rank').textContent = 'Guild Master';
-      document.getElementById('current-guild-name').textContent = guildName;
-      document.getElementById('guild-role').textContent = 'Guild Master';
+      updateGuildDisplay();
       document.getElementById('guild-management').style.display = 'block';
       
       alert(`🎉 Successfully created ${guildName}!\nYou are now the Guild Master.`);
@@ -1422,19 +1665,19 @@ e="viewport" content="width=device-width, initial-scale=1">
       saveToLocalStorage();
     }
     
-    function joinGuild(guildName, guildType) {
+    function joinGuild(guildName, guildType, guildLevel) {
       if (player.guild !== 'None') {
         alert('You are already in a guild! Leave your current guild first.');
         return;
       }
       
       player.guild = guildName;
+      player.guildType = guildType;
+      player.guildLevel = guildLevel || 1;
+      player.guildRank = 'Recruit';
       player.guildPoints = 0;
       
-      document.getElementById('guild-name').textContent = guildName;
-      document.getElementById('guild-rank').textContent = 'Member';
-      document.getElementById('current-guild-name').textContent = guildName;
-      document.getElementById('guild-role').textContent = 'Member';
+      updateGuildDisplay();
       document.getElementById('guild-management').style.display = 'block';
       
       alert(`🎉 Successfully joined ${guildName}!`);
@@ -1470,16 +1713,177 @@ e="viewport" content="width=device-width, initial-scale=1">
       
       if (confirm) {
         player.guild = 'None';
+        player.guildType = null;
+        player.guildLevel = 0;
+        player.guildRank = 'N/A';
         player.guildPoints = 0;
+        player.guildTreasury = 0;
         
-        document.getElementById('guild-name').textContent = 'None';
-        document.getElementById('guild-rank').textContent = 'N/A';
+        updateGuildDisplay();
         document.getElementById('guild-management').style.display = 'none';
         
         alert('You have left your guild.');
         
         updateStats();
         saveToLocalStorage();
+      }
+    }
+    
+    // GUILD PERMISSION & MEMBER MANAGEMENT FUNCTIONS
+    function toggleGuildPermission(permType) {
+      if (player.guildRank !== 'Guild Master') {
+        alert('Only the Guild Master can change permissions!');
+        return;
+      }
+      
+      let checkbox =document.getElementById(`perm-${permType === 'deposit' ? 'all-deposit' : permType === 'donate' ? 'all-donate' : permType === 'borrow' ? 'veteran-borrow' : 'elite-upgrade'}`);
+      player.guildPermissions[permType] = checkbox.checked;
+      
+      alert(`✅ Permission updated!\n${permType.charAt(0).toUpperCase() + permType.slice(1)} is now ${player.guildPermissions[permType] ? 'enabled' : 'disabled'}`);
+      
+      // Update officer view
+      if (document.getElementById(`officer-view-${permType}`)) {
+        document.getElementById(`officer-view-${permType}`).textContent = player.guildPermissions[permType] ? 'Enabled' : 'Disabled';
+        document.getElementById(`officer-view-${permType}`).style.color = player.guildPermissions[permType] ? '#3fb950' : '#f85149';
+      }
+      
+      saveToLocalStorage();
+    }
+    
+    function assignMemberRank() {
+      if (player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') {
+        alert('Only the Guild Master and Co-Leaders can assign ranks!');
+        return;
+      }
+      
+      let memberName = document.getElementById('member-select').value;
+      let newRank = document.getElementById('rank-assign').value;
+      
+      if (!memberName || !newRank) {
+        alert('Please select both a member and a rank!');
+        return;
+      }
+      
+      // Don't allow promoting to Guild Master
+      if (newRank === 'Guild Master') {
+        alert('❌ Cannot promote to Guild Master! Only the founder can be Guild Master.');
+        return;
+      }
+      
+      alert(`✅ Rank Updated!\n${memberName} has been promoted/demoted to ${newRank}!`);
+      
+      // Reset selections
+      document.getElementById('member-select').value = '';
+      document.getElementById('rank-assign').value = '';
+      
+      saveToLocalStorage();
+    }
+    
+    function kickMember() {
+      if (player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') {
+        alert('Only the Guild Master and Co-Leaders can kick members!');
+        return;
+      }
+      
+      let memberName = document.getElementById('member-kick').value;
+      
+      if (!memberName) {
+        alert('Please select a member to kick!');
+        return;
+      }
+      
+      let confirm = window.confirm(`Are you sure you want to kick ${memberName} from the guild?\n\nThis action cannot be undone.`);
+      
+      if (confirm) {
+        alert(`❌ ${memberName} has been kicked from ${player.guild}!`);
+        
+        // Reset selection
+        document.getElementById('member-kick').value = '';
+        
+        saveToLocalStorage();
+      }
+    }
+    
+    function updateGuildDisplay() {
+      if (document.getElementById('guild-name')) {
+        document.getElementById('guild-name').textContent = player.guild;
+        document.getElementById('guild-level').textContent = player.guildLevel;
+        document.getElementById('guild-rank').textContent = player.guildRank;
+        document.getElementById('guild-points').textContent = player.guildPoints;
+        document.getElementById('guild-treasury').textContent = player.guildTreasury;
+        document.getElementById('current-guild-name').textContent = player.guild;
+        document.getElementById('current-guild-type').textContent = player.guildType || 'N/A';
+        document.getElementById('guild-role').textContent = player.guildRank;
+        document.getElementById('current-guild-level').textContent = player.guildLevel;
+        document.getElementById('your-rank-display').textContent = player.guildRank;
+        document.getElementById('your-contribution').textContent = player.guildPoints;
+        
+        // Update bank displays
+        if (document.getElementById('bank-gold')) {
+          document.getElementById('bank-gold').textContent = player.guildBankGold;
+          document.getElementById('bank-potions').textContent = player.guildBankPotions;
+          document.getElementById('bank-herbs').textContent = player.guildBankHerbs;
+        }
+        
+        // Update guild power
+        let guildPower = (player.guildLevel * 100) + (player.guildHallLevel * 200) + (player.guildPowerLevel * 100);
+        if (document.getElementById('guild-power')) document.getElementById('guild-power').textContent = guildPower;
+        if (document.getElementById('battle-guild-power')) document.getElementById('battle-guild-power').textContent = guildPower;
+        
+        // Show/hide controls based on rank
+        let guildMasterControls = document.getElementById('guild-master-controls');
+        let officerControls = document.getElementById('officer-controls');
+        
+        if (guildMasterControls) {
+          guildMasterControls.style.display = (player.guildRank === 'Guild Master' || player.guildRank === 'Co-Leader') ? 'block' : 'none';
+        }
+        
+        if (officerControls) {
+          officerControls.style.display = (player.guildRank === 'Officer' && player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') ? 'block' : 'none';
+        }
+        
+        // Update permission checkboxes if Guild Master
+        if (player.guildRank === 'Guild Master' && player.guildPermissions) {
+          if (document.getElementById('perm-all-deposit')) document.getElementById('perm-all-deposit').checked = player.guildPermissions.deposit;
+          if (document.getElementById('perm-all-donate')) document.getElementById('perm-all-donate').checked = player.guildPermissions.donate;
+          if (document.getElementById('perm-veteran-borrow')) document.getElementById('perm-veteran-borrow').checked = player.guildPermissions.borrow;
+          if (document.getElementById('perm-elite-upgrade')) document.getElementById('perm-elite-upgrade').checked = player.guildPermissions.upgrade;
+        }
+        
+        // Update rank based on GP
+        updateGuildRank();
+      }
+    }
+    
+    function updateGuildRank() {
+      let oldRank = player.guildRank;
+      
+      if (player.guild === 'None') return;
+      if (player.guildRank === 'Guild Master') return; // Founder stays as master
+      
+      if (player.guildPoints >= 5000) player.guildRank = 'Co-Leader';
+      else if (player.guildPoints >= 3000) player.guildRank = 'Officer';
+      else if (player.guildPoints >= 1500) player.guildRank = 'Elite';
+      else if (player.guildPoints >= 500) player.guildRank = 'Veteran';
+      else if (player.guildPoints >= 100) player.guildRank = 'Member';
+      else player.guildRank = 'Recruit';
+      
+      if (oldRank !== player.guildRank) {
+        alert(`🎉 Rank Up! You are now a ${player.guildRank}!`);
+        updateGuildDisplay();
+      }
+    }
+    
+    function showGuildTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.guild-tab').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Show selected tab
+      let selectedTab = document.getElementById('guild-tab-' + tabName);
+      if (selectedTab) {
+        selectedTab.style.display = 'block';
       }
     }
     
