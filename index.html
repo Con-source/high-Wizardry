@@ -128,6 +128,31 @@ e="viewport" content="width=device-width, initial-scale=1">
     .chat-input { flex:1; border-radius:5px; border:1px solid #555; padding:5px 8px; font-size:15px; }
     .chat-send { background:#4477d0; color:#fff; border:none; border-radius:5px; padding:5px 18px; cursor:pointer; font-size:15px;}
     .chat-send:hover { background:#2569b8;}
+    /* Map location styling */
+    .map-location {
+      padding: 25px 20px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      border: 2px solid transparent;
+      color: #fff;
+    }
+    .map-location:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .map-location h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+    .map-location p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -155,6 +180,9 @@ e="viewport" content="width=device-width, initial-scale=1">
       <div class="menu">
         <button class="menu-btn active" onclick="showSection('home', this)">
           <i class="fa-solid fa-house-chimney"></i> Home
+        </button>
+        <button class="menu-btn" onclick="showSection('map', this)">
+          <i class="fa-solid fa-map"></i> Map
         </button>
         <button class="menu-btn" onclick="showSection('town', this)">
           <i class="fa-solid fa-city"></i> Town Centre
@@ -206,6 +234,79 @@ e="viewport" content="width=device-width, initial-scale=1">
           </p>
           <div class="bar"><div class="bar-inner" style="width:35%"></div></div>
           <div class="stat-label">XP <span id="xp">0</span>/100</div>
+        </div>
+        <div class="content-box" id="map-section" style="display:none;">
+          <h2>🗺️ City Map</h2>
+          <p style="color:#8b949e;">Click on a location to visit</p>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:20px;">
+            <!-- Row 1 -->
+            <div onclick="navigateToLocation('guild')" class="map-location" style="background: linear-gradient(135deg, #a371f7 0%, #7c3aed 100%); grid-column: span 1;">
+              <i class="fa-solid fa-users" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Guild Hall</h3>
+              <p style="font-size:12px; margin:5px 0;">Join guilds & earn points</p>
+            </div>
+            
+            <div onclick="navigateToLocation('arena')" class="map-location" style="background: linear-gradient(135deg, #f85149 0%, #da3633 100%); grid-column: span 1;">
+              <i class="fa-solid fa-shield-halved" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Arena</h3>
+              <p style="font-size:12px; margin:5px 0;">Battle other wizards</p>
+            </div>
+            
+            <div onclick="navigateToLocation('gym')" class="map-location" style="background: linear-gradient(135deg, #f0883e 0%, #d97706 100%); grid-column: span 1;">
+              <i class="fa-solid fa-dumbbell" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Gym</h3>
+              <p style="font-size:12px; margin:5px 0;">Train your strength</p>
+            </div>
+            
+            <!-- Row 2 -->
+            <div onclick="navigateToLocation('market')" class="map-location" style="background: linear-gradient(135deg, #3fb950 0%, #2ea043 100%); grid-column: span 1;">
+              <i class="fa-solid fa-store" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Marketplace</h3>
+              <p style="font-size:12px; margin:5px 0;">Trade with players</p>
+            </div>
+            
+            <div onclick="navigateToLocation('weapontrader')" class="map-location" style="background: linear-gradient(135deg, #58a6ff 0%, #1f6feb 100%); grid-column: span 1;">
+              <i class="fa-solid fa-sword" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Weapon Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy powerful weapons</p>
+            </div>
+            
+            <div onclick="navigateToLocation('armortrader')" class="map-location" style="background: linear-gradient(135deg, #79c0ff 0%, #388bfd 100%); grid-column: span 1;">
+              <i class="fa-solid fa-shield" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Armor Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy protective armor</p>
+            </div>
+            
+            <!-- Row 3 -->
+            <div onclick="navigateToLocation('housetrader')" class="map-location" style="background: linear-gradient(135deg, #ffd33d 0%, #f9c513 100%); color:#000; grid-column: span 1;">
+              <i class="fa-solid fa-home" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">House Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy property</p>
+            </div>
+            
+            <div onclick="navigateToLocation('bar')" class="map-location" style="background: linear-gradient(135deg, #d2a8ff 0%, #bc8cff 100%); grid-column: span 1;">
+              <i class="fa-solid fa-martini-glass" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">The Bar</h3>
+              <p style="font-size:12px; margin:5px 0;">Drinks & crime</p>
+            </div>
+            
+            <div onclick="navigateToLocation('newspaper')" class="map-location" style="background: linear-gradient(135deg, #8b949e 0%, #6e7681 100%); grid-column: span 1;">
+              <i class="fa-solid fa-newspaper" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Newspaper</h3>
+              <p style="font-size:12px; margin:5px 0;">Latest news</p>
+            </div>
+          </div>
+          
+          <div style="margin-top:30px; padding:20px; background:#0d1117; border-radius:6px; border-left:3px solid #58a6ff;">
+            <h3 style="color:#58a6ff; margin:0 0 10px 0;">💡 Quick Travel Tips</h3>
+            <ul style="margin:10px 0; padding-left:20px; line-height:1.8;">
+              <li>Click any location to instantly travel there</li>
+              <li>NPC traders have a 100 item/day purchase limit</li>
+              <li>Player Marketplace has no limits!</li>
+              <li>Visit the Gym when your happiness is high for better gains</li>
+            </ul>
+          </div>
         </div>
         <div class="content-box" id="town-section" style="display:none;">
           <h2>Town Centre</h2>
@@ -612,7 +713,7 @@ e="viewport" content="width=device-width, initial-scale=1">
     }
     function showSection(section, btn) {
       [
-        "home","town","guild","market","weapontrader","armortrader","housetrader","bar","arena","gym","inventory","newspaper","forum"
+        "home","map","town","guild","market","weapontrader","armortrader","housetrader","bar","arena","gym","inventory","newspaper","forum"
       ].forEach(id=>{
         document.getElementById(id + "-section").style.display = "none";
       });
@@ -620,6 +721,17 @@ e="viewport" content="width=device-width, initial-scale=1">
       document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       updateStats();
+    }
+    
+    function navigateToLocation(location) {
+      // Find the corresponding button and trigger it
+      let buttons = document.querySelectorAll('.menu-btn');
+      buttons.forEach(btn => {
+        let sectionName = btn.getAttribute('onclick');
+        if (sectionName && sectionName.includes(location)) {
+          btn.click();
+        }
+      });
     }
     function buyItem(item, price){
       if(player.gold >= price){
