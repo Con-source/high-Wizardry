@@ -180,6 +180,11 @@ e="viewport" content="width=device-width, initial-scale=1">
         <div class="stats-row">💪 Endurance: <span id="endurance">10</span></div>
         <div class="stats-row">💬 Charisma: <span id="charisma">10</span></div>
         <div class="stats-row">🎯 Dexterity: <span id="dexterity">10</span></div>
+        <div class="stats-row" style="border-top:1px solid #2d333b; margin-top:8px; padding-top:8px;">💎 Net Worth: <span id="net-worth">10</span></div>
+        <div class="stats-row">🏦 Bank: <span id="bank-balance">0</span>g</div>
+        <div class="stats-row">⭐ Reputation: <span id="reputation">50</span></div>
+        <div class="stats-row">📈 Price: <span id="price-multiplier">1.00</span>x</div>
+        <div class="stats-row">🏋️ Gym Level: <span id="gym-level">1</span></div>
       </div>
       <div class="menu">
         <button class="menu-btn active" onclick="showSection('home', this)">
@@ -220,6 +225,9 @@ e="viewport" content="width=device-width, initial-scale=1">
         </button>
         <button class="menu-btn" onclick="showSection('inventory', this)">
           <i class="fa-solid fa-box-open"></i> Inventory
+        </button>
+        <button class="menu-btn" onclick="showSection('bank', this)">
+          <i class="fa-solid fa-building-columns"></i> Bank
         </button>
         <button class="menu-btn" onclick="showSection('newspaper', this)">
           <i class="fa-solid fa-newspaper"></i> Newspaper
@@ -991,13 +999,41 @@ e="viewport" content="width=device-width, initial-scale=1">
           <p>Challenge other wizards in magical duels for rewards and glory!</p>
         </div>
         <div class="content-box" id="gym-section" style="display:none;">
-          <h2>💪 Gym</h2>
-          <p>Work out to gain strength! The happier you are, the more gains you get per 5 energy.</p>
-          <p><b>Your Strength:</b> <span id="strength">10</span></p>
-          <p><b>Happiness Multiplier:</b> <span id="gym-multiplier">1.5x</span></p>
-          <p><b>Next Workout Gains:</b> <span id="gym-gains">3</span> strength</p>
-          <button onclick="gymWorkout()" style="font-size:18px; padding:15px 30px;">💪 Work Out (5 Energy)</button>
-          <p id="gym-message" style="color:#aaf; margin-top:15px;"></p>
+          <h2>🏋️ Gym Network</h2>
+          <p style="color:#8b949e;">Train across 25 specialized gyms! Each gym focuses on different stats and unlocks progressively.</p>
+          
+          <div style="background:#0d1117; padding:20px; border-radius:6px; margin:20px 0; border-left:3px solid #ffd33d;">
+            <h3 style="color:#ffd33d; margin:0 0 15px 0;">🎯 Your Training Progress</h3>
+            <p><b>Gym Level:</b> <span id="display-gym-level">1</span></p>
+            <p><b>Gym XP:</b> <span id="display-gym-xp">0</span> / <span id="display-gym-xp-next">100</span></p>
+            <div style="background:#161b22; height:10px; border-radius:5px; margin:10px 0; overflow:hidden;">
+              <div id="gym-xp-bar" style="background:#ffd33d; height:100%; width:0%; border-radius:5px;"></div>
+            </div>
+            <p><b>Gyms Unlocked:</b> <span id="display-gyms-unlocked">1</span>/25</p>
+            <p><b>Secret Gyms Found:</b> <span id="display-secret-gyms">0</span>/5</p>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#58a6ff; margin:0 0 15px 0;">🏋️ Regular Gyms</h3>
+            <div id="regular-gyms-list">
+              <!-- Regular gyms will be populated here -->
+            </div>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0; border-left:3px solid #a371f7;">
+            <h3 style="color:#a371f7; margin:0 0 15px 0;">🔍 Secret Gyms</h3>
+            <p style="color:#8b949e; font-size:14px; margin-bottom:15px;">Special gyms that require specific stat combinations to unlock. Train wisely!</p>
+            <div id="secret-gyms-list">
+              <!-- Secret gyms will be populated here -->
+            </div>
+          </div>
+          
+          <div style="background:#0d1117; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#3fb950; margin:0 0 15px 0;">📊 Recent Workouts</h3>
+            <div id="workout-history" style="max-height:200px; overflow-y:auto;">
+              <!-- Workout history will be shown here -->
+            </div>
+          </div>
         </div>
         <div class="content-box" id="inventory-section" style="display:none;">
           <h2>Inventory</h2>
@@ -1027,6 +1063,60 @@ e="viewport" content="width=device-width, initial-scale=1">
               <td id="inv-houses">None</td>
             </tr>
           </table>
+        </div>
+        <div class="content-box" id="bank-section" style="display:none;">
+          <h2>🏦 Wizard's Bank</h2>
+          <p style="color:#8b949e;">Secure your gold and earn interest! Build your wealth through smart banking.</p>
+          
+          <div style="background:#0d1117; padding:20px; border-radius:6px; margin:20px 0; border-left:3px solid #ffd33d;">
+            <h3 style="color:#ffd33d; margin:0 0 15px 0;">💰 Your Account</h3>
+            <p><b>Current Balance:</b> <span id="bank-display-balance">0</span>g</p>
+            <p><b>Interest Rate:</b> 5% monthly</p>
+            <p><b>Last Interest:</b> <span id="last-interest-date">Never</span></p>
+            <button onclick="collectBankInterest()" style="padding:10px 20px; background:#ffd33d; color:#000; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">🏦 Collect Monthly Interest</button>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#3fb950; margin:0 0 15px 0;">💸 Deposit Gold</h3>
+            <p style="color:#8b949e; font-size:14px;">Move gold from your inventory to the secure bank vault</p>
+            <input type="number" id="deposit-amount" placeholder="Amount to deposit" min="1" style="padding:10px; margin:10px 5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:200px;">
+            <button onclick="depositToBank(parseInt(document.getElementById('deposit-amount').value))" style="padding:10px 20px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Deposit</button>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#58a6ff; margin:0 0 15px 0;">💰 Withdraw Gold</h3>
+            <p style="color:#8b949e; font-size:14px;">Move gold from bank back to your inventory</p>
+            <input type="number" id="withdraw-amount" placeholder="Amount to withdraw" min="1" style="padding:10px; margin:10px 5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:200px;">
+            <button onclick="withdrawFromBank(parseInt(document.getElementById('withdraw-amount').value))" style="padding:10px 20px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Withdraw</button>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0; border-left:3px solid #a371f7;">
+            <h3 style="color:#a371f7; margin:0 0 15px 0;">📊 Economic Status</h3>
+            <p><b>Your Reputation:</b> <span id="bank-reputation">50</span>/100</p>
+            <p><b>Price Multiplier:</b> <span id="bank-price-multiplier">1.00</span>x</p>
+            <p><b>Net Worth:</b> <span id="bank-net-worth">10</span>g</p>
+            <p style="font-size:12px; color:#8b949e; margin-top:10px;">💡 Higher reputation = better prices at shops!</p>
+          </div>
+          
+          <div style="background:#0d1117; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#f85149; margin:0 0 15px 0;">📈 Market Insights</h3>
+            <p style="font-size:14px; color:#8b949e;">Global economic indicators</p>
+            <p><b>Market Activity:</b> <span id="market-activity">0</span> transactions today</p>
+            <p><b>Price Index:</b> <span id="price-index">1.00</span></p>
+            <p><b>Market Sentiment:</b> <span id="market-sentiment">Neutral</span></p>
+            <p><b>Monthly Interest:</b> 5% on bank deposits</p>
+            <div id="economic-events" style="margin-top:15px;">
+              <p><b>Recent Events:</b></p>
+              <div id="events-list" style="font-size:12px; color:#8b949e; max-height:100px; overflow-y:auto;"></div>
+            </div>
+          </div>
+          
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:20px 0;">
+            <h3 style="color:#58a6ff; margin:0 0 15px 0;">📊 Market Trends</h3>
+            <div id="market-trends" style="font-size:14px;">
+              <!-- Dynamic market trend display -->
+            </div>
+          </div>
         </div>
         <div class="content-box" id="newspaper-section" style="display:none;">
           <h2>📰 The Daily Wizard</h2>
@@ -1263,10 +1353,293 @@ e="viewport" content="width=device-width, initial-scale=1">
       houses: [],
       npcPurchasesToday: 0,
       lastPurchaseDate: new Date().toDateString(),
+      // Economy enhancements
+      totalEarnings: 0,
+      totalSpent: 0,
+      netWorth: 10, // Starting gold + silver value
+      marketTransactions: 0,
+      lastMarketActivity: null,
+      priceMultiplier: 1.0, // Dynamic pricing based on economy
+      reputation: 50, // Affects prices and opportunities
+      bankBalance: 0, // Separate from inventory gold
+      bankInterestRate: 0.05, // 5% monthly interest
+      lastBankInterest: null, // Will track monthly
+      // Gym system expansion
+      gymLevel: 1,
+      gymXP: 0,
+      gymXPToNext: 100,
+      availableGyms: ['beginner-gym'], // Unlocked gyms
+      secretGymsUnlocked: [], // Secret gyms found
+      workoutHistory: [], // Track recent workouts
     };
     
     // Global marketplace listings
     let marketListings = [];
+    
+    // Economy system
+    let globalEconomy = {
+      goldCirculation: 10000,
+      marketActivity: 0,
+      priceIndex: 1.0,
+      lastEconomyUpdate: new Date().toDateString(),
+      inflationRate: 0.02,
+      // Torn City-style economy simulation
+      marketTrends: {
+        weapons: 1.0,
+        armor: 1.0,
+        houses: 1.0,
+        potions: 1.0,
+        herbs: 1.0
+      },
+      volatility: 0.05, // 5% base volatility
+      lastPriceUpdate: new Date().toDateString(),
+      economicEvents: [],
+      marketSentiment: 0.5, // 0-1 scale (pessimistic to optimistic)
+      supplyDemand: {
+        weapons: { supply: 100, demand: 100 },
+        armor: { supply: 100, demand: 100 },
+        houses: { supply: 50, demand: 50 },
+        potions: { supply: 200, demand: 200 },
+        herbs: { supply: 300, demand: 300 }
+      }
+    };
+    
+    // Comprehensive Gym System
+    let gymData = {
+      // Regular Gyms (20 total, unlocked by gym level)
+      'beginner-gym': {
+        name: 'Beginner\'s Gym',
+        cost: 5,
+        energyCost: 5,
+        unlockLevel: 1,
+        description: 'Basic training facility for newcomers',
+        stats: { strength: 2, endurance: 1, intelligence: 0, charisma: 0, dexterity: 1 },
+        xpGain: 3
+      },
+      'strength-sanctuary': {
+        name: 'Strength Sanctuary',
+        cost: 8,
+        energyCost: 6,
+        unlockLevel: 2,
+        description: 'Temple dedicated to raw power',
+        stats: { strength: 4, endurance: 1, intelligence: 0, charisma: 0, dexterity: 0 },
+        xpGain: 4
+      },
+      'endurance-forge': {
+        name: 'Endurance Forge',
+        cost: 10,
+        energyCost: 7,
+        unlockLevel: 3,
+        description: 'Forge your body into an unbreakable weapon',
+        stats: { strength: 1, endurance: 4, intelligence: 0, charisma: 0, dexterity: 1 },
+        xpGain: 5
+      },
+      'mind-palace': {
+        name: 'Mind Palace',
+        cost: 12,
+        energyCost: 8,
+        unlockLevel: 4,
+        description: 'Train your intellect and magical knowledge',
+        stats: { strength: 0, endurance: 0, intelligence: 4, charisma: 1, dexterity: 0 },
+        xpGain: 5
+      },
+      'social-club': {
+        name: 'Social Club',
+        cost: 15,
+        energyCost: 9,
+        unlockLevel: 5,
+        description: 'Network and build your charisma',
+        stats: { strength: 0, endurance: 0, intelligence: 1, charisma: 4, dexterity: 0 },
+        xpGain: 6
+      },
+      'agility-academy': {
+        name: 'Agility Academy',
+        cost: 18,
+        energyCost: 10,
+        unlockLevel: 6,
+        description: 'Master precision and dexterity',
+        stats: { strength: 1, endurance: 0, intelligence: 0, charisma: 0, dexterity: 4 },
+        xpGain: 6
+      },
+      'warriors-hall': {
+        name: 'Warrior\'s Hall',
+        cost: 22,
+        energyCost: 12,
+        unlockLevel: 7,
+        description: 'Ancient training ground for battle-hardened fighters',
+        stats: { strength: 3, endurance: 3, intelligence: 0, charisma: 1, dexterity: 1 },
+        xpGain: 7
+      },
+      'arcane-academy': {
+        name: 'Arcane Academy',
+        cost: 25,
+        energyCost: 13,
+        unlockLevel: 8,
+        description: 'Study the deepest mysteries of magic',
+        stats: { strength: 0, endurance: 0, intelligence: 5, charisma: 2, dexterity: 0 },
+        xpGain: 8
+      },
+      'noble-court': {
+        name: 'Noble Court',
+        cost: 30,
+        energyCost: 15,
+        unlockLevel: 9,
+        description: 'Learn the arts of diplomacy and leadership',
+        stats: { strength: 1, endurance: 1, intelligence: 2, charisma: 5, dexterity: 1 },
+        xpGain: 8
+      },
+      'shadow-gym': {
+        name: 'Shadow Gym',
+        cost: 35,
+        energyCost: 16,
+        unlockLevel: 10,
+        description: 'Train in the darkness, perfecting stealth and precision',
+        stats: { strength: 2, endurance: 1, intelligence: 1, charisma: 0, dexterity: 5 },
+        xpGain: 9
+      },
+      'titanium-temple': {
+        name: 'Titanium Temple',
+        cost: 40,
+        energyCost: 18,
+        unlockLevel: 11,
+        description: 'Unbreakable body, unbreakable will',
+        stats: { strength: 5, endurance: 4, intelligence: 0, charisma: 0, dexterity: 0 },
+        xpGain: 10
+      },
+      'eternal-flame': {
+        name: 'Eternal Flame',
+        cost: 45,
+        energyCost: 20,
+        unlockLevel: 12,
+        description: 'Burn away weakness, forge legendary endurance',
+        stats: { strength: 3, endurance: 6, intelligence: 0, charisma: 0, dexterity: 1 },
+        xpGain: 11
+      },
+      'cosmic-library': {
+        name: 'Cosmic Library',
+        cost: 50,
+        energyCost: 22,
+        unlockLevel: 13,
+        description: 'Unlock the secrets of the universe',
+        stats: { strength: 0, endurance: 1, intelligence: 7, charisma: 1, dexterity: 0 },
+        xpGain: 12
+      },
+      'royal-palace': {
+        name: 'Royal Palace',
+        cost: 60,
+        energyCost: 25,
+        unlockLevel: 14,
+        description: 'Command respect and admiration from all',
+        stats: { strength: 1, endurance: 1, intelligence: 1, charisma: 7, dexterity: 1 },
+        xpGain: 13
+      },
+      'phantom-realm': {
+        name: 'Phantom Realm',
+        cost: 70,
+        energyCost: 28,
+        unlockLevel: 15,
+        description: 'Move like a ghost, strike like lightning',
+        stats: { strength: 2, endurance: 0, intelligence: 2, charisma: 0, dexterity: 7 },
+        xpGain: 14
+      },
+      'colossus-arena': {
+        name: 'Colossus Arena',
+        cost: 80,
+        energyCost: 30,
+        unlockLevel: 16,
+        description: 'Battleground for titans',
+        stats: { strength: 6, endurance: 5, intelligence: 0, charisma: 2, dexterity: 2 },
+        xpGain: 15
+      },
+      'infinity-mind': {
+        name: 'Infinity Mind',
+        cost: 90,
+        energyCost: 32,
+        unlockLevel: 17,
+        description: 'Transcend mortal limits of knowledge',
+        stats: { strength: 0, endurance: 2, intelligence: 9, charisma: 2, dexterity: 0 },
+        xpGain: 16
+      },
+      'starlight-court': {
+        name: 'Starlight Court',
+        cost: 100,
+        energyCost: 35,
+        unlockLevel: 18,
+        description: 'Radiate power and influence',
+        stats: { strength: 2, endurance: 2, intelligence: 2, charisma: 8, dexterity: 2 },
+        xpGain: 17
+      },
+      'void-walker': {
+        name: 'Void Walker',
+        cost: 120,
+        energyCost: 38,
+        unlockLevel: 19,
+        description: 'Master the space between spaces',
+        stats: { strength: 3, endurance: 1, intelligence: 3, charisma: 1, dexterity: 9 },
+        xpGain: 18
+      },
+      'apex-sanctum': {
+        name: 'Apex Sanctum',
+        cost: 150,
+        energyCost: 40,
+        unlockLevel: 20,
+        description: 'The ultimate test of body, mind, and spirit',
+        stats: { strength: 4, endurance: 4, intelligence: 4, charisma: 4, dexterity: 4 },
+        xpGain: 20
+      },
+      
+      // Secret Gyms (5 total, unlocked by stat requirements)
+      'dragon-heart': {
+        name: 'Dragon Heart Temple',
+        cost: 200,
+        energyCost: 50,
+        secret: true,
+        requirements: { strength: 50, endurance: 50 },
+        description: 'Hidden temple where dragons once trained',
+        stats: { strength: 8, endurance: 8, intelligence: 0, charisma: 0, dexterity: 2 },
+        xpGain: 25
+      },
+      'mystic-oracle': {
+        name: 'Mystic Oracle Chamber',
+        cost: 200,
+        energyCost: 50,
+        secret: true,
+        requirements: { intelligence: 50, charisma: 50 },
+        description: 'Ancient chamber of prophetic visions',
+        stats: { strength: 0, endurance: 1, intelligence: 10, charisma: 8, dexterity: 0 },
+        xpGain: 25
+      },
+      'phantom-shadow': {
+        name: 'Phantom Shadow Dojo',
+        cost: 200,
+        energyCost: 50,
+        secret: true,
+        requirements: { dexterity: 50, intelligence: 30 },
+        description: 'Dojo hidden in the shadows between worlds',
+        stats: { strength: 2, endurance: 0, intelligence: 4, charisma: 0, dexterity: 12 },
+        xpGain: 25
+      },
+      'harmony-sanctuary': {
+        name: 'Harmony Sanctuary',
+        cost: 200,
+        energyCost: 50,
+        secret: true,
+        requirements: { strength: 25, endurance: 25, intelligence: 25, charisma: 25, dexterity: 25 },
+        description: 'Sacred place where all elements align',
+        stats: { strength: 5, endurance: 5, intelligence: 5, charisma: 5, dexterity: 5 },
+        xpGain: 25
+      },
+      'chaos-dimension': {
+        name: 'Chaos Dimension Gym',
+        cost: 300,
+        energyCost: 75,
+        secret: true,
+        requirements: { strength: 75, endurance: 75, intelligence: 75, charisma: 75, dexterity: 75 },
+        description: 'Reality-bending gym in the chaos realm',
+        stats: { strength: 12, endurance: 12, intelligence: 12, charisma: 12, dexterity: 12 },
+        xpGain: 50
+      }
+    };
     function updateStats() {
       document.getElementById("username").textContent = player.username;
       document.getElementById("level").textContent = player.level;
@@ -1289,6 +1662,21 @@ e="viewport" content="width=device-width, initial-scale=1">
       document.getElementById("inv-weapons").textContent = player.weapons.length > 0 ? player.weapons.join(", ") : "None";
       document.getElementById("inv-armor").textContent = player.armor.length > 0 ? player.armor.join(", ") : "None";
       document.getElementById("inv-houses").textContent = player.houses.length > 0 ? player.houses.join(", ") : "None";
+      
+      // Update economy displays
+      if (document.getElementById("net-worth")) {
+        updateNetWorth();
+        document.getElementById("net-worth").textContent = player.netWorth;
+        document.getElementById("bank-balance").textContent = player.bankBalance;
+        document.getElementById("reputation").textContent = player.reputation;
+        document.getElementById("price-multiplier").textContent = player.priceMultiplier.toFixed(2);
+      }
+      
+      // Update gym displays
+      if (document.getElementById("gym-level")) {
+        document.getElementById("gym-level").textContent = player.gymLevel;
+      }
+      
       if(document.getElementById("strength")) document.getElementById("strength").textContent = player.strength;
       if(document.getElementById("gym-multiplier")) {
         let mult = 1 + (player.happiness / 100);
@@ -1304,7 +1692,7 @@ e="viewport" content="width=device-width, initial-scale=1">
     }
     function showSection(section, btn) {
       [
-        "home","town","guild","market","weapontrader","armortrader","housetrader","bar","crimes","jobs","arena","gym","inventory","newspaper","forum"
+        "home","town","guild","market","weapontrader","armortrader","housetrader","bar","crimes","jobs","arena","gym","inventory","bank","newspaper","forum"
       ].forEach(id=>{
         document.getElementById(id + "-section").style.display = "none";
       });
@@ -1321,6 +1709,55 @@ e="viewport" content="width=device-width, initial-scale=1">
       // Update job display in jobs section
       if (section === 'jobs') {
         updateJobDisplay();
+      }
+      
+      // Update bank display in bank section
+      if (section === 'bank') {
+        updateNetWorth();
+        updateGlobalEconomy();
+        if (document.getElementById('bank-display-balance')) {
+          document.getElementById('bank-display-balance').textContent = player.bankBalance;
+          document.getElementById('bank-reputation').textContent = player.reputation;
+          document.getElementById('bank-price-multiplier').textContent = player.priceMultiplier.toFixed(2);
+          document.getElementById('bank-net-worth').textContent = player.netWorth;
+          document.getElementById('market-activity').textContent = globalEconomy.marketActivity;
+          document.getElementById('price-index').textContent = globalEconomy.priceIndex.toFixed(2);
+          document.getElementById('market-sentiment').textContent = globalEconomy.marketSentiment > 0.6 ? 'Bullish' : globalEconomy.marketSentiment < 0.4 ? 'Bearish' : 'Neutral';
+          document.getElementById('last-interest-date').textContent = player.lastBankInterest === new Date().getFullYear() + '-' + new Date().getMonth() ? 'This Month' : player.lastBankInterest ? player.lastBankInterest.replace('-', '/') : 'Never';
+          
+          // Update economic events
+          let eventsList = document.getElementById('events-list');
+          if (eventsList) {
+            eventsList.innerHTML = '';
+            if (globalEconomy.economicEvents.length === 0) {
+              eventsList.innerHTML = '<p style="color:#666;">No recent events</p>';
+            } else {
+              globalEconomy.economicEvents.slice(-5).forEach(event => {
+                let eventDiv = document.createElement('div');
+                eventDiv.innerHTML = `<b>${event.name}:</b> ${event.description}`;
+                eventsList.appendChild(eventDiv);
+              });
+            }
+          }
+          
+          // Update market trends
+          let trendsDiv = document.getElementById('market-trends');
+          if (trendsDiv) {
+            let trendsHtml = '';
+            Object.entries(globalEconomy.marketTrends).forEach(([category, trend]) => {
+              let trendPercent = ((trend - 1) * 100).toFixed(1);
+              let color = trend > 1.5 ? '#3fb950' : trend < 0.7 ? '#f85149' : '#58a6ff';
+              let arrow = trend > 1.5 ? '📈' : trend < 0.7 ? '📉' : '➡️';
+              trendsHtml += `<p style="color:${color}; margin:3px 0;">${arrow} ${category.charAt(0).toUpperCase() + category.slice(1)}: ${trendPercent}%</p>`;
+            });
+            trendsDiv.innerHTML = trendsHtml;
+          }
+        }
+      }
+      
+      // Update gym display in gym section
+      if (section === 'gym') {
+        updateGymDisplay();
       }
     }
     
@@ -1364,16 +1801,22 @@ e="viewport" content="width=device-width, initial-scale=1">
       return player.npcPurchasesToday < 100;
     }
     
-    function buyWeapon(name, goldCost, silverCost, damage) {
+    function buyWeapon(name, basePrice, damage) {
       if (!checkDailyLimit()) {
-        alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
+        alert("❌ Daily NPC purchase limit reached! (100 items per day)");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
+      
+      let actualPrice = getMarketPrice(name, basePrice);
+      
+      if (spendMoney(actualPrice, 0)) {
         player.npcPurchasesToday++;
         player.weapons.push(name);
-        player.happiness = Math.min(100, player.happiness + 5);
-        alert(`✅ Purchased ${name}! (+${damage} damage, +5 happiness)`);
+        
+        // Update supply/demand for weapons
+        globalEconomy.supplyDemand.weapons.supply += 1;
+        
+        alert(`✅ Purchased ${name}! Damage: +${damage}g\nMarket Price: ${actualPrice}g`);
         
         // Broadcast to server if online
         if (isOnline && socket) {
@@ -1387,7 +1830,7 @@ e="viewport" content="width=device-width, initial-scale=1">
         updateStats();
         saveToLocalStorage();
       } else {
-        alert("❌ Not enough money!");
+        alert("❌ Not enough gold!");
       }
     }
     function buyArmor(name, goldCost, silverCost, defense) {
@@ -1395,11 +1838,18 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
+      
+      let actualPrice = getMarketPrice(name, goldCost);
+      
+      if (spendMoney(actualPrice, 0)) {
         player.npcPurchasesToday++;
         player.armor.push(name);
         player.happiness = Math.min(100, player.happiness + 5);
-        alert(`✅ Purchased ${name}! (+${defense} defense, +5 happiness)`);
+        
+        // Update supply/demand for armor
+        globalEconomy.supplyDemand.armor.supply += 1;
+        
+        alert(`✅ Purchased ${name}! Defense: +${defense}, +5 happiness\nMarket Price: ${actualPrice}g`);
         
         // Broadcast to server if online
         if (isOnline && socket) {
@@ -1413,7 +1863,7 @@ e="viewport" content="width=device-width, initial-scale=1">
         updateStats();
         saveToLocalStorage();
       } else {
-        alert("❌ Not enough money!");
+        alert("❌ Not enough gold!");
       }
     }
     function buyHouse(name, goldCost, silverCost, happinessBonus) {
@@ -1421,11 +1871,18 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
+      
+      let actualPrice = getMarketPrice(name, goldCost);
+      
+      if (spendMoney(actualPrice, 0)) {
         player.npcPurchasesToday++;
         player.houses.push(name);
         player.happiness = Math.min(100, player.happiness + happinessBonus);
-        alert(`✅ Purchased ${name}! +${happinessBonus} happiness!`);
+        
+        // Update supply/demand for houses
+        globalEconomy.supplyDemand.houses.supply += 1;
+        
+        alert(`✅ Purchased ${name}! +${happinessBonus} happiness\nMarket Price: ${actualPrice}g`);
         
         // Broadcast to server if online
         if (isOnline && socket) {
@@ -1447,6 +1904,8 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("❌ Daily NPC purchase limit reached! (100 items per day)");
         return;
       }
+      
+      // For drinks, use static pricing since they don't fluctuate much
       if (spendMoney(goldCost, silverCost)) {
         player.npcPurchasesToday++;
         player.crime = Math.min(100, player.crime + crimeIncrease);
@@ -1818,6 +2277,21 @@ e="viewport" content="width=device-width, initial-scale=1">
         document.getElementById('your-rank-display').textContent = player.guildRank;
         document.getElementById('your-contribution').textContent = player.guildPoints;
         
+        // Hide/show guild recruitment sections based on membership
+        let inGuild = player.guild !== 'None';
+        
+        // Hide Browse Guilds table when in a guild
+        let browseGuildsSection = document.querySelector('#guild-section h3:nth-of-type(3)');
+        let guildTable = document.querySelector('#guild-section .inv-table');
+        if (browseGuildsSection) browseGuildsSection.style.display = inGuild ? 'none' : 'block';
+        if (guildTable) guildTable.style.display = inGuild ? 'none' : 'table';
+        
+        // Hide Create Guild section when in a guild
+        let createGuildHeading = document.querySelector('#guild-section h3:nth-of-type(2)');
+        let createGuildDiv = document.querySelector('#guild-section > div:nth-of-type(2)');
+        if (createGuildHeading) createGuildHeading.style.display = inGuild ? 'none' : 'block';
+        if (createGuildDiv) createGuildDiv.style.display = inGuild ? 'none' : 'block';
+        
         // Update bank displays
         if (document.getElementById('bank-gold')) {
           document.getElementById('bank-gold').textContent = player.guildBankGold;
@@ -1885,6 +2359,563 @@ e="viewport" content="width=device-width, initial-scale=1">
       if (selectedTab) {
         selectedTab.style.display = 'block';
       }
+    }
+    
+    // ECONOMY FUNCTIONS
+    function updateNetWorth() {
+      let silverValue = Math.floor(player.silver / 10); // 10 silver = 1 gold
+      let houseValue = player.houses.length * 50; // Each house worth 50g
+      let weaponValue = player.weapons.length * 20; // Each weapon worth 20g
+      let armorValue = player.armor.length * 25; // Each armor worth 25g
+      let itemValue = (player.potions * 5) + (player.herbs * 2); // Potion=5g, Herb=2g
+      
+      player.netWorth = player.gold + silverValue + player.bankBalance + houseValue + weaponValue + armorValue + itemValue;
+    }
+    
+    function calculateDynamicPrice(basePrice) {
+      // Price affected by reputation and global economy
+      let reputationDiscount = (100 - player.reputation) / 200; // Better rep = lower prices
+      let economyMultiplier = globalEconomy.priceIndex;
+      let finalPrice = Math.floor(basePrice * player.priceMultiplier * economyMultiplier * (1 - reputationDiscount));
+      return Math.max(1, finalPrice); // Minimum price of 1
+    }
+    
+    function updateReputation(change, reason) {
+      player.reputation = Math.max(0, Math.min(100, player.reputation + change));
+      
+      // Update price multiplier based on reputation
+      if (player.reputation >= 80) {
+        player.priceMultiplier = 0.85; // 15% discount for excellent reputation
+      } else if (player.reputation >= 60) {
+        player.priceMultiplier = 0.95; // 5% discount for good reputation
+      } else if (player.reputation >= 40) {
+        player.priceMultiplier = 1.0; // Normal prices
+      } else if (player.reputation >= 20) {
+        player.priceMultiplier = 1.1; // 10% markup for poor reputation
+      } else {
+        player.priceMultiplier = 1.25; // 25% markup for terrible reputation
+      }
+      
+      if (reason) {
+        let changeText = change > 0 ? `+${change}` : `${change}`;
+        alert(`⭐ Reputation ${changeText}: ${reason}\nCurrent reputation: ${player.reputation}\nPrice multiplier: ${player.priceMultiplier.toFixed(2)}x`);
+      }
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function depositToBank(amount) {
+      if (amount <= 0) {
+        alert('Please enter a valid amount!');
+        return;
+      }
+      
+      if (player.gold < amount) {
+        alert('Not enough gold to deposit!');
+        return;
+      }
+      
+      player.gold -= amount;
+      player.bankBalance += amount;
+      player.totalEarnings += amount;
+      
+      alert(`💰 Deposited ${amount}g to bank!\nBank balance: ${player.bankBalance}g`);
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function withdrawFromBank(amount) {
+      if (amount <= 0) {
+        alert('Please enter a valid amount!');
+        return;
+      }
+      
+      if (player.bankBalance < amount) {
+        alert('Not enough gold in bank!');
+        return;
+      }
+      
+      player.bankBalance -= amount;
+      player.gold += amount;
+      
+      alert(`💸 Withdrew ${amount}g from bank!\nBank balance: ${player.bankBalance}g`);
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function collectBankInterest() {
+      let today = new Date();
+      let currentMonth = today.getFullYear() + '-' + today.getMonth();
+      
+      if (player.lastBankInterest === currentMonth) {
+        alert('You already collected this month\'s interest! Come back next month.');
+        return;
+      }
+      
+      if (player.bankBalance <= 0) {
+        alert('No bank balance to earn interest on!');
+        return;
+      }
+      
+      let interest = Math.floor(player.bankBalance * player.bankInterestRate);
+      player.bankBalance += interest;
+      player.lastBankInterest = currentMonth;
+      player.totalEarnings += interest;
+      
+      alert(`🏦 Monthly Interest Collected!\nEarned ${interest}g (5% of balance)\nNew balance: ${player.bankBalance}g`);
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function updateGlobalEconomy() {
+      let today = new Date().toDateString();
+      
+      if (globalEconomy.lastEconomyUpdate === today) {
+        return; // Already updated today
+      }
+      
+      // Simulate economic changes
+      let marketActivity = player.marketTransactions + Math.floor(Math.random() * 100);
+      let inflationChange = (Math.random() - 0.5) * 0.02; // Random -1% to +1%
+      
+      globalEconomy.priceIndex = Math.max(0.5, Math.min(2.0, globalEconomy.priceIndex + inflationChange));
+      globalEconomy.marketActivity = marketActivity;
+      globalEconomy.goldCirculation += player.totalEarnings;
+      globalEconomy.lastEconomyUpdate = today;
+      
+      // Torn City-style market simulation
+      updateMarketTrends();
+      generateEconomicEvents();
+      updateSupplyDemand();
+      
+      console.log(`Economy updated: Price index ${globalEconomy.priceIndex.toFixed(3)}, Market activity ${marketActivity}`);
+    }
+    
+    function updateMarketTrends() {
+      // Simulate market trends for each category
+      Object.keys(globalEconomy.marketTrends).forEach(category => {
+        let baseVolatility = globalEconomy.volatility;
+        let sentimentFactor = (globalEconomy.marketSentiment - 0.5) * 0.2; // -10% to +10%
+        let randomChange = (Math.random() - 0.5) * baseVolatility;
+        
+        let newTrend = globalEconomy.marketTrends[category] + randomChange + sentimentFactor;
+        globalEconomy.marketTrends[category] = Math.max(0.3, Math.min(3.0, newTrend)); // 30% to 300% range
+      });
+      
+      // Update market sentiment randomly
+      let sentimentChange = (Math.random() - 0.5) * 0.1; // -5% to +5% change
+      globalEconomy.marketSentiment = Math.max(0, Math.min(1, globalEconomy.marketSentiment + sentimentChange));
+    }
+    
+    function generateEconomicEvents() {
+      // Random economic events (like Torn City)
+      let events = [
+        { name: "Dragon Attack", impact: 1.5, category: "weapons", description: "Dragons attacking towns! Weapon demand surges." },
+        { name: "Peace Treaty", impact: 0.7, category: "weapons", description: "Peace negotiations reduce weapon demand." },
+        { name: "Plague Outbreak", impact: 1.8, category: "potions", description: "Healers overwhelmed! Potion prices skyrocket." },
+        { name: "Bountiful Harvest", impact: 0.6, category: "herbs", description: "Record herb harvest floods the market." },
+        { name: "Royal Wedding", impact: 1.3, category: "houses", description: "Noble weddings drive luxury housing demand." },
+        { name: "Economic Boom", impact: 1.2, category: "all", description: "General prosperity increases all prices." },
+        { name: "Market Crash", impact: 0.8, category: "all", description: "Economic downturn affects all markets." }
+      ];
+      
+      // 10% chance of economic event each day
+      if (Math.random() < 0.1) {
+        let event = events[Math.floor(Math.random() * events.length)];
+        globalEconomy.economicEvents.push({
+          name: event.name,
+          impact: event.impact,
+          category: event.category,
+          description: event.description,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Apply event impact
+        if (event.category === 'all') {
+          Object.keys(globalEconomy.marketTrends).forEach(cat => {
+            globalEconomy.marketTrends[cat] *= event.impact;
+            globalEconomy.marketTrends[cat] = Math.max(0.3, Math.min(3.0, globalEconomy.marketTrends[cat]));
+          });
+        } else {
+          globalEconomy.marketTrends[event.category] *= event.impact;
+          globalEconomy.marketTrends[event.category] = Math.max(0.3, Math.min(3.0, globalEconomy.marketTrends[event.category]));
+        }
+        
+        // Update market sentiment based on event
+        if (event.impact > 1.0) {
+          globalEconomy.marketSentiment = Math.min(1, globalEconomy.marketSentiment + 0.1);
+        } else {
+          globalEconomy.marketSentiment = Math.max(0, globalEconomy.marketSentiment - 0.1);
+        }
+        
+        console.log(`Economic Event: ${event.name} - ${event.description}`);
+      }
+      
+      // Keep only last 10 events
+      if (globalEconomy.economicEvents.length > 10) {
+        globalEconomy.economicEvents = globalEconomy.economicEvents.slice(-10);
+      }
+    }
+    
+    function updateSupplyDemand() {
+      // Simulate natural supply/demand fluctuations
+      Object.keys(globalEconomy.supplyDemand).forEach(category => {
+        let sd = globalEconomy.supplyDemand[category];
+        
+        // Random fluctuations
+        let supplyChange = Math.floor((Math.random() - 0.5) * 20);
+        let demandChange = Math.floor((Math.random() - 0.5) * 20);
+        
+        sd.supply = Math.max(10, sd.supply + supplyChange);
+        sd.demand = Math.max(10, sd.demand + demandChange);
+        
+        // Update market trend based on supply/demand ratio
+        let ratio = sd.demand / sd.supply;
+        let targetTrend = Math.max(0.5, Math.min(2.0, ratio));
+        
+        // Gradually move towards target
+        let difference = targetTrend - globalEconomy.marketTrends[category];
+        globalEconomy.marketTrends[category] += difference * 0.1; // 10% adjustment
+        globalEconomy.marketTrends[category] = Math.max(0.3, Math.min(3.0, globalEconomy.marketTrends[category]));
+      });
+    }
+    
+    function getMarketPrice(itemType, basePrice) {
+      let category = getItemCategory(itemType);
+      let trend = globalEconomy.marketTrends[category] || 1.0;
+      let volatility = globalEconomy.volatility * (Math.random() - 0.5) * 2; // -volatility to +volatility
+      
+      let marketPrice = basePrice * trend * (1 + volatility);
+      return Math.max(1, Math.floor(marketPrice));
+    }
+    
+    function getItemCategory(itemType) {
+      if (itemType.includes('Sword') || itemType.includes('Wand') || itemType.includes('Staff') || itemType.includes('Axe') || itemType.includes('Hammer')) {
+        return 'weapons';
+      } else if (itemType.includes('Armor') || itemType.includes('Shield') || itemType.includes('Helmet') || itemType.includes('Boots')) {
+        return 'armor';
+      } else if (itemType.includes('Villa') || itemType.includes('Manor') || itemType.includes('Castle') || itemType.includes('Estate') || itemType.includes('Fortress') || itemType.includes('Palace')) {
+        return 'houses';
+      } else if (itemType.includes('Potion')) {
+        return 'potions';
+      } else if (itemType.includes('Herb')) {
+        return 'herbs';
+      }
+      return 'weapons'; // default
+    }
+    
+    function getMarketAnalysis() {
+      let analysis = {
+        sentiment: globalEconomy.marketSentiment > 0.6 ? 'Bullish' : globalEconomy.marketSentiment < 0.4 ? 'Bearish' : 'Neutral',
+        trending: [],
+        warnings: []
+      };
+      
+      // Find trending categories
+      Object.entries(globalEconomy.marketTrends).forEach(([category, trend]) => {
+        if (trend > 1.5) analysis.trending.push(category.toUpperCase());
+        if (trend < 0.7) analysis.warnings.push(category.toUpperCase());
+      });
+      
+      return analysis;
+    }
+    function updateTraderPrices() {
+      // Update weapon prices
+      const weapons = [
+        { name: 'Wooden Sword', base: 1 },
+        { name: 'Iron Wand', base: 5 },
+        { name: 'Short Sword', base: 2 },
+        { name: 'Steel Sword', base: 5 },
+        { name: 'Battle Axe', base: 7 },
+        { name: 'Magic Staff', base: 10 },
+        { name: 'Flame Sword', base: 12 },
+        { name: 'Crystal Wand', base: 15 },
+        { name: 'Legendary Blade', base: 20 },
+        { name: 'Thunder Hammer', base: 30 },
+        { name: 'Shadow Blade', base: 45 },
+        { name: 'Dragonbone Sword', base: 65 },
+        { name: 'Excalibur', base: 100 },
+        { name: 'Soul Reaper', base: 150 },
+        { name: 'Cosmic Staff', base: 250 },
+        { name: 'Infinity Blade', base: 500 }
+      ];
+      
+      weapons.forEach(weapon => {
+        let priceElement = document.querySelector(`button[onclick*="buyWeapon('${weapon.name}'"]`);
+        if (priceElement) {
+          let currentPrice = getMarketPrice(weapon.name, weapon.base);
+          // Update the button text to show current price
+          priceElement.textContent = `Buy (${currentPrice}g)`;
+        }
+      });
+      
+      // Update armor prices
+      const armors = [
+        { name: 'Leather Armor', base: 5 },
+        { name: 'Chain Mail', base: 10 },
+        { name: 'Iron Armor', base: 15 },
+        { name: 'Steel Plate', base: 25 },
+        { name: 'Magic Robes', base: 30 },
+        { name: 'Dragon Scale', base: 50 },
+        { name: 'Shadow Armor', base: 75 },
+        { name: 'Celestial Plate', base: 100 }
+      ];
+      
+      armors.forEach(armor => {
+        let priceElement = document.querySelector(`button[onclick*="buyArmor('${armor.name}'"]`);
+        if (priceElement) {
+          let currentPrice = getMarketPrice(armor.name, armor.base);
+          priceElement.textContent = `Buy (${currentPrice}g)`;
+        }
+      });
+      
+      // Update house prices
+      const houses = [
+        { name: 'Cottage', base: 10 },
+        { name: 'Villa', base: 70 },
+        { name: 'Manor', base: 100 },
+        { name: 'Estate', base: 150 },
+        { name: 'Castle', base: 200 },
+        { name: 'Fortress', base: 300 },
+        { name: 'Palace', base: 500 },
+        { name: 'Sky Tower', base: 800 },
+        { name: 'Floating Island', base: 1500 }
+      ];
+      
+      houses.forEach(house => {
+        let priceElement = document.querySelector(`button[onclick*="buyHouse('${house.name}'"]`);
+        if (priceElement) {
+          let currentPrice = getMarketPrice(house.name, house.base);
+          priceElement.textContent = `Buy (${currentPrice}g)`;
+        }
+      });
+    }
+    
+    // COMPREHENSIVE GYM SYSTEM FUNCTIONS
+    function updateGymDisplay() {
+      if (document.getElementById('display-gym-level')) {
+        document.getElementById('display-gym-level').textContent = player.gymLevel;
+        document.getElementById('display-gym-xp').textContent = player.gymXP;
+        document.getElementById('display-gym-xp-next').textContent = player.gymXPToNext;
+        document.getElementById('display-gyms-unlocked').textContent = player.availableGyms.length;
+        document.getElementById('display-secret-gyms').textContent = player.secretGymsUnlocked.length;
+        
+        // Update XP bar
+        let xpPercent = (player.gymXP / player.gymXPToNext) * 100;
+        document.getElementById('gym-xp-bar').style.width = xpPercent + '%';
+        
+        // Populate regular gyms
+        let regularGymsList = document.getElementById('regular-gyms-list');
+        if (regularGymsList) {
+          regularGymsList.innerHTML = '';
+          
+          // Get all regular gyms
+          let regularGyms = Object.keys(gymData).filter(gym => !gymData[gym].secret);
+          
+          regularGyms.forEach(gymKey => {
+            let gym = gymData[gymKey];
+            let isUnlocked = player.availableGyms.includes(gymKey);
+            let canUnlock = player.gymLevel >= gym.unlockLevel;
+            
+            let gymDiv = document.createElement('div');
+            gymDiv.style.cssText = `background:#0d1117; padding:15px; margin:10px 0; border-radius:6px; border-left:3px solid ${isUnlocked ? '#3fb950' : canUnlock ? '#ffd33d' : '#f85149'};`;
+            
+            let statsText = Object.entries(gym.stats).filter(([stat, value]) => value > 0).map(([stat, value]) => `+${value} ${stat.charAt(0).toUpperCase() + stat.slice(1)}`).join(', ');
+            
+            gymDiv.innerHTML = `
+              <h4 style="color:${isUnlocked ? '#3fb950' : canUnlock ? '#ffd33d' : '#f85149'}; margin:0 0 8px 0;">
+                ${isUnlocked ? '✅' : canUnlock ? '🔓' : '🔒'} ${gym.name}
+              </h4>
+              <p style="color:#8b949e; font-size:12px; margin:5px 0;">${gym.description}</p>
+              <p style="color:#58a6ff; font-size:13px; margin:5px 0;"><b>Stats:</b> ${statsText}</p>
+              <p style="color:#ffd33d; font-size:12px; margin:5px 0;"><b>Cost:</b> ${gym.cost}g, ${gym.energyCost} energy</p>
+              <p style="color:#a371f7; font-size:12px; margin:5px 0;"><b>XP Gain:</b> +${gym.xpGain}</p>
+              ${isUnlocked ? 
+                `<button onclick="workoutAtGym('${gymKey}')" style="padding:8px 15px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:8px;">Train Here</button>` :
+                canUnlock ? 
+                  `<p style="color:#ffd33d; font-size:13px;">Reach gym level ${gym.unlockLevel} to unlock!</p>` :
+                  `<p style="color:#f85149; font-size:13px;">Locked - Need gym level ${gym.unlockLevel}</p>`
+              }
+            `;
+            
+            regularGymsList.appendChild(gymDiv);
+          });
+        }
+        
+        // Populate secret gyms
+        let secretGymsList = document.getElementById('secret-gyms-list');
+        if (secretGymsList) {
+          secretGymsList.innerHTML = '';
+          
+          let secretGyms = Object.keys(gymData).filter(gym => gymData[gym].secret);
+          
+          secretGyms.forEach(gymKey => {
+            let gym = gymData[gymKey];
+            let isUnlocked = player.secretGymsUnlocked.includes(gymKey);
+            let canUnlock = checkSecretGymRequirements(gymKey);
+            
+            let gymDiv = document.createElement('div');
+            gymDiv.style.cssText = `background:#0d1117; padding:15px; margin:10px 0; border-radius:6px; border-left:3px solid ${isUnlocked ? '#a371f7' : canUnlock ? '#ffd33d' : '#666'};`;
+            
+            let requirementsText = Object.entries(gym.requirements).map(([stat, value]) => `${value} ${stat.charAt(0).toUpperCase() + stat.slice(1)}`).join(', ');
+            let statsText = Object.entries(gym.stats).filter(([stat, value]) => value > 0).map(([stat, value]) => `+${value} ${stat.charAt(0).toUpperCase() + stat.slice(1)}`).join(', ');
+            
+            gymDiv.innerHTML = `
+              <h4 style="color:${isUnlocked ? '#a371f7' : canUnlock ? '#ffd33d' : '#666'}; margin:0 0 8px 0;">
+                ${isUnlocked ? '🔮' : canUnlock ? '✨' : '❓'} ${gym.name}
+              </h4>
+              <p style="color:#8b949e; font-size:12px; margin:5px 0;">${gym.description}</p>
+              ${isUnlocked ? 
+                `<p style="color:#58a6ff; font-size:13px; margin:5px 0;"><b>Stats:</b> ${statsText}</p>
+                 <p style="color:#ffd33d; font-size:12px; margin:5px 0;"><b>Cost:</b> ${gym.cost}g, ${gym.energyCost} energy</p>
+                 <button onclick="workoutAtGym('${gymKey}')" style="padding:8px 15px; background:#a371f7; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:8px;">Train Here</button>` :
+                canUnlock ?
+                  `<p style="color:#ffd33d; font-size:13px;">Requirements met! Click to unlock.</p>
+                   <button onclick="unlockSecretGym('${gymKey}')" style="padding:8px 15px; background:#ffd33d; color:#000; border:none; border-radius:4px; cursor:pointer; margin-top:8px; font-weight:bold;">Unlock Secret Gym</button>` :
+                  `<p style="color:#666; font-size:13px;"><b>Requirements:</b> ${requirementsText}</p>
+                   <p style="color:#666; font-size:12px;">Train to meet these stat requirements!</p>`
+              }
+            `;
+            
+            secretGymsList.appendChild(gymDiv);
+          });
+        }
+        
+        // Update workout history
+        let historyDiv = document.getElementById('workout-history');
+        if (historyDiv) {
+          historyDiv.innerHTML = '';
+          if (player.workoutHistory.length === 0) {
+            historyDiv.innerHTML = '<p style="color:#666; text-align:center; margin:20px 0;">No workouts yet. Start training!</p>';
+          } else {
+            player.workoutHistory.slice(-10).reverse().forEach(workout => {
+              let workoutDiv = document.createElement('div');
+              workoutDiv.style.cssText = 'background:#161b22; padding:8px; margin:5px 0; border-radius:4px; font-size:12px;';
+              workoutDiv.innerHTML = `<b>${workout.gym}:</b> ${workout.gains} (${workout.timestamp})`;
+              historyDiv.appendChild(workoutDiv);
+            });
+          }
+        }
+      }
+    }
+    
+    function checkGymUnlocks() {
+      // Check for new gym unlocks based on level
+      let newUnlocks = [];
+      Object.keys(gymData).forEach(gymKey => {
+        let gym = gymData[gymKey];
+        if (!gym.secret && player.gymLevel >= gym.unlockLevel && !player.availableGyms.includes(gymKey)) {
+          player.availableGyms.push(gymKey);
+          newUnlocks.push(gym.name);
+        }
+      });
+      
+      if (newUnlocks.length > 0) {
+        alert(`🎉 Gym Level Up!\nNew gyms unlocked: ${newUnlocks.join(', ')}`);
+      }
+    }
+    
+    function checkSecretGymRequirements(gymKey) {
+      let gym = gymData[gymKey];
+      if (!gym.secret) return false;
+      
+      return Object.entries(gym.requirements).every(([stat, required]) => {
+        return player[stat] >= required;
+      });
+    }
+    
+    function unlockSecretGym(gymKey) {
+      if (checkSecretGymRequirements(gymKey) && !player.secretGymsUnlocked.includes(gymKey)) {
+        player.secretGymsUnlocked.push(gymKey);
+        player.availableGyms.push(gymKey);
+        let gym = gymData[gymKey];
+        alert(`🔮 Secret Gym Unlocked!\n${gym.name} is now available for training!`);
+        updateGymDisplay();
+        saveToLocalStorage();
+      }
+    }
+    
+    function workoutAtGym(gymKey) {
+      let gym = gymData[gymKey];
+      
+      // Check if unlocked
+      if (!player.availableGyms.includes(gymKey)) {
+        alert('This gym is not unlocked yet!');
+        return;
+      }
+      
+      // Check energy
+      if (player.energy < gym.energyCost) {
+        alert(`Not enough energy! You need ${gym.energyCost} energy.`);
+        return;
+      }
+      
+      // Check gold
+      if (player.gold < gym.cost) {
+        alert(`Not enough gold! You need ${gym.cost} gold.`);
+        return;
+      }
+      
+      // Deduct costs
+      player.energy -= gym.energyCost;
+      player.gold -= gym.cost;
+      
+      // Apply stat gains with happiness multiplier
+      let happinessMultiplier = 1 + (player.happiness / 100);
+      let actualStats = {};
+      
+      Object.entries(gym.stats).forEach(([stat, baseGain]) => {
+        if (baseGain > 0) {
+          let actualGain = Math.floor(baseGain * happinessMultiplier);
+          player[stat] += actualGain;
+          actualStats[stat] = actualGain;
+        }
+      });
+      
+      // Add XP
+      player.gymXP += gym.xpGain;
+      
+      // Check for gym level up
+      if (player.gymXP >= player.gymXPToNext) {
+        gymLevelUp();
+      }
+      
+      // Record workout
+      let statsText = Object.entries(actualStats).map(([stat, gain]) => `+${gain} ${stat.charAt(0).toUpperCase() + stat.slice(1)}`).join(', ');
+      player.workoutHistory.push({
+        gym: gym.name,
+        gains: statsText,
+        timestamp: new Date().toLocaleTimeString()
+      });
+      
+      // Keep only last 20 workouts
+      if (player.workoutHistory.length > 20) {
+        player.workoutHistory = player.workoutHistory.slice(-20);
+      }
+      
+      // Broadcast if online
+      if (isOnline && socket) {
+        socket.emit('player:update', player);
+      }
+      
+      alert(`💪 Workout Complete!\n\n${gym.name}:\n${statsText}\n\nXP Gained: +${gym.xpGain}\nEnergy Used: ${gym.energyCost}\nGold Spent: ${gym.cost}g`);
+      
+      updateStats();
+      updateGymDisplay();
+      saveToLocalStorage();
+    }
+    
+    function gymLevelUp() {
+      player.gymLevel++;
+      player.gymXP = 0;
+      player.gymXPToNext = Math.floor(player.gymXPToNext * 1.2); // Increase XP requirement
+      
+      alert(`🎉 Gym Level Up!\nYou are now Gym Level ${player.gymLevel}!`);
+      
+      checkGymUnlocks(); // Check for new gym unlocks
+      updateGymDisplay();
     }
     
     function gymWorkout() {
@@ -1955,6 +2986,8 @@ e="viewport" content="width=device-width, initial-scale=1">
     loadFromLocalStorage();
     updateStats();
     updateJobDisplay();
+    updateGuildDisplay();
+    updateGymDisplay();
     checkDailyPayout(); // Check for payout on load
     initSocket();
     
