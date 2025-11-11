@@ -1,1 +1,1 @@
-# high-wizardry
+# high-Wizardry
