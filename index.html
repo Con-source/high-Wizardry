@@ -1,16 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="css/styles.css">
   <meta charset="UTF-8">
   <title>High Wizardry - Online Multiplayer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- External Dependencies -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  
-  <!-- Local CSS -->
-  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Base Styles */
+    body {
+      background-color: #1a1a2e;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Layout */
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background-color: #0f3460;
+      padding: 15px 20px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background-color: #16213e;
+      padding: 20px;
+      color: white;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .stats {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .stats-row {
+      margin: 8px 0;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: 20px;
+      background-color: #0f3460;
+    }
+
+    .content-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Buttons */
+    button, .menu-btn {
+      background-color: #4e9f3d;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: all 0.3s;
+    }
+
+    button:hover, .menu-btn:hover {
+      background-color: #3e7d32;
+    }
+
+    .menu-btn.active {
+      background-color: #2e5e24;
+    }
+
+    /* Chat System */
+    .chat-dock {
+      position: fixed;
+      bottom: 0;
+      right: 20px;
+      width: 300px;
+      background: #16213e;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-header {
+      padding: 10px;
+      background: #0f3460;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #0f3460;
+    }
+
+    .chat-input {
+      width: calc(100% - 80px);
+      padding: 8px;
+      border: 1px solid #4e9f3d;
+      background: #1a1a2e;
+      color: white;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .chat-send {
+      width: 70px;
+      border-radius: 0 4px 4px 0;
+      text-align: center;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .chat-dock {
+        width: 100%;
+        right: 0;
+      }
+    }
+
+    /* Game Sections */
+    .game-section {
+      display: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -34,7 +194,9 @@
         <div class="stats-row"><i class="fa-solid fa-bolt"></i> Energy: <span id="energy">100</span></div>
         <div class="stats-row"><i class="fa-solid fa-droplet"></i> Mana: <span id="mana">5</span></div>
         <div class="stats-row"><i class="fa-solid fa-heart"></i> Health: <span id="health">10</span></div>
-        <div class="stats-row" style="border-top:1px solid #2d333b; margin-top:8px; padding-top:8px;">🧠 Intelligence: <span id="intelligence">10</span></div>
+        <div class="stats-row" style="border-top:1px solid #2d333b; margin-top:8px; padding-top:8px;">
+          🧠 Intelligence: <span id="intelligence">10</span>
+        </div>
         <div class="stats-row">💪 Endurance: <span id="endurance">10</span></div>
         <div class="stats-row">💬 Charisma: <span id="charisma">10</span></div>
         <div class="stats-row">🎯 Dexterity: <span id="dexterity">10</span></div>
@@ -66,7 +228,7 @@
     <main class="main">
       <div class="main-content">
         <!-- Home Section -->
-        <div class="content-box" id="home-section">
+        <div class="content-box game-section" id="home-section">
           <h2>Welcome to High Wizardry</h2>
           <p>Your magical adventure begins here. Train, battle, trade, and rise in power!</p>
           <div class="bar">
@@ -75,37 +237,117 @@
           <div class="stat-label">XP <span id="xp-display">0</span>/100</div>
         </div>
 
-        <!-- Other sections will be loaded dynamically -->
-        <div id="dynamic-content"></div>
+        <!-- Town Center Section -->
+        <div class="content-box game-section" id="town-section">
+          <h2>Town Center</h2>
+          <p>Welcome to the heart of the town. What would you like to do?</p>
+          <button id="explore-btn">Explore the Town</button>
+          <button id="talk-btn">Talk to Villagers</button>
+        </div>
+
+        <!-- Market Section -->
+        <div class="content-box game-section" id="market-section">
+          <h2>Marketplace</h2>
+          <div id="market-items">
+            <!-- Market items will be added here by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Guild Hall Section -->
+        <div class="content-box game-section" id="guild-section">
+          <h2>Guild Hall</h2>
+          <p>Join or create a guild to team up with other players!</p>
+          <button id="create-guild-btn">Create Guild</button>
+          <button id="join-guild-btn">Join Guild</button>
+        </div>
+
+        <!-- Gym Section -->
+        <div class="content-box game-section" id="gym-section">
+          <h2>Wizard's Gym</h2>
+          <p>Train your skills to become more powerful!</p>
+          <button id="train-magic-btn">Train Magic</button>
+          <button id="train-endurance-btn">Train Endurance</button>
+        </div>
+
+        <!-- Inventory Section -->
+        <div class="content-box game-section" id="inventory-section">
+          <h2>Inventory</h2>
+          <div id="inventory-items">
+            <!-- Inventory items will be added here by JavaScript -->
+          </div>
+        </div>
       </div>
     </main>
   </div>
 
   <!-- Chat System -->
   <div class="chat-dock">
-    <div class="chat-group">
-      <button class="chat-toggle" onclick="toggleChat('global-chat')">
-        <i class="fas fa-globe"></i> Global
-      </button>
-      <div class="chat-box" id="global-chat">
-        <div class="chat-header">Global Chat</div>
-        <div class="chat-messages" id="global-chat-messages"></div>
-        <form onsubmit="return sendChat('global-chat')" class="chat-form">
-          <input type="text" id="global-chat-input" class="chat-input" placeholder="Type a message..." required>
-          <button type="submit" class="chat-send">Send</button>
-        </form>
-      </div>
+    <div class="chat-header" onclick="toggleChat()">
+      <i class="fas fa-comments"></i> Global Chat
+      <span class="unread-count" id="unread-count" style="display:none">0</span>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="system-message">Welcome to High Wizardry! Type /help for commands.</div>
+    </div>
+    <div class="chat-input-container">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Type a message...">
+      <button id="send-chat" class="chat-send">Send</button>
     </div>
   </div>
 
-  <!-- Game Scripts -->
-  <script src="js/config.js"></script>
-  <script src="js/player.js"></script>
-  <script src="js/game.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/main.js"></script>
+  <!-- JavaScript -->
+  <script>
+    // Basic navigation
+    document.querySelectorAll('.menu-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Hide all sections
+        document.querySelectorAll('.game-section').forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        // Show selected section
+        const sectionId = this.getAttribute('data-section') + '-section';
+        document.getElementById(sectionId).style.display = 'block';
+      });
+    });
+
+    // Show home section by default
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('home-section').style.display = 'block';
+    });
+
+    // Toggle chat
+    function toggleChat() {
+      const messages = document.querySelector('.chat-messages');
+      messages.style.display = messages.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Simple chat functionality
+    document.getElementById('send-chat').addEventListener('click', function() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      
+      if (message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = 'You: ' + message;
+        chatMessages.appendChild(messageElement);
+        input.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
+
+    // Handle Enter key in chat
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('send-chat').click();
+      }
+    });
+  </script>
 </body>
 </html>
-
-     
