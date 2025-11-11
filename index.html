@@ -1,3 +1,4 @@
+@ -0,0 +1,3197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -188,7 +189,41 @@ e="viewport" content="width=device-width, initial-scale=1">
       </div>
       <div class="menu">
         <button class="menu-btn active" onclick="showSection('home', this)">
-@@ -221,6 +226,9 @@
+          <i class="fa-solid fa-house-chimney"></i> Home
+        </button>
+        <button class="menu-btn" onclick="showSection('town', this)">
+          <i class="fa-solid fa-city"></i> Town Centre
+        </button>
+        <button class="menu-btn" onclick="showSection('guild', this)">
+          <i class="fa-solid fa-users"></i> Guild Hall
+        </button>
+        <button class="menu-btn" onclick="showSection('market', this)">
+          <i class="fa-solid fa-store"></i> Marketplace
+        </button>
+        <button class="menu-btn" onclick="showSection('weapontrader', this)">
+          <i class="fa-solid fa-sword"></i> Weapon Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('armortrader', this)">
+          <i class="fa-solid fa-shield"></i> Armor Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('housetrader', this)">
+          <i class="fa-solid fa-home"></i> House Trader
+        </button>
+        <button class="menu-btn" onclick="showSection('bar', this)">
+          <i class="fa-solid fa-martini-glass"></i> Bar
+        </button>
+        <button class="menu-btn" onclick="showSection('crimes', this)">
+          <i class="fa-solid fa-mask"></i> Crimes
+        </button>
+        <button class="menu-btn" onclick="showSection('jobs', this)">
+          <i class="fa-solid fa-briefcase"></i> Jobs
+        </button>
+        <button class="menu-btn" onclick="showSection('arena', this)">
+          <i class="fa-solid fa-shield-halved"></i> Arena
+        </button>
+        <button class="menu-btn" onclick="showSection('gym', this)">
+          <i class="fa-solid fa-dumbbell"></i> Gym
+        </button>
         <button class="menu-btn" onclick="showSection('inventory', this)">
           <i class="fa-solid fa-box-open"></i> Inventory
         </button>
@@ -198,17 +233,773 @@ e="viewport" content="width=device-width, initial-scale=1">
         <button class="menu-btn" onclick="showSection('newspaper', this)">
           <i class="fa-solid fa-newspaper"></i> Newspaper
         </button>
-@@ -991,13 +999,41 @@
+        <button class="menu-btn" onclick="showSection('forum', this)">
+          <i class="fa-solid fa-comments"></i> Forum
+        </button>
+      </div>
+    </nav>
+    <!-- Main content -->
+    <main class="main">
+      <div class="main-content">
+        <div class="content-box" id="home-section">
+          <h2>Home</h2>
+          <p>
+            Welcome to <b>High Wizardry</b>! Your magical adventure begins here.<br>
+            Use the sidebar to explore every part of the wizarding world.<br>
+            Train, battle, trade, and rise in power!
+          </p>
+          <div class="bar"><div class="bar-inner" style="width:35%"></div></div>
+          <div class="stat-label">XP <span id="xp">0</span>/100</div>
+        </div>
+        <div class="content-box" id="town-section" style="display:none;">
+          <h2>🏙️ Town Centre</h2>
+          <p style="color:#8b949e;">Click on a location to visit</p>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:20px;">
+            <!-- Row 1 -->
+            <div onclick="navigateToLocation('guild')" class="map-location" style="background: linear-gradient(135deg, #a371f7 0%, #7c3aed 100%); grid-column: span 1;">
+              <i class="fa-solid fa-users" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Guild Hall</h3>
+              <p style="font-size:12px; margin:5px 0;">Join guilds & earn points</p>
+            </div>
+            
+            <div onclick="navigateToLocation('arena')" class="map-location" style="background: linear-gradient(135deg, #f85149 0%, #da3633 100%); grid-column: span 1;">
+              <i class="fa-solid fa-shield-halved" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Arena</h3>
+              <p style="font-size:12px; margin:5px 0;">Battle other wizards</p>
+            </div>
+            
+            <div onclick="navigateToLocation('gym')" class="map-location" style="background: linear-gradient(135deg, #f0883e 0%, #d97706 100%); grid-column: span 1;">
+              <i class="fa-solid fa-dumbbell" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Gym</h3>
+              <p style="font-size:12px; margin:5px 0;">Train your strength</p>
+            </div>
+            
+            <!-- Row 2 -->
+            <div onclick="navigateToLocation('market')" class="map-location" style="background: linear-gradient(135deg, #3fb950 0%, #2ea043 100%); grid-column: span 1;">
+              <i class="fa-solid fa-store" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Marketplace</h3>
+              <p style="font-size:12px; margin:5px 0;">Trade with players</p>
+            </div>
+            
+            <div onclick="navigateToLocation('weapontrader')" class="map-location" style="background: linear-gradient(135deg, #58a6ff 0%, #1f6feb 100%); grid-column: span 1;">
+              <i class="fa-solid fa-sword" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Weapon Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy powerful weapons</p>
+            </div>
+            
+            <div onclick="navigateToLocation('armortrader')" class="map-location" style="background: linear-gradient(135deg, #79c0ff 0%, #388bfd 100%); grid-column: span 1;">
+              <i class="fa-solid fa-shield" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Armor Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy protective armor</p>
+            </div>
+            
+            <!-- Row 3 -->
+            <div onclick="navigateToLocation('housetrader')" class="map-location" style="background: linear-gradient(135deg, #ffd33d 0%, #f9c513 100%); color:#000; grid-column: span 1;">
+              <i class="fa-solid fa-home" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">House Trader</h3>
+              <p style="font-size:12px; margin:5px 0;">Buy property</p>
+            </div>
+            
+            <div onclick="navigateToLocation('bar')" class="map-location" style="background: linear-gradient(135deg, #d2a8ff 0%, #bc8cff 100%); grid-column: span 1;">
+              <i class="fa-solid fa-martini-glass" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">The Bar</h3>
+              <p style="font-size:12px; margin:5px 0;">Drinks & crime</p>
+            </div>
+            
+            <div onclick="navigateToLocation('newspaper')" class="map-location" style="background: linear-gradient(135deg, #8b949e 0%, #6e7681 100%); grid-column: span 1;">
+              <i class="fa-solid fa-newspaper" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Newspaper</h3>
+              <p style="font-size:12px; margin:5px 0;">Latest news</p>
+            </div>
+            
+            <!-- Row 4 -->
+            <div onclick="navigateToLocation('crimes')" class="map-location" style="background: linear-gradient(135deg, #f85149 0%, #b91c1c 100%); grid-column: span 1;">
+              <i class="fa-solid fa-mask" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Crimes</h3>
+              <p style="font-size:12px; margin:5px 0;">Dark activities</p>
+            </div>
+            
+            <div onclick="navigateToLocation('jobs')" class="map-location" style="background: linear-gradient(135deg, #3fb950 0%, #16a34a 100%); grid-column: span 1;">
+              <i class="fa-solid fa-briefcase" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Jobs</h3>
+              <p style="font-size:12px; margin:5px 0;">Honest work</p>
+            </div>
+            
+            <div onclick="navigateToLocation('forum')" class="map-location" style="background: linear-gradient(135deg, #a371f7 0%, #8b5cf6 100%); grid-column: span 1;">
+              <i class="fa-solid fa-comments" style="font-size:32px; margin-bottom:10px;"></i>
+              <h3 style="margin:5px 0;">Forums</h3>
+              <p style="font-size:12px; margin:5px 0;">Community hub</p>
+            </div>
+          </div>
+          
+          <div style="margin-top:30px; padding:20px; background:#0d1117; border-radius:6px; border-left:3px solid #58a6ff;">
+            <h3 style="color:#58a6ff; margin:0 0 10px 0;">💡 Quick Travel Tips</h3>
+            <ul style="margin:10px 0; padding-left:20px; line-height:1.8;">
+              <li>Click any location to instantly travel there</li>
+              <li>NPC traders have a 100 item/day purchase limit</li>
+              <li>Player Marketplace has no limits!</li>
+              <li>Visit the Gym when your happiness is high for better gains</li>
+            </ul>
+          </div>
+        </div>
+        <div class="content-box" id="guild-section" style="display:none;">
+          <h2>🏛️ Guild Hall</h2>
+          <p style="color:#8b949e;">Join or create a guild, collaborate with wizards, and dominate the realm!</p>
+          
+          <div style="background:#0d1117; padding:20px; border-radius:6px; margin:20px 0; border-left:3px solid #a371f7;">
+            <h3 style="color:#a371f7; margin:0 0 10px 0;">👥 Your Guild Status</h3>
+            <p><b>Current Guild:</b> <span id="guild-name" style="color:#3fb950;">None</span></p>
+            <p><b>Guild Points:</b> <span id="guild-points" style="color:#ffd33d;">0</span></p>
+            <p><b>Guild Rank:</b> <span id="guild-rank" style="color:#58a6ff;">N/A</span></p>
+          </div>
+          
+          <h3 style="color:#3fb950; font-size:16px; margin-top:25px;">🆕 Create Your Own Guild</h3>
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0;">
+            <p style="color:#8b949e;">Start your own magical organization! Cost: 100g</p>
+            <input type="text" id="guild-name-input" placeholder="Enter guild name" maxlength="30" style="padding:10px; margin:10px 5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:250px;">
+            <select id="guild-type-select" style="padding:10px; margin:10px 5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px;">
+              <option value="">Select Guild Type</option>
+              <option value="combat">⚔️ Combat Guild</option>
+              <option value="trading">💰 Trading Guild</option>
+              <option value="magic">🔮 Magic Research</option>
+              <option value="crime">🎭 Criminal Syndicate</option>
+              <option value="social">🎉 Social Club</option>
+            </select>
+            <button onclick="createGuild()" style="padding:10px 25px; margin:10px 5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Create Guild (100g)</button>
+          </div>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:25px;">🔍 Browse Guilds</h3>
+          <table class="inv-table" style="margin-top:15px;">
+            <tr><th>Guild Name</th><th>Type</th><th>Members</th><th>Level</th><th>Action</th></tr>
+            <tbody id="guild-list">
+              <tr><td>Shadow Wizards</td><td>🎭 Crime</td><td>24</td><td>15</td>
+                <td><button onclick="joinGuild('Shadow Wizards','crime')">Join</button></td></tr>
+              <tr><td>Arcane Scholars</td><td>🔮 Magic</td><td>18</td><td>12</td>
+                <td><button onclick="joinGuild('Arcane Scholars','magic')">Join</button></td></tr>
+              <tr><td>Gold Merchants</td><td>💰 Trading</td><td>31</td><td>20</td>
+                <td><button onclick="joinGuild('Gold Merchants','trading')">Join</button></td></tr>
+              <tr><td>Battle Mages</td><td>⚔️ Combat</td><td>42</td><td>25</td>
+                <td><button onclick="joinGuild('Battle Mages','combat')">Join</button></td></tr>
+              <tr><td>The Laughing Wyrm</td><td>🎉 Social</td><td>56</td><td>8</td>
+                <td><button onclick="joinGuild('The Laughing Wyrm','social')">Join</button></td></tr>
+            </tbody>
+          </table>
+          
+          <!-- GUILD MANAGEMENT PANEL -->
+          <div id="guild-management" style="display:none; margin-top:30px;">
+            
+            <!-- Quick Actions -->
+            <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #ffd33d;">
+              <h3 style="color:#ffd33d; margin:0 0 15px 0;">⚡ Quick Actions</h3>
+              <button onclick="showGuildTab('overview')" style="padding:10px 20px; margin:5px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">📊 Overview</button>
+              <button onclick="showGuildTab('bank')" style="padding:10px 20px; margin:5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">🏦 Guild Bank</button>
+              <button onclick="showGuildTab('upgrades')" style="padding:10px 20px; margin:5px; background:#a371f7; color:#fff; border:none; border-radius:4px; cursor:pointer;">⬆️ Upgrades</button>
+              <button onclick="showGuildTab('battles')" style="padding:10px 20px; margin:5px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">⚔️ Battles</button>
+              <button onclick="showGuildTab('members')" style="padding:10px 20px; margin:5px; background:#d2a8ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">👥 Members</button>
+              <button onclick="leaveGuild()" style="padding:10px 20px; margin:5px; background:#8b949e; color:#fff; border:none; border-radius:4px; cursor:pointer;">🚪 Leave Guild</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="guild-tab-overview" class="guild-tab" style="background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#58a6ff; margin:0 0 15px 0;">📊 Guild Overview</h3>
+              <p><b>Guild Name:</b> <span id="current-guild-name">Your Guild</span></p>
+              <p><b>Guild Type:</b> <span id="current-guild-type">⚔️ Combat</span></p>
+              <p><b>Your Role:</b> <span id="guild-role">Member</span></p>
+              <p><b>Guild Level:</b> <span id="current-guild-level">1</span></p>
+              <p><b>Total Power:</b> <span id="guild-power">0</span></p>
+              <p><b>Next Battle:</b> <span id="next-guild-battle">Ready</span></p>
+              
+              <h4 style="color:#ffd33d; margin:20px 0 10px 0;">📈 Rank Progression System</h4>
+              <p style="font-size:14px; color:#8b949e;">Contribute to climb the ranks!</p>
+              <ul style="font-size:14px; line-height:1.8;">
+                <li><b style="color:#8b949e;">Recruit</b> - 0 GP (Starting rank)</li>
+                <li><b style="color:#58a6ff;">Member</b> - 100 GP (+5% guild XP bonus)</li>
+                <li><b style="color:#3fb950;">Veteran</b> - 500 GP (+10% guild XP, can use bank)</li>
+                <li><b style="color:#ffd33d;">Elite</b> - 1,500 GP (+15% guild XP, can upgrade guild)</li>
+                <li><b style="color:#f85149;">Officer</b> - 3,000 GP (+20% guild XP, view permissions)</li>
+                <li><b style="color:#d2a8ff;">Co-Leader</b> - 5,000 GP (+25% guild XP, full permissions)</li>
+                <li><b style="color:#a371f7;">Guild Master</b> - Founder only (all permissions)</li>
+              </ul>
+            </div>
+            
+            <!-- Bank Tab -->
+            <div id="guild-tab-bank" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#3fb950; margin:0 0 15px 0;">🏦 Guild Bank</h3>
+              <p style="color:#8b949e;">Store items and gold for your guild members to borrow!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#ffd33d; margin:0 0 10px 0;">💰 Deposit to Treasury</h4>
+                <input type="number" id="deposit-gold-amount" placeholder="Amount (gold)" min="1" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:120px;">
+                <button onclick="depositToBank('gold')" style="padding:8px 15px; margin:5px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Deposit Gold</button>
+                <p style="font-size:12px; color:#8b949e; margin-top:5px;">Earn 1 GP per gold deposited</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#58a6ff; margin:0 0 10px 0;">📦 Donate Items</h4>
+                <select id="donate-item-select" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px;">
+                  <option value="">Select item</option>
+                  <option value="potion">Potion</option>
+                  <option value="herb">Herb</option>
+                </select>
+                <input type="number" id="donate-item-amount" placeholder="Quantity" min="1" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:100px;">
+                <button onclick="donateItemToBank()" style="padding:8px 15px; margin:5px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Donate</button>
+                <p style="font-size:12px; color:#8b949e; margin-top:5px;">Earn 5 GP per item donated</p>
+              </div>
+              
+              <h4 style="color:#d2a8ff; margin:20px 0 10px 0;">🎁 Available Resources</h4>
+              <table class="inv-table">
+                <tr><th>Resource</th><th>Amount</th><th>Action</th></tr>
+                <tbody id="guild-bank-items">
+                  <tr><td>Gold</td><td><span id="bank-gold">0</span>g</td>
+                    <td><button onclick="borrowFromBank('gold')">Borrow 10g</button></td></tr>
+                  <tr><td>Potions</td><td><span id="bank-potions">0</span></td>
+                    <td><button onclick="borrowFromBank('potion')">Borrow 1</button></td></tr>
+                  <tr><td>Herbs</td><td><span id="bank-herbs">0</span></td>
+                    <td><button onclick="borrowFromBank('herb')">Borrow 1</button></td></tr>
+                </tbody>
+              </table>
+              <p style="color:#f85149; font-size:12px; margin-top:10px;">⚠️ Requires Veteran rank or higher to borrow</p>
+            </div>
+            
+            <!-- Upgrades Tab -->
+            <div id="guild-tab-upgrades" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#a371f7; margin:0 0 15px 0;">⬆️ Guild Upgrades</h3>
+              <p style="color:#8b949e;">Upgrade your guild to unlock powerful bonuses!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #58a6ff;">
+                <h4 style="color:#58a6ff; margin:0 0 10px 0;">🏛️ Guild Hall Level <span id="guild-hall-level">1</span></h4>
+                <p style="font-size:14px;">Increases max members: <span id="max-members">10</span></p>
+                <p style="font-size:14px;">Cost: <span id="hall-upgrade-cost">500</span>g from treasury</p>
+                <button onclick="upgradeGuild('hall')" style="padding:8px 15px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Hall</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #3fb950;">
+                <h4 style="color:#3fb950; margin:0 0 10px 0;">💰 Treasury Size <span id="treasury-level">1</span></h4>
+                <p style="font-size:14px;">Max storage: <span id="max-treasury">1,000</span>g</p>
+                <p style="font-size:14px;">Cost: <span id="treasury-upgrade-cost">300</span>g from treasury</p>
+                <button onclick="upgradeGuild('treasury')" style="padding:8px 15px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Treasury</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+                <h4 style="color:#f85149; margin:0 0 10px 0;">⚔️ Battle Power <span id="battle-power-level">1</span></h4>
+                <p style="font-size:14px;">Guild battle bonus: <span id="battle-bonus">+5</span>%</p>
+                <p style="font-size:14px;">Cost: <span id="power-upgrade-cost">400</span>g from treasury</p>
+                <button onclick="upgradeGuild('power')" style="padding:8px 15px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Upgrade Power</button>
+                <p style="color:#f85149; font-size:12px; margin-top:5px;">Requires Elite rank</p>
+              </div>
+            </div>
+            
+            <!-- Battles Tab -->
+            <div id="guild-tab-battles" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#f85149; margin:0 0 15px 0;">⚔️ Guild Battles</h3>
+              <p style="color:#8b949e;">Challenge other guilds for glory and rewards!</p>
+              
+              <div style="background:#161b22; padding:15px; border-radius:6px; margin:15px 0;">
+                <h4 style="color:#ffd33d; margin:0 0 10px 0;">🏆 Your Guild's Power</h4>
+                <p><b>Total Power:</b> <span id="battle-guild-power">0</span></p>
+                <p style="font-size:12px; color:#8b949e;">Power = (Guild Level × 100) + (Members × 50) + Upgrades</p>
+              </div>
+              
+              <h4 style="color:#58a6ff; margin:20px 0 10px 0;">🎯 Challenge Guilds</h4>
+              <table class="inv-table">
+                <tr><th>Guild Name</th><th>Power</th><th>Reward</th><th>Action</th></tr>
+                <tr><td>Novice Raiders</td><td>250</td><td>50g, 100 GP</td>
+                  <td><button onclick="challengeGuild('Novice Raiders',250,50,100)">Challenge</button></td></tr>
+                <tr><td>Iron Brotherhood</td><td>500</td><td>100g, 200 GP</td>
+                  <td><button onclick="challengeGuild('Iron Brotherhood',500,100,200)">Challenge</button></td></tr>
+                <tr><td>Mystic Order</td><td>1000</td><td>200g, 400 GP</td>
+                  <td><button onclick="challengeGuild('Mystic Order',1000,200,400)">Challenge</button></td></tr>
+                <tr><td>Dragon Legion</td><td>2000</td><td>400g, 800 GP</td>
+                  <td><button onclick="challengeGuild('Dragon Legion',2000,400,800)">Challenge</button></td></tr>
+                <tr><td>Immortal Empire</td><td>5000</td><td>1000g, 2000 GP</td>
+                  <td><button onclick="challengeGuild('Immortal Empire',5000,1000,2000)">Challenge</button></td></tr>
+              </table>
+              <p style="color:#f85149; font-size:12px; margin-top:10px;">⚠️ Battles can only be fought once per day. Win = full reward, Loss = 50% reward</p>
+            </div>
+            
+            <!-- Members Tab with Guild Master Controls -->
+            <div id="guild-tab-members" class="guild-tab" style="display:none; background:#0d1117; padding:20px; border-radius:6px; margin:15px 0;">
+              <h3 style="color:#d2a8ff; margin:0 0 15px 0;">👥 Guild Members</h3>
+              
+              <!-- Guild Master Controls -->
+              <div id="guild-master-controls" style="display:none; background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #a371f7;">
+                <h4 style="color:#a371f7; margin:0 0 10px 0;">👑 Guild Master Controls</h4>
+                <p style="font-size:14px; color:#8b949e;">Manage member ranks and permissions</p>
+                
+                <div style="margin-top:15px;">
+                  <h5 style="color:#ffd33d; margin:10px 0;">⚙️ Global Permissions</h5>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-all-deposit" checked onchange="toggleGuildPermission('deposit')"> 
+                    Allow all members to deposit to treasury
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-all-donate" checked onchange="toggleGuildPermission('donate')"> 
+                    Allow all members to donate items
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-veteran-borrow" checked onchange="toggleGuildPermission('borrow')"> 
+                    Allow Veteran+ to borrow from bank
+                  </label>
+                  <label style="display:block; margin:8px 0; font-size:14px;">
+                    <input type="checkbox" id="perm-elite-upgrade" checked onchange="toggleGuildPermission('upgrade')"> 
+                    Allow Elite+ to upgrade guild
+                  </label>
+                </div>
+                
+                <div style="margin-top:20px;">
+                  <h5 style="color:#58a6ff; margin:10px 0;">🎖️ Promote/Demote Members</h5>
+                  <p style="font-size:13px; color:#8b949e;">Select a member and assign their rank manually</p>
+                  <select id="member-select" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:180px;">
+                    <option value="">Select member</option>
+                    <option value="MysticMage">MysticMage</option>
+                    <option value="ShadowKnight">ShadowKnight</option>
+                    <option value="CrystalWizard">CrystalWizard</option>
+                    <option value="DarkSorcerer">DarkSorcerer</option>
+                  </select>
+                  <select id="rank-assign" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:150px;">
+                    <option value="">Assign rank</option>
+                    <option value="Recruit">Recruit</option>
+                    <option value="Member">Member</option>
+                    <option value="Veteran">Veteran</option>
+                    <option value="Elite">Elite</option>
+                    <option value="Officer">Officer</option>
+                    <option value="Co-Leader">Co-Leader</option>
+                  </select>
+                  <button onclick="assignMemberRank()" style="padding:8px 15px; margin:5px; background:#a371f7; color:#fff; border:none; border-radius:4px; cursor:pointer;">Assign Rank</button>
+                </div>
+                
+                <div style="margin-top:20px;">
+                  <h5 style="color:#f85149; margin:10px 0;">🚫 Member Management</h5>
+                  <select id="member-kick" style="padding:8px; margin:5px; background:#0d1117; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:180px;">
+                    <option value="">Select member</option>
+                    <option value="MysticMage">MysticMage</option>
+                    <option value="ShadowKnight">ShadowKnight</option>
+                    <option value="CrystalWizard">CrystalWizard</option>
+                    <option value="DarkSorcerer">DarkSorcerer</option>
+                  </select>
+                  <button onclick="kickMember()" style="padding:8px 15px; margin:5px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Kick Member</button>
+                  <p style="font-size:12px; color:#f85149; margin-top:5px;">⚠️ This will remove the member from the guild permanently</p>
+                </div>
+              </div>
+              
+              <!-- Officer/Co-Leader Controls -->
+              <div id="officer-controls" style="display:none; background:#161b22; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+                <h4 style="color:#f85149; margin:0 0 10px 0;">⚔️ Officer Controls</h4>
+                <p style="font-size:14px; color:#8b949e;">View guild permissions</p>
+                
+                <div style="margin-top:15px;">
+                  <h5 style="color:#58a6ff; margin:10px 0;">📊 Current Guild Permissions</h5>
+                  <p style="font-size:13px;">Deposits: <span id="officer-view-deposit" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Donations: <span id="officer-view-donate" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Borrowing: <span id="officer-view-borrow" style="color:#3fb950;">Enabled</span></p>
+                  <p style="font-size:13px;">Upgrades: <span id="officer-view-upgrade" style="color:#3fb950;">Enabled</span></p>
+                </div>
+              </div>
+              
+              <h4 style="color:#ffd33d; margin:20px 0 10px 0;">📋 Member List</h4>
+              <table class="inv-table">
+                <tr><th>Username</th><th>Rank</th><th>Contribution</th><th>Power</th><th>Status</th></tr>
+                <tbody id="guild-members-list">
+                  <tr><td>You</td><td><span id="your-rank-display">Recruit</span></td><td><span id="your-contribution">0</span> GP</td><td>100</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>MysticMage</td><td>Veteran</td><td>650 GP</td><td>250</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>ShadowKnight</td><td>Elite</td><td>1,800 GP</td><td>420</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>CrystalWizard</td><td>Member</td><td>340 GP</td><td>180</td><td style="color:#3fb950;">Active</td></tr>
+                  <tr><td>DarkSorcerer</td><td>Officer</td><td>3,200 GP</td><td>580</td><td style="color:#3fb950;">Active</td></tr>
+                </tbody>
+              </table>
+              
+              <p style="font-size:12px; color:#8b949e; margin-top:15px;">💡 Guild Master and Co-Leaders can manage all aspects of the guild</p>
+            </div>
+            
+          </div>
+        </div>
+        <div class="content-box" id="market-section" style="display:none;">
+          <h2>🏪 Player Marketplace</h2>
+          <p>Buy and sell items with other players! No daily limits. 10% listing fee applies.</p>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:20px;">📦 Sell Your Items</h3>
+          <div style="background:#0d1117; padding:15px; border-radius:6px; margin:10px 0;">
+            <p>List your items for sale (10% fee deducted on listing):</p>
+            <select id="sell-item-select" style="padding:8px; margin:5px; background:#161b22; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px;">
+              <option value="">Select item to sell</option>
+              <option value="potion">Potion</option>
+              <option value="herb">Herb</option>
+            </select>
+            <input type="number" id="sell-price" placeholder="Price (gold)" min="1" style="padding:8px; margin:5px; background:#161b22; color:#c9d1d9; border:1px solid #2d333b; border-radius:4px; width:120px;">
+            <button onclick="listItemForSale()" class="btn">List Item</button>
+          </div>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:20px;">🛒 Player Listings</h3>
+          <table class="inv-table">
+            <tr><th>Seller</th><th>Item</th><th>Price</th><th>Action</th></tr>
+            <tbody id="market-listings">
+              <tr><td colspan="4" style="text-align:center; color:#8b949e;">No items listed yet. Be the first!</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="content-box" id="weapontrader-section" style="display:none;">
+          <h2>⚔️ Weapon Trader</h2>
+          <p>Buy powerful weapons to increase your combat power!</p>
+          
+          <h3 style="color:#8b949e; font-size:14px; margin-top:20px;">🪵 Basic Weapons</h3>
+          <table class="inv-table">
+            <tr><th>Weapon</th><th>Damage</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Wooden Staff</td><td>+5</td><td>50s</td>
+              <td><button onclick="buyWeapon('Wooden Staff',0,50,5)">Buy</button></td></tr>
+            <tr><td>Bronze Dagger</td><td>+8</td><td>1g 0s</td>
+              <td><button onclick="buyWeapon('Bronze Dagger',1,0,8)">Buy</button></td></tr>
+            <tr><td>Iron Wand</td><td>+10</td><td>1g 20s</td>
+              <td><button onclick="buyWeapon('Iron Wand',1,20,10)">Buy</button></td></tr>
+            <tr><td>Short Sword</td><td>+12</td><td>2g 0s</td>
+              <td><button onclick="buyWeapon('Short Sword',2,0,12)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#58a6ff; font-size:14px; margin-top:20px;">⚔️ Advanced Weapons</h3>
+          <table class="inv-table">
+            <tr><th>Weapon</th><th>Damage</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Steel Sword</td><td>+25</td><td>5g 0s</td>
+              <td><button onclick="buyWeapon('Steel Sword',5,0,25)">Buy</button></td></tr>
+            <tr><td>Battle Axe</td><td>+30</td><td>7g 50s</td>
+              <td><button onclick="buyWeapon('Battle Axe',7,50,30)">Buy</button></td></tr>
+            <tr><td>Magic Staff</td><td>+35</td><td>10g 0s</td>
+              <td><button onclick="buyWeapon('Magic Staff',10,0,35)">Buy</button></td></tr>
+            <tr><td>Flame Sword</td><td>+40</td><td>12g 0s</td>
+              <td><button onclick="buyWeapon('Flame Sword',12,0,40)">Buy</button></td></tr>
+            <tr><td>Crystal Wand</td><td>+45</td><td>15g 0s</td>
+              <td><button onclick="buyWeapon('Crystal Wand',15,0,45)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#3fb950; font-size:14px; margin-top:20px;">🌟 Legendary Weapons</h3>
+          <table class="inv-table">
+            <tr><th>Weapon</th><th>Damage</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Legendary Blade</td><td>+50</td><td>20g 0s</td>
+              <td><button onclick="buyWeapon('Legendary Blade',20,0,50)">Buy</button></td></tr>
+            <tr><td>Thunder Hammer</td><td>+60</td><td>30g 0s</td>
+              <td><button onclick="buyWeapon('Thunder Hammer',30,0,60)">Buy</button></td></tr>
+            <tr><td>Shadow Blade</td><td>+70</td><td>45g 0s</td>
+              <td><button onclick="buyWeapon('Shadow Blade',45,0,70)">Buy</button></td></tr>
+            <tr><td>Dragonbone Sword</td><td>+85</td><td>65g 0s</td>
+              <td><button onclick="buyWeapon('Dragonbone Sword',65,0,85)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#d2a8ff; font-size:14px; margin-top:20px;">💫 Mythical Weapons</h3>
+          <table class="inv-table">
+            <tr><th>Weapon</th><th>Damage</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Excalibur</td><td>+100</td><td>100g 0s</td>
+              <td><button onclick="buyWeapon('Excalibur',100,0,100)">Buy</button></td></tr>
+            <tr><td>Soul Reaper</td><td>+120</td><td>150g 0s</td>
+              <td><button onclick="buyWeapon('Soul Reaper',150,0,120)">Buy</button></td></tr>
+            <tr><td>Cosmic Staff</td><td>+150</td><td>250g 0s</td>
+              <td><button onclick="buyWeapon('Cosmic Staff',250,0,150)">Buy</button></td></tr>
+            <tr><td>Infinity Blade</td><td>+200</td><td>500g 0s</td>
+              <td><button onclick="buyWeapon('Infinity Blade',500,0,200)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="armortrader-section" style="display:none;">
+          <h2>🛡️ Armor Trader</h2>
+          <p>Buy protective armor to defend yourself in battle!</p>
+          
+          <h3 style="color:#8b949e; font-size:14px; margin-top:20px;">👕 Light Armor</h3>
+          <table class="inv-table">
+            <tr><th>Armor</th><th>Defense</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Cloth Robe</td><td>+3</td><td>80s</td>
+              <td><button onclick="buyArmor('Cloth Robe',0,80,3)">Buy</button></td></tr>
+            <tr><td>Leather Vest</td><td>+6</td><td>1g 50s</td>
+              <td><button onclick="buyArmor('Leather Vest',1,50,6)">Buy</button></td></tr>
+            <tr><td>Leather Armor</td><td>+8</td><td>2g 0s</td>
+              <td><button onclick="buyArmor('Leather Armor',2,0,8)">Buy</button></td></tr>
+            <tr><td>Studded Leather</td><td>+12</td><td>3g 50s</td>
+              <td><button onclick="buyArmor('Studded Leather',3,50,12)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#58a6ff; font-size:14px; margin-top:20px;">⚙️ Medium Armor</h3>
+          <table class="inv-table">
+            <tr><th>Armor</th><th>Defense</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Chainmail</td><td>+15</td><td>5g 0s</td>
+              <td><button onclick="buyArmor('Chainmail',5,0,15)">Buy</button></td></tr>
+            <tr><td>Iron Armor</td><td>+20</td><td>7g 50s</td>
+              <td><button onclick="buyArmor('Iron Armor',7,50,20)">Buy</button></td></tr>
+            <tr><td>Bronze Plate</td><td>+25</td><td>10g 0s</td>
+              <td><button onclick="buyArmor('Bronze Plate',10,0,25)">Buy</button></td></tr>
+            <tr><td>Steel Plate</td><td>+30</td><td>15g 0s</td>
+              <td><button onclick="buyArmor('Steel Plate',15,0,30)">Buy</button></td></tr>
+            <tr><td>Knight Armor</td><td>+35</td><td>20g 0s</td>
+              <td><button onclick="buyArmor('Knight Armor',20,0,35)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#3fb950; font-size:14px; margin-top:20px;">🛡️ Heavy Armor</h3>
+          <table class="inv-table">
+            <tr><th>Armor</th><th>Defense</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Dragon Scale</td><td>+40</td><td>25g 0s</td>
+              <td><button onclick="buyArmor('Dragon Scale',25,0,40)">Buy</button></td></tr>
+            <tr><td>Mythril Armor</td><td>+55</td><td>50g 0s</td>
+              <td><button onclick="buyArmor('Mythril Armor',50,0,55)">Buy</button></td></tr>
+            <tr><td>Demon Plate</td><td>+65</td><td>70g 0s</td>
+              <td><button onclick="buyArmor('Demon Plate',70,0,65)">Buy</button></td></tr>
+            <tr><td>Adamantine Armor</td><td>+75</td><td>90g 0s</td>
+              <td><button onclick="buyArmor('Adamantine Armor',90,0,75)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#d2a8ff; font-size:14px; margin-top:20px;">✨ Legendary Armor</h3>
+          <table class="inv-table">
+            <tr><th>Armor</th><th>Defense</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Celestial Armor</td><td>+90</td><td>120g 0s</td>
+              <td><button onclick="buyArmor('Celestial Armor',120,0,90)">Buy</button></td></tr>
+            <tr><td>Phoenix Plate</td><td>+110</td><td>180g 0s</td>
+              <td><button onclick="buyArmor('Phoenix Plate',180,0,110)">Buy</button></td></tr>
+            <tr><td>Void Armor</td><td>+140</td><td>280g 0s</td>
+              <td><button onclick="buyArmor('Void Armor',280,0,140)">Buy</button></td></tr>
+            <tr><td>Divine Aegis</td><td>+180</td><td>450g 0s</td>
+              <td><button onclick="buyArmor('Divine Aegis',450,0,180)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="housetrader-section" style="display:none;">
+          <h2>🏠 House Trader</h2>
+          <p>Buy a home to boost your happiness! The more happy you are, the better your gym gains.</p>
+          
+          <h3 style="color:#8b949e; font-size:14px; margin-top:20px;">⛺ Basic Shelter</h3>
+          <table class="inv-table">
+            <tr><th>House</th><th>Happiness Bonus</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Tent</td><td>+2</td><td>2g 0s</td>
+              <td><button onclick="buyHouse('Tent',2,0,2)">Buy</button></td></tr>
+            <tr><td>Small Shack</td><td>+5</td><td>5g 0s</td>
+              <td><button onclick="buyHouse('Small Shack',5,0,5)">Buy</button></td></tr>
+            <tr><td>Wooden Cabin</td><td>+8</td><td>10g 0s</td>
+              <td><button onclick="buyHouse('Wooden Cabin',10,0,8)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#58a6ff; font-size:14px; margin-top:20px;">🏡 Standard Homes</h3>
+          <table class="inv-table">
+            <tr><th>House</th><th>Happiness Bonus</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Cottage</td><td>+10</td><td>15g 0s</td>
+              <td><button onclick="buyHouse('Cottage',15,0,10)">Buy</button></td></tr>
+            <tr><td>Apartment</td><td>+15</td><td>25g 0s</td>
+              <td><button onclick="buyHouse('Apartment',25,0,15)">Buy</button></td></tr>
+            <tr><td>Town House</td><td>+20</td><td>40g 0s</td>
+              <td><button onclick="buyHouse('Town House',40,0,20)">Buy</button></td></tr>
+            <tr><td>Large House</td><td>+25</td><td>55g 0s</td>
+              <td><button onclick="buyHouse('Large House',55,0,25)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#3fb950; font-size:14px; margin-top:20px;">🏰 Luxury Properties</h3>
+          <table class="inv-table">
+            <tr><th>House</th><th>Happiness Bonus</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Villa</td><td>+28</td><td>70g 0s</td>
+              <td><button onclick="buyHouse('Villa',70,0,28)">Buy</button></td></tr>
+            <tr><td>Manor</td><td>+35</td><td>100g 0s</td>
+              <td><button onclick="buyHouse('Manor',100,0,35)">Buy</button></td></tr>
+            <tr><td>Estate</td><td>+40</td><td>150g 0s</td>
+              <td><button onclick="buyHouse('Estate',150,0,40)">Buy</button></td></tr>
+            <tr><td>Castle</td><td>+45</td><td>200g 0s</td>
+              <td><button onclick="buyHouse('Castle',200,0,45)">Buy</button></td></tr>
+          </table>
+          
+          <h3 style="color:#d2a8ff; font-size:14px; margin-top:20px;">👑 Royal Residences</h3>
+          <table class="inv-table">
+            <tr><th>House</th><th>Happiness Bonus</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Fortress</td><td>+50</td><td>300g 0s</td>
+              <td><button onclick="buyHouse('Fortress',300,0,50)">Buy</button></td></tr>
+            <tr><td>Palace</td><td>+60</td><td>500g 0s</td>
+              <td><button onclick="buyHouse('Palace',500,0,60)">Buy</button></td></tr>
+            <tr><td>Sky Tower</td><td>+75</td><td>800g 0s</td>
+              <td><button onclick="buyHouse('Sky Tower',800,0,75)">Buy</button></td></tr>
+            <tr><td>Floating Island</td><td>+100</td><td>1500g 0s</td>
+              <td><button onclick="buyHouse('Floating Island',1500,0,100)">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="content-box" id="bar-section" style="display:none;">
+          <h2>🍺 The Wizard's Bar</h2>
+          <p>Drink alcohol to increase your crime bar! Higher crime = more dangerous activities unlocked.</p>
+          
+          <h3 style="color:#8b949e; font-size:14px; margin-top:20px;">🍻 Basic Drinks</h3>
+          <table class="inv-table">
+            <tr><th>Drink</th><th>Crime Increase</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Beer</td><td>+5</td><td>50s</td>
+              <td><button onclick="buyAlcohol('Beer',0,50,5)">Buy & Drink</button></td></tr>
+            <tr><td>Ale</td><td>+6</td><td>80s</td>
+              <td><button onclick="buyAlcohol('Ale',0,80,6)">Buy & Drink</button></td></tr>
+            <tr><td>Wine</td><td>+8</td><td>1g 0s</td>
+              <td><button onclick="buyAlcohol('Wine',1,0,8)">Buy & Drink</button></td></tr>
+            <tr><td>Mead</td><td>+10</td><td>1g 50s</td>
+              <td><button onclick="buyAlcohol('Mead',1,50,10)">Buy & Drink</button></td></tr>
+          </table>
+          
+          <h3 style="color:#f0883e; font-size:14px; margin-top:20px;">🥃 Strong Spirits</h3>
+          <table class="inv-table">
+            <tr><th>Drink</th><th>Crime Increase</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Whiskey</td><td>+12</td><td>2g 50s</td>
+              <td><button onclick="buyAlcohol('Whiskey',2,50,12)">Buy & Drink</button></td></tr>
+            <tr><td>Rum</td><td>+15</td><td>3g 0s</td>
+              <td><button onclick="buyAlcohol('Rum',3,0,15)">Buy & Drink</button></td></tr>
+            <tr><td>Vodka</td><td>+18</td><td>4g 0s</td>
+              <td><button onclick="buyAlcohol('Vodka',4,0,18)">Buy & Drink</button></td></tr>
+            <tr><td>Absinthe</td><td>+20</td><td>5g 0s</td>
+              <td><button onclick="buyAlcohol('Absinthe',5,0,20)">Buy & Drink</button></td></tr>
+          </table>
+          
+          <h3 style="color:#d2a8ff; font-size:14px; margin-top:20px;">🔮 Magical Brews</h3>
+          <table class="inv-table">
+            <tr><th>Drink</th><th>Crime Increase</th><th>Price</th><th>Action</th></tr>
+            <tr><td>Firewhiskey</td><td>+25</td><td>7g 0s</td>
+              <td><button onclick="buyAlcohol('Firewhiskey',7,0,25)">Buy & Drink</button></td></tr>
+            <tr><td>Dragon Breath</td><td>+30</td><td>10g 0s</td>
+              <td><button onclick="buyAlcohol('Dragon Breath',10,0,30)">Buy & Drink</button></td></tr>
+            <tr><td>Liquid Chaos</td><td>+40</td><td>15g 0s</td>
+              <td><button onclick="buyAlcohol('Liquid Chaos',15,0,40)">Buy & Drink</button></td></tr>
+            <tr><td>Essence of Madness</td><td>+50</td><td>25g 0s</td>
+              <td><button onclick="buyAlcohol('Essence of Madness',25,0,50)">Buy & Drink</button></td></tr>
+          </table>
+          <p style="color:#f85149; margin-top:15px;">⚠️ Warning: High crime may attract unwanted attention!</p>
+        </div>
+        <div class="content-box" id="crimes-section" style="display:none;">
+          <h2>🎭 Criminal Activities</h2>
+          <p style="color:#8b949e;">Use your crime points to commit magical misdeeds. Higher crime = better rewards!</p>
+          
+          <div style="background:#0d1117; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+            <h3 style="color:#f85149; margin:0 0 10px 0;">⚠️ Your Criminal Status</h3>
+            <p><b>Crime Level:</b> <span id="crime-display-crimes">0</span>/100</p>
+            <p style="font-size:12px; color:#8b949e;">Visit the Bar to increase your crime level!</p>
+          </div>
+          
+          <h3 style="color:#8b949e; font-size:14px; margin-top:20px;">🔰 Petty Crimes</h3>
+          <table class="inv-table">
+            <tr><th>Crime</th><th>Crime Cost</th><th>Reward</th><th>Success Rate</th><th>Action</th></tr>
+            <tr><td>Pickpocket Apprentice</td><td>5</td><td>2-5g</td><td>95%</td>
+              <td><button onclick="commitCrime('Pickpocket Apprentice',5,2,5,95)">Commit</button></td></tr>
+            <tr><td>Steal Spell Components</td><td>10</td><td>5-10g</td><td>90%</td>
+              <td><button onclick="commitCrime('Steal Spell Components',10,5,10,90)">Commit</button></td></tr>
+            <tr><td>Forge Magic Documents</td><td>15</td><td>8-15g</td><td>85%</td>
+              <td><button onclick="commitCrime('Forge Magic Documents',15,8,15,85)">Commit</button></td></tr>
+          </table>
+          
+          <h3 style="color:#f0883e; font-size:14px; margin-top:20px;">⚡ Moderate Crimes</h3>
+          <table class="inv-table">
+            <tr><th>Crime</th><th>Crime Cost</th><th>Reward</th><th>Success Rate</th><th>Action</th></tr>
+            <tr><td>Smuggle Enchanted Items</td><td>20</td><td>15-25g</td><td>80%</td>
+              <td><button onclick="commitCrime('Smuggle Enchanted Items',20,15,25,80)">Commit</button></td></tr>
+            <tr><td>Hex a Rival Wizard</td><td>25</td><td>20-35g</td><td>75%</td>
+              <td><button onclick="commitCrime('Hex a Rival Wizard',25,20,35,75)">Commit</button></td></tr>
+            <tr><td>Steal From Alchemy Shop</td><td>30</td><td>25-45g</td><td>70%</td>
+              <td><button onclick="commitCrime('Steal From Alchemy Shop',30,25,45,70)">Commit</button></td></tr>
+            <tr><td>Curse a Merchant</td><td>35</td><td>30-55g</td><td>65%</td>
+              <td><button onclick="commitCrime('Curse a Merchant',35,30,55,65)">Commit</button></td></tr>
+          </table>
+          
+          <h3 style="color:#f85149; font-size:14px; margin-top:20px;">💀 Serious Crimes</h3>
+          <table class="inv-table">
+            <tr><th>Crime</th><th>Crime Cost</th><th>Reward</th><th>Success Rate</th><th>Action</th></tr>
+            <tr><td>Rob Magic Vault</td><td>40</td><td>40-70g</td><td>60%</td>
+              <td><button onclick="commitCrime('Rob Magic Vault',40,40,70,60)">Commit</button></td></tr>
+            <tr><td>Summon Illegal Demon</td><td>50</td><td>50-90g</td><td>55%</td>
+              <td><button onclick="commitCrime('Summon Illegal Demon',50,50,90,55)">Commit</button></td></tr>
+            <tr><td>Steal Ancient Artifact</td><td>60</td><td>70-120g</td><td>50%</td>
+              <td><button onclick="commitCrime('Steal Ancient Artifact',60,70,120,50)">Commit</button></td></tr>
+            <tr><td>Assassinate Guild Master</td><td>70</td><td>90-150g</td><td>45%</td>
+              <td><button onclick="commitCrime('Assassinate Guild Master',70,90,150,45)">Commit</button></td></tr>
+          </table>
+          
+          <h3 style="color:#d2a8ff; font-size:14px; margin-top:20px;">👑 Legendary Heists</h3>
+          <table class="inv-table">
+            <tr><th>Crime</th><th>Crime Cost</th><th>Reward</th><th>Success Rate</th><th>Action</th></tr>
+            <tr><td>Raid Royal Treasury</td><td>80</td><td>120-200g</td><td>40%</td>
+              <td><button onclick="commitCrime('Raid Royal Treasury',80,120,200,40)">Commit</button></td></tr>
+            <tr><td>Steal Dragon's Hoard</td><td>90</td><td>150-250g</td><td>35%</td>
+              <td><button onclick="commitCrime('Steal Dragon Hoard',90,150,250,35)">Commit</button></td></tr>
+            <tr><td>Overthrow City Council</td><td>100</td><td>200-350g</td><td>30%</td>
+              <td><button onclick="commitCrime('Overthrow City Council',100,200,350,30)">Commit</button></td></tr>
+          </table>
+          
+          <p style="color:#f85149; margin-top:15px;">⚠️ Failed crimes may result in jail time (energy loss) and fines!</p>
+        </div>
+        <div class="content-box" id="jobs-section" style="display:none;">
+          <h2>💼 Employment Traders</h2>
+          <p style="color:#8b949e;">Work for traders daily! Collect wages at 6pm UK time. Earn job points to unlock perks!</p>
+          
+          <div style="background:#0d1117; padding:15px; border-radius:6px; margin:15px 0; border-left:3px solid #3fb950;">
+            <h3 style="color:#3fb950; margin:0 0 10px 0;">💰 Your Employment Status</h3>
+            <p><b>Current Employer:</b> <span id="current-employer" style="color:#58a6ff;">None</span></p>
+            <p><b>Job Points:</b> <span id="job-points" style="color:#ffd33d;">0</span></p>
+            <p><b>Worked Today:</b> <span id="worked-today" style="color:#f85149;">No</span></p>
+            <p><b>Next Payout:</b> <span id="next-payout" style="color:#8b949e;">6:00 PM UK Time</span></p>
+          </div>
+          
+          <h3 style="color:#58a6ff; font-size:16px; margin-top:25px;">🏢 Available Employers</h3>
+          
+          <!-- Arcane Library -->
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #58a6ff;">
+            <h3 style="color:#58a6ff; margin:0 0 10px 0;">📚 Arcane Library</h3>
+            <p style="color:#8b949e;">Work with ancient tomes and magical knowledge</p>
+            <p><b>Requirements:</b> Intelligence 15+</p>
+            <p><b>Daily Wage:</b> 25g | <b>Daily Gains:</b> +3 Int, +1 Charisma | <b>Job Points:</b> +5/day</p>
+            <button onclick="applyForJob('Arcane Library',15,'intelligence',25,3,1,0,0,5)" style="padding:10px 20px; background:#58a6ff; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:10px;">Apply for Position</button>
+            
+            <div id="arcane-perks" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #2d333b;">
+              <h4 style="color:#ffd33d; margin:0 0 10px 0;">🌟 Available Perks</h4>
+              <p style="font-size:13px; margin:5px 0;">• <b>Speed Reader</b> (50 JP): +10% XP from all sources</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Ancient Knowledge</b> (100 JP): +5 Int permanently</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Scholar's Bonus</b> (150 JP): Daily wage increased to 40g</p>
+            </div>
+          </div>
+          
+          <!-- Mercenary Guild -->
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #f85149;">
+            <h3 style="color:#f85149; margin:0 0 10px 0;">⚔️ Mercenary Guild</h3>
+            <p style="color:#8b949e;">Fight for gold as a hired blade</p>
+            <p><b>Requirements:</b> Endurance 20+</p>
+            <p><b>Daily Wage:</b> 35g | <b>Daily Gains:</b> +3 Endurance, +2 Dexterity | <b>Job Points:</b> +7/day</p>
+            <button onclick="applyForJob('Mercenary Guild',20,'endurance',35,0,3,0,2,7)" style="padding:10px 20px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:10px;">Apply for Position</button>
+            
+            <div id="mercenary-perks" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #2d333b;">
+              <h4 style="color:#ffd33d; margin:0 0 10px 0;">🌟 Available Perks</h4>
+              <p style="font-size:13px; margin:5px 0;">• <b>Battle Hardened</b> (50 JP): +5 Endurance permanently</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Combat Pay</b> (100 JP): Daily wage increased to 55g</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Veteran Status</b> (200 JP): +10% max health</p>
+            </div>
+          </div>
+          
+          <!-- Diplomatic Corps -->
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #d2a8ff;">
+            <h3 style="color:#d2a8ff; margin:0 0 10px 0;">👔 Diplomatic Corps</h3>
+            <p style="color:#8b949e;">Negotiate treaties and build alliances</p>
+            <p><b>Requirements:</b> Charisma 25+</p>
+            <p><b>Daily Wage:</b> 45g | <b>Daily Gains:</b> +4 Charisma, +2 Int | <b>Job Points:</b> +8/day</p>
+            <button onclick="applyForJob('Diplomatic Corps',25,'charisma',45,2,0,4,0,8)" style="padding:10px 20px; background:#d2a8ff; color:#000; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">Apply for Position</button>
+            
+            <div id="diplomatic-perks" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #2d333b;">
+              <h4 style="color:#ffd33d; margin:0 0 10px 0;">🌟 Available Perks</h4>
+              <p style="font-size:13px; margin:5px 0;">• <b>Silver Tongue</b> (75 JP): +5 Charisma permanently</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Diplomatic Immunity</b> (150 JP): Reduce crime penalties by 50%</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Ambassador</b> (250 JP): Daily wage increased to 70g</p>
+            </div>
+          </div>
+          
+          <!-- Thieves Den -->
+          <div style="background:#161b22; padding:20px; border-radius:6px; margin:15px 0; border-left:3px solid #3fb950;">
+            <h3 style="color:#3fb950; margin:0 0 10px 0;">🗝️ Thieves Den</h3>
+            <p style="color:#8b949e;">Work in the shadows, perfect your craft</p>
+            <p><b>Requirements:</b> Dexterity 30+</p>
+            <p><b>Daily Wage:</b> 50g | <b>Daily Gains:</b> +4 Dexterity, +2 Charisma | <b>Job Points:</b> +10/day</p>
+            <button onclick="applyForJob('Thieves Den',30,'dexterity',50,0,0,2,4,10)" style="padding:10px 20px; background:#3fb950; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:10px;">Apply for Position</button>
+            
+            <div id="thieves-perks" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #2d333b;">
+              <h4 style="color:#ffd33d; margin:0 0 10px 0;">🌟 Available Perks</h4>
+              <p style="font-size:13px; margin:5px 0;">• <b>Nimble Fingers</b> (100 JP): +5 Dexterity permanently</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Master Thief</b> (200 JP): +20% crime success rates</p>
+              <p style="font-size:13px; margin:5px 0;">• <b>Shadow Wages</b> (300 JP): Daily wage increased to 80g</p>
+            </div>
+          </div>
+          
+          <p style="color:#3fb950; margin-top:15px;">💡 Wages are automatically collected at 6:00 PM UK time each day!</p>
+          <button onclick="quitJob()" style="padding:10px 25px; margin-top:15px; background:#f85149; color:#fff; border:none; border-radius:4px; cursor:pointer;">Quit Current Job</button>
+        </div>
+        <div class="content-box" id="arena-section" style="display:none;">
+          <h2>Arena</h2>
           <p>Challenge other wizards in magical duels for rewards and glory!</p>
         </div>
         <div class="content-box" id="gym-section" style="display:none;">
-          <h2>💪 Gym</h2>
-          <p>Work out to gain strength! The happier you are, the more gains you get per 5 energy.</p>
-          <p><b>Your Strength:</b> <span id="strength">10</span></p>
-          <p><b>Happiness Multiplier:</b> <span id="gym-multiplier">1.5x</span></p>
-          <p><b>Next Workout Gains:</b> <span id="gym-gains">3</span> strength</p>
-          <button onclick="gymWorkout()" style="font-size:18px; padding:15px 30px;">💪 Work Out (5 Energy)</button>
-          <p id="gym-message" style="color:#aaf; margin-top:15px;"></p>
           <h2>🏋️ Gym Network</h2>
           <p style="color:#8b949e;">Train across 25 specialized gyms! Each gym focuses on different stats and unlocks progressively.</p>
           
@@ -247,7 +1038,30 @@ e="viewport" content="width=device-width, initial-scale=1">
         </div>
         <div class="content-box" id="inventory-section" style="display:none;">
           <h2>Inventory</h2>
-@@ -1028,6 +1064,60 @@
+          <table class="inv-table">
+            <tr>
+              <th>Item</th>
+              <th>Amount</th>
+            </tr>
+            <tr>
+              <td>Herbs</td>
+              <td id="inv-herbs">0</td>
+            </tr>
+            <tr>
+              <td>Potions</td>
+              <td id="inv-potions">0</td>
+            </tr>
+            <tr>
+              <td>Weapons</td>
+              <td id="inv-weapons">None</td>
+            </tr>
+            <tr>
+              <td>Armor</td>
+              <td id="inv-armor">None</td>
+            </tr>
+            <tr>
+              <td>Houses</td>
+              <td id="inv-houses">None</td>
             </tr>
           </table>
         </div>
@@ -308,7 +1122,235 @@ e="viewport" content="width=device-width, initial-scale=1">
         <div class="content-box" id="newspaper-section" style="display:none;">
           <h2>📰 The Daily Wizard</h2>
           <p style="color:#8b949e; font-style:italic;">Latest news from around the magical world!</p>
-@@ -1263,10 +1353,293 @@
+          
+          <div style="border-left:3px solid #58a6ff; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#58a6ff; margin:0 0 10px 0;">🔥 BREAKING: Dragon Spotted Near Castle District</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 2 hours ago</p>
+            <p>Local wizards report sightings of a massive dragon circling the Castle district. Authorities advise residents to stay indoors and avoid provoking the creature. Dragon Scale armor sales have tripled in the past hour.</p>
+          </div>
+          
+          <div style="border-left:3px solid #3fb950; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#3fb950; margin:0 0 10px 0;">💰 Market Watch: Potion Prices Surge</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 5 hours ago</p>
+            <p>The player marketplace has seen a 40% increase in potion prices this week. Traders attribute the spike to increased arena activity and gym training.</p>
+          </div>
+          
+          <div style="border-left:3px solid #f0883e; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#f0883e; margin:0 0 10px 0;">🏆 Guild Rankings Updated</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 8 hours ago</p>
+            <p>The monthly guild rankings have been updated. Check the Guild Hall to see if your guild made the top 10! New rewards available for top performers.</p>
+          </div>
+          
+          <div style="border-left:3px solid #8b949e; padding-left:15px; margin:20px 0; background:#0d1117; padding:15px; border-radius:6px;">
+            <h3 style="color:#8b949e; margin:0 0 10px 0;">⚠️ Crime Wave: City Guards on Alert</h3>
+            <p style="font-size:12px; color:#8b949e; margin:5px 0;">Published 1 day ago</p>
+            <p>Reports of increased criminal activity have prompted city guards to increase patrols. Players with high crime ratings are advised to lay low for a while.</p>
+          </div>
+        </div>
+        <div class="content-box" id="forum-section" style="display:none;">
+          <h2>💬 Community Forums</h2>
+          <p>Discuss, trade, and connect with other wizards!</p>
+          
+          <div style="margin:20px 0;">
+            <div onclick="showForumCategory('general')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #58a6ff;">
+              <h3 style="color:#58a6ff; margin:0;">📢 General Discussion</h3>
+              <p style="margin:5px 0; color:#8b949e;">Talk about anything wizard-related</p>
+              <p style="font-size:12px; color:#58a6ff;">1,234 posts • Latest: 2 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('trade')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #3fb950;">
+              <h3 style="color:#3fb950; margin:0;">💰 Trade Forum</h3>
+              <p style="margin:5px 0; color:#8b949e;">Buy, sell, and negotiate trades</p>
+              <p style="font-size:12px; color:#3fb950;">892 posts • Latest: 5 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('help')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #f0883e;">
+              <h3 style="color:#f0883e; margin:0;">❓ Help & Guides</h3>
+              <p style="margin:5px 0; color:#8b949e;">Get help and share tips</p>
+              <p style="font-size:12px; color:#f0883e;">567 posts • Latest: 12 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('guild')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #a371f7;">
+              <h3 style="color:#a371f7; margin:0;">👥 Guild Recruitment</h3>
+              <p style="margin:5px 0; color:#8b949e;">Find or advertise guilds</p>
+              <p style="font-size:12px; color:#a371f7;">345 posts • Latest: 20 minutes ago</p>
+            </div>
+            
+            <div onclick="showForumCategory('pvp')" style="background:#161b22; padding:15px; margin:10px 0; border-radius:6px; cursor:pointer; border-left:3px solid #f85149;">
+              <h3 style="color:#f85149; margin:0;">⚔️ PvP & Arena</h3>
+              <p style="margin:5px 0; color:#8b949e;">Discuss battles and strategies</p>
+              <p style="font-size:12px; color:#f85149;">678 posts • Latest: 30 minutes ago</p>
+            </div>
+          </div>
+          
+          <div id="forum-posts" style="display:none; margin-top:20px; background:#0d1117; padding:20px; border-radius:6px;">
+            <button onclick="document.getElementById('forum-posts').style.display='none'" style="margin-bottom:15px;">← Back to Categories</button>
+            <h3 id="forum-category-title" style="color:#58a6ff;"></h3>
+            <p style="color:#8b949e;">Forum posts will appear here. (Online functionality coming soon!)</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Floating chat boxes for Torn City style PC/laptop play -->
+    <div class="chat-dock">
+      <div class="chat-group">
+        <button class="chat-toggle" onclick="toggleChat('global-chat')">Global Chat</button>
+        <div class="chat-box" id="global-chat">
+          <span class="chat-label">Global Chat</span>
+          <div class="chat-messages" id="global-chat-messages"></div>
+          <form class="chat-input-bar" onsubmit="return sendChat('global-chat')">
+            <input type="text" class="chat-input" id="global-chat-input" autocomplete="off" placeholder="Message...">
+            <button class="chat-send" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+      <div class="chat-group">
+        <button class="chat-toggle" onclick="toggleChat('trade-chat')">Trade Chat</button>
+        <div class="chat-box" id="trade-chat">
+          <span class="chat-label">Trade Chat</span>
+          <div class="chat-messages" id="trade-chat-messages"></div>
+          <form class="chat-input-bar" onsubmit="return sendChat('trade-chat')">
+            <input type="text" class="chat-input" id="trade-chat-input" autocomplete="off" placeholder="Message...">
+            <button class="chat-send" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+      <div class="chat-group">
+        <button class="chat-toggle" onclick="toggleChat('guild-chat')">Guild Chat</button>
+        <div class="chat-box" id="guild-chat">
+          <span class="chat-label">Guild Chat</span>
+          <div class="chat-messages" id="guild-chat-messages"></div>
+          <form class="chat-input-bar" onsubmit="return sendChat('guild-chat')">
+            <input type="text" class="chat-input" id="guild-chat-input" autocomplete="off" placeholder="Message...">
+            <button class="chat-send" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+      <div class="chat-group">
+        <button class="chat-toggle" onclick="toggleChat('player-chat')">New Player Chat</button>
+        <div class="chat-box" id="player-chat">
+          <span class="chat-label">New Player Chat</span>
+          <div class="chat-messages" id="player-chat-messages"></div>
+          <form class="chat-input-bar" onsubmit="return sendChat('player-chat')">
+            <input type="text" class="chat-input" id="player-chat-input" autocomplete="off" placeholder="Message...">
+            <button class="chat-send" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Socket.IO connection
+    let socket = null;
+    let isOnline = false;
+    
+    // Initialize Socket.IO connection
+    function initSocket() {
+      try {
+        socket = io('http://localhost:3000');
+        
+        socket.on('connect', () => {
+          console.log('Connected to server');
+          isOnline = true;
+          // Send player data to server
+          socket.emit('player:join', player);
+        });
+        
+        socket.on('disconnect', () => {
+          console.log('Disconnected from server');
+          isOnline = false;
+        });
+        
+        socket.on('players:count', (count) => {
+          document.getElementById('online-count').textContent = count;
+        });
+        
+        socket.on('chat:global', (message) => {
+          addChatMessageToUI('global-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:trade', (message) => {
+          addChatMessageToUI('trade-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:guild', (message) => {
+          addChatMessageToUI('guild-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('chat:newplayer', (message) => {
+          addChatMessageToUI('player-chat-messages', message.username, message.message);
+        });
+        
+        socket.on('activity:feed', (activity) => {
+          console.log('Activity:', activity.message);
+        });
+      } catch (error) {
+        console.log('Running in offline mode');
+        isOnline = false;
+      }
+    }
+    
+    function addChatMessageToUI(elementId, username, message) {
+      let messages = document.getElementById(elementId);
+      if (messages) {
+        let msg = document.createElement('div');
+        msg.innerHTML = `<b>${username}:</b>${message}`;
+        messages.appendChild(msg);
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Keep only last 50 messages
+        while (messages.children.length > 50) {
+          messages.removeChild(messages.firstChild);
+        }
+      }
+    }
+    
+    // Player object — for demo, replace with live data
+    let player = {
+      username: "Con-source",
+      level: 1,
+      xp: 0,
+      gold: 10,
+      silver: 50,
+      energy: 100,
+      mana: 5,
+      health: 10,
+      maxHealth: 10,
+      happiness: 50,
+      crime: 0,
+      strength: 10,
+      intelligence: 10,
+      endurance: 10,
+      charisma: 10,
+      dexterity: 10,
+      guild: "None",
+      guildType: null,
+      guildLevel: 0,
+      guildRank: "N/A",
+      guildPoints: 0,
+      guildTreasury: 0,
+      guildBankGold: 0,
+      guildBankPotions: 0,
+      guildBankHerbs: 0,
+      guildHallLevel: 1,
+      guildTreasuryLevel: 1,
+      guildPowerLevel: 1,
+      lastGuildBattle: null,
+      guildPermissions: {
+        deposit: true,
+        donate: true,
+        borrow: true,
+        upgrade: true
+      },
+      currentJob: "None",
+      jobPoints: 0,
+      workedToday: false,
+      lastPayoutDate: null,
+      jobData: null,
+      herbs: 0,
+      potions: 0,
+      weapons: [],
+      armor: [],
       houses: [],
       npcPurchasesToday: 0,
       lastPurchaseDate: new Date().toDateString(),
@@ -331,7 +1373,7 @@ e="viewport" content="width=device-width, initial-scale=1">
       secretGymsUnlocked: [], // Secret gyms found
       workoutHistory: [], // Track recent workouts
     };
-
+    
     // Global marketplace listings
     let marketListings = [];
     
@@ -602,7 +1644,22 @@ e="viewport" content="width=device-width, initial-scale=1">
     function updateStats() {
       document.getElementById("username").textContent = player.username;
       document.getElementById("level").textContent = player.level;
-@@ -1289,6 +1662,21 @@
+      document.getElementById("gold").textContent = player.gold;
+      document.getElementById("silver").textContent = player.silver;
+      document.getElementById("happiness").textContent = player.happiness;
+      document.getElementById("crime").textContent = player.crime;
+      document.getElementById("energy").textContent = player.energy;
+      document.getElementById("intelligence").textContent = player.intelligence;
+      document.getElementById("endurance").textContent = player.endurance;
+      document.getElementById("charisma").textContent = player.charisma;
+      document.getElementById("dexterity").textContent = player.dexterity;
+      document.getElementById("mana").textContent = player.mana;
+      document.getElementById("health").textContent = player.health;
+      document.getElementById("xp").textContent = player.xp;
+      document.getElementById("guild-name").textContent = player.guild;
+      document.getElementById("guild-points").textContent = player.guildPoints;
+      document.getElementById("inv-herbs").textContent = player.herbs;
+      document.getElementById("inv-potions").textContent = player.potions;
       document.getElementById("inv-weapons").textContent = player.weapons.length > 0 ? player.weapons.join(", ") : "None";
       document.getElementById("inv-armor").textContent = player.armor.length > 0 ? player.armor.join(", ") : "None";
       document.getElementById("inv-houses").textContent = player.houses.length > 0 ? player.houses.join(", ") : "None";
@@ -624,16 +1681,33 @@ e="viewport" content="width=device-width, initial-scale=1">
       if(document.getElementById("strength")) document.getElementById("strength").textContent = player.strength;
       if(document.getElementById("gym-multiplier")) {
         let mult = 1 + (player.happiness / 100);
-@@ -1304,7 +1692,7 @@
+        document.getElementById("gym-multiplier").textContent = mult.toFixed(2) + "x";
+      }
+      if(document.getElementById("gym-gains")) {
+        let mult = 1 + (player.happiness / 100);
+        let gains = Math.floor(2 * mult);
+        document.getElementById("gym-gains").textContent = gains;
+      }
+      let percent = Math.min(100, Math.round(player.xp / 100 * 100));
+      document.querySelector(".bar-inner").style.width = percent + "%";
     }
     function showSection(section, btn) {
       [
-        "home","town","guild","market","weapontrader","armortrader","housetrader","bar","crimes","jobs","arena","gym","inventory","newspaper","forum"
         "home","town","guild","market","weapontrader","armortrader","housetrader","bar","crimes","jobs","arena","gym","inventory","bank","newspaper","forum"
       ].forEach(id=>{
         document.getElementById(id + "-section").style.display = "none";
       });
-@@ -1322,6 +1710,55 @@
+      document.getElementById(section + "-section").style.display = "block";
+      document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      updateStats();
+      
+      // Update crime display in crimes section
+      if (section === 'crimes') {
+        document.getElementById('crime-display-crimes').textContent = player.crime;
+      }
+      
+      // Update job display in jobs section
       if (section === 'jobs') {
         updateJobDisplay();
       }
@@ -687,41 +1761,76 @@ e="viewport" content="width=device-width, initial-scale=1">
         updateGymDisplay();
       }
     }
-
+    
     function navigateToLocation(location) {
-@@ -1364,16 +1801,22 @@
+      // Find the corresponding button and trigger it
+      let buttons = document.querySelectorAll('.menu-btn');
+      buttons.forEach(btn => {
+        let sectionName = btn.getAttribute('onclick');
+        if (sectionName && sectionName.includes(location)) {
+          btn.click();
+        }
+      });
+    }
+    function buyItem(item, price){
+      if(player.gold >= price){
+        player.gold -= price;
+        if(item === "potion") player.potions++;
+        if(item === "herb") player.herbs++;
+        updateStats();
+      } else {
+        alert("Not enough gold!");
+      }
+    }
+    function spendMoney(goldCost, silverCost) {
+      let totalCostInSilver = (goldCost * 100) + silverCost;
+      let totalMoney = (player.gold * 100) + player.silver;
+      if (totalMoney >= totalCostInSilver) {
+        let remaining = totalMoney - totalCostInSilver;
+        player.gold = Math.floor(remaining / 100);
+        player.silver = remaining % 100;
+        return true;
+      }
+      return false;
+    }
+    function checkDailyLimit() {
+      let today = new Date().toDateString();
+      if (player.lastPurchaseDate !== today) {
+        player.npcPurchasesToday = 0;
+        player.lastPurchaseDate = today;
+      }
       return player.npcPurchasesToday < 100;
     }
-
-    function buyWeapon(name, goldCost, silverCost, damage) {
+    
     function buyWeapon(name, basePrice, damage) {
       if (!checkDailyLimit()) {
-        alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
         alert("❌ Daily NPC purchase limit reached! (100 items per day)");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
       
       let actualPrice = getMarketPrice(name, basePrice);
       
       if (spendMoney(actualPrice, 0)) {
         player.npcPurchasesToday++;
         player.weapons.push(name);
-        player.happiness = Math.min(100, player.happiness + 5);
-        alert(`✅ Purchased ${name}! (+${damage} damage, +5 happiness)`);
         
         // Update supply/demand for weapons
         globalEconomy.supplyDemand.weapons.supply += 1;
         
         alert(`✅ Purchased ${name}! Damage: +${damage}g\nMarket Price: ${actualPrice}g`);
-
+        
         // Broadcast to server if online
         if (isOnline && socket) {
-@@ -1387,19 +1830,26 @@
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
         updateStats();
         saveToLocalStorage();
       } else {
-        alert("❌ Not enough money!");
         alert("❌ Not enough gold!");
       }
     }
@@ -730,7 +1839,6 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
       
       let actualPrice = getMarketPrice(name, goldCost);
       
@@ -738,20 +1846,24 @@ e="viewport" content="width=device-width, initial-scale=1">
         player.npcPurchasesToday++;
         player.armor.push(name);
         player.happiness = Math.min(100, player.happiness + 5);
-        alert(`✅ Purchased ${name}! (+${defense} defense, +5 happiness)`);
         
         // Update supply/demand for armor
         globalEconomy.supplyDemand.armor.supply += 1;
         
         alert(`✅ Purchased ${name}! Defense: +${defense}, +5 happiness\nMarket Price: ${actualPrice}g`);
-
+        
         // Broadcast to server if online
         if (isOnline && socket) {
-@@ -1413,19 +1863,26 @@
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
         updateStats();
         saveToLocalStorage();
       } else {
-        alert("❌ Not enough money!");
         alert("❌ Not enough gold!");
       }
     }
@@ -760,7 +1872,6 @@ e="viewport" content="width=device-width, initial-scale=1">
         alert("❌ Daily NPC purchase limit reached! (100 items per day)\nTry the Player Marketplace instead!");
         return;
       }
-      if (spendMoney(goldCost, silverCost)) {
       
       let actualPrice = getMarketPrice(name, goldCost);
       
@@ -768,16 +1879,29 @@ e="viewport" content="width=device-width, initial-scale=1">
         player.npcPurchasesToday++;
         player.houses.push(name);
         player.happiness = Math.min(100, player.happiness + happinessBonus);
-        alert(`✅ Purchased ${name}! +${happinessBonus} happiness!`);
         
         // Update supply/demand for houses
         globalEconomy.supplyDemand.houses.supply += 1;
         
         alert(`✅ Purchased ${name}! +${happinessBonus} happiness\nMarket Price: ${actualPrice}g`);
-
+        
         // Broadcast to server if online
         if (isOnline && socket) {
-@@ -1447,6 +1904,8 @@
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    function buyAlcohol(name, goldCost, silverCost, crimeIncrease) {
+      if (!checkDailyLimit()) {
         alert("❌ Daily NPC purchase limit reached! (100 items per day)");
         return;
       }
@@ -786,10 +1910,374 @@ e="viewport" content="width=device-width, initial-scale=1">
       if (spendMoney(goldCost, silverCost)) {
         player.npcPurchasesToday++;
         player.crime = Math.min(100, player.crime + crimeIncrease);
-@@ -1818,6 +2277,21 @@
+        alert(`🍺 Drank ${name}! Crime increased by ${crimeIncrease}. Current crime: ${player.crime}/100`);
+        
+        // Broadcast to server if online
+        if (isOnline && socket) {
+          socket.emit('purchase:item', {
+            username: player.username,
+            item: name + ' (Drink)'
+          });
+          socket.emit('player:update', player);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      } else {
+        alert("❌ Not enough money!");
+      }
+    }
+    
+    // CRIME FUNCTIONS
+    function commitCrime(name, crimeCost, minReward, maxReward, successRate) {
+      if (player.crime < crimeCost) {
+        alert(`❌ Not enough crime points! You need ${crimeCost} crime, you have ${player.crime}.`);
+        return;
+      }
+      
+      // Deduct crime points
+      player.crime -= crimeCost;
+      
+      // Calculate success
+      let roll = Math.random() * 100;
+      let success = roll <= successRate;
+      
+      if (success) {
+        let reward = Math.floor(Math.random() * (maxReward - minReward + 1)) + minReward;
+        player.gold += reward;
+        player.xp += Math.floor(crimeCost / 2);
+        alert(`✅ ${name} successful! Earned ${reward}g and ${Math.floor(crimeCost / 2)} XP!`);
+        
+        checkLevelUp();
+      } else {
+        // Failed crime - penalties
+        let energyLoss = Math.floor(crimeCost / 2);
+        let fine = Math.floor(minReward / 2);
+        player.energy = Math.max(0, player.energy - energyLoss);
+        player.gold = Math.max(0, player.gold - fine);
+        alert(`❌ ${name} failed! Caught by guards!\nLost ${energyLoss} energy and paid ${fine}g fine.`);
+      }
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    // JOB FUNCTIONS
+    function applyForJob(jobName, statRequirement, statType, dailyWage, intGain, endGain, chaGain, dexGain, jpPerDay) {
+      // Check if already employed
+      if (player.currentJob !== 'None') {
+        alert(`You already work for ${player.currentJob}! Quit your current job first.`);
+        return;
+      }
+      
+      // Check stat requirement
+      let playerStat = player[statType];
+      if (playerStat < statRequirement) {
+        alert(`❌ Requirements not met!\nYou need ${statRequirement} ${statType}, you have ${playerStat}.`);
+        return;
+      }
+      
+      // Apply for job
+      player.currentJob = jobName;
+      player.workedToday = false;
+      
+      // Store job details for later use
+      player.jobData = {
+        name: jobName,
+        wage: dailyWage,
+        intGain: intGain,
+        endGain: endGain,
+        chaGain: chaGain,
+        dexGain: dexGain,
+        jpPerDay: jpPerDay
+      };
+      
+      alert(`🎉 Congratulations!\nYou've been hired by ${jobName}!\n\nYou'll receive your first payout at 6:00 PM UK time today.`);
+      
+      updateGuildDisplay();
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function quitJob() {
+      if (player.currentJob === 'None') {
+        alert('You don\'t have a job!');
+        return;
+      }
+      
+      let confirm = window.confirm(`Are you sure you want to quit ${player.currentJob}?`);
+      
+      if (confirm) {
+        player.currentJob = 'None';
+        player.jobData = null;
+        player.workedToday = false;
+        
+        alert('You have quit your job.');
+        
+        updateJobDisplay();
+        updateStats();
+        saveToLocalStorage();
+      }
+    }
+    
+    function updateJobDisplay() {
+      if (document.getElementById('current-employer')) {
+        document.getElementById('current-employer').textContent = player.currentJob;
+        document.getElementById('job-points').textContent = player.jobPoints;
+        document.getElementById('worked-today').textContent = player.workedToday ? 'Yes' : 'No';
+        document.getElementById('worked-today').style.color = player.workedToday ? '#3fb950' : '#f85149';
+      }
+    }
+    
+    function checkDailyPayout() {
+      // Check if player has a job
+      if (player.currentJob === 'None' || !player.jobData) return;
+      
+      // Get current UK time
+      let now = new Date();
+      let ukTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+      let hour = ukTime.getHours();
+      let todayDate = ukTime.toDateString();
+      
+      // Check if it's 6 PM or later and we haven't paid out today
+      if (hour >= 18 && player.lastPayoutDate !== todayDate) {
+        // Pay out!
+        player.gold += player.jobData.wage;
+        player.intelligence += player.jobData.intGain;
+        player.endurance += player.jobData.endGain;
+        player.charisma += player.jobData.chaGain;
+        player.dexterity += player.jobData.dexGain;
+        player.jobPoints += player.jobData.jpPerDay;
+        player.workedToday = true;
+        player.lastPayoutDate = todayDate;
+        
+        let statsGained = [];
+        if (player.jobData.intGain > 0) statsGained.push(`+${player.jobData.intGain} Int`);
+        if (player.jobData.endGain > 0) statsGained.push(`+${player.jobData.endGain} End`);
+        if (player.jobData.chaGain > 0) statsGained.push(`+${player.jobData.chaGain} Cha`);
+        if (player.jobData.dexGain > 0) statsGained.push(`+${player.jobData.dexGain} Dex`);
+        
+        alert(`💰 Daily Payout Received!\n\nWage: ${player.jobData.wage}g\nStats: ${statsGained.join(', ')}\nJob Points: +${player.jobData.jpPerDay} JP`);
+        
+        updateStats();
+        updateJobDisplay();
+        saveToLocalStorage();
+      }
+      
+      // Reset workedToday at midnight
+      let currentDate = ukTime.toDateString();
+      if (player.lastPayoutDate && player.lastPayoutDate !== currentDate && hour < 18) {
+        player.workedToday = false;
+        updateJobDisplay();
+        saveToLocalStorage();
+      }
+    }
+    
+    // Check for daily payout every minute
+    setInterval(checkDailyPayout, 60000);
+    
+    // GUILD FUNCTIONS
+    function createGuild() {
+      let guildName = document.getElementById('guild-name-input').value.trim();
+      let guildType = document.getElementById('guild-type-select').value;
+      
+      if (!guildName) {
+        alert('Please enter a guild name!');
+        return;
+      }
+      
+      if (!guildType) {
+        alert('Please select a guild type!');
+        return;
+      }
+      
+      if (player.guild !== 'None') {
+        alert('You are already in a guild! Leave your current guild first.');
+        return;
+      }
+      
+      if (player.gold < 100) {
+        alert('Not enough gold! Creating a guild costs 100g.');
+        return;
+      }
+      
+      player.gold -= 100;
+      player.guild = guildName;
+      player.guildType = guildType;
+      player.guildLevel = 1;
+      player.guildRank = 'Guild Master';
+      player.guildPoints = 0;
+      player.guildTreasury = 0;
+      player.guildBankGold = 0;
+      player.guildBankPotions = 0;
+      player.guildBankHerbs = 0;
+      
+      updateGuildDisplay();
+      document.getElementById('guild-management').style.display = 'block';
+      
+      alert(`🎉 Successfully created ${guildName}!\nYou are now the Guild Master.`);
+      
+      // Clear inputs
+      document.getElementById('guild-name-input').value = '';
+      document.getElementById('guild-type-select').value = '';
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function joinGuild(guildName, guildType, guildLevel) {
+      if (player.guild !== 'None') {
+        alert('You are already in a guild! Leave your current guild first.');
+        return;
+      }
+      
+      player.guild = guildName;
+      player.guildType = guildType;
+      player.guildLevel = guildLevel || 1;
+      player.guildRank = 'Recruit';
+      player.guildPoints = 0;
+      
+      updateGuildDisplay();
+      document.getElementById('guild-management').style.display = 'block';
+      
+      alert(`🎉 Successfully joined ${guildName}!`);
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function donateToGuild() {
+      if (player.gold < 10) {
+        alert('Not enough gold! Donation requires 10g.');
+        return;
+      }
+      
+      player.gold -= 10;
+      player.guildPoints += 10;
+      
+      document.getElementById('guild-points').textContent = player.guildPoints;
+      
+      alert('✅ Donated 10g to your guild! Earned 10 guild points.');
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function leaveGuild() {
+      if (player.guild === 'None') {
+        alert('You are not in a guild!');
+        return;
+      }
+      
+      let confirm = window.confirm(`Are you sure you want to leave ${player.guild}?\nYou will lose all guild points.`);
+      
+      if (confirm) {
+        player.guild = 'None';
+        player.guildType = null;
+        player.guildLevel = 0;
+        player.guildRank = 'N/A';
+        player.guildPoints = 0;
+        player.guildTreasury = 0;
+        
+        updateGuildDisplay();
+        document.getElementById('guild-management').style.display = 'none';
+        
+        alert('You have left your guild.');
+        
+        updateStats();
+        saveToLocalStorage();
+      }
+    }
+    
+    // GUILD PERMISSION & MEMBER MANAGEMENT FUNCTIONS
+    function toggleGuildPermission(permType) {
+      if (player.guildRank !== 'Guild Master') {
+        alert('Only the Guild Master can change permissions!');
+        return;
+      }
+      
+      let checkbox =document.getElementById(`perm-${permType === 'deposit' ? 'all-deposit' : permType === 'donate' ? 'all-donate' : permType === 'borrow' ? 'veteran-borrow' : 'elite-upgrade'}`);
+      player.guildPermissions[permType] = checkbox.checked;
+      
+      alert(`✅ Permission updated!\n${permType.charAt(0).toUpperCase() + permType.slice(1)} is now ${player.guildPermissions[permType] ? 'enabled' : 'disabled'}`);
+      
+      // Update officer view
+      if (document.getElementById(`officer-view-${permType}`)) {
+        document.getElementById(`officer-view-${permType}`).textContent = player.guildPermissions[permType] ? 'Enabled' : 'Disabled';
+        document.getElementById(`officer-view-${permType}`).style.color = player.guildPermissions[permType] ? '#3fb950' : '#f85149';
+      }
+      
+      saveToLocalStorage();
+    }
+    
+    function assignMemberRank() {
+      if (player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') {
+        alert('Only the Guild Master and Co-Leaders can assign ranks!');
+        return;
+      }
+      
+      let memberName = document.getElementById('member-select').value;
+      let newRank = document.getElementById('rank-assign').value;
+      
+      if (!memberName || !newRank) {
+        alert('Please select both a member and a rank!');
+        return;
+      }
+      
+      // Don't allow promoting to Guild Master
+      if (newRank === 'Guild Master') {
+        alert('❌ Cannot promote to Guild Master! Only the founder can be Guild Master.');
+        return;
+      }
+      
+      alert(`✅ Rank Updated!\n${memberName} has been promoted/demoted to ${newRank}!`);
+      
+      // Reset selections
+      document.getElementById('member-select').value = '';
+      document.getElementById('rank-assign').value = '';
+      
+      saveToLocalStorage();
+    }
+    
+    function kickMember() {
+      if (player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') {
+        alert('Only the Guild Master and Co-Leaders can kick members!');
+        return;
+      }
+      
+      let memberName = document.getElementById('member-kick').value;
+      
+      if (!memberName) {
+        alert('Please select a member to kick!');
+        return;
+      }
+      
+      let confirm = window.confirm(`Are you sure you want to kick ${memberName} from the guild?\n\nThis action cannot be undone.`);
+      
+      if (confirm) {
+        alert(`❌ ${memberName} has been kicked from ${player.guild}!`);
+        
+        // Reset selection
+        document.getElementById('member-kick').value = '';
+        
+        saveToLocalStorage();
+      }
+    }
+    
+    function updateGuildDisplay() {
+      if (document.getElementById('guild-name')) {
+        document.getElementById('guild-name').textContent = player.guild;
+        document.getElementById('guild-level').textContent = player.guildLevel;
+        document.getElementById('guild-rank').textContent = player.guildRank;
+        document.getElementById('guild-points').textContent = player.guildPoints;
+        document.getElementById('guild-treasury').textContent = player.guildTreasury;
+        document.getElementById('current-guild-name').textContent = player.guild;
+        document.getElementById('current-guild-type').textContent = player.guildType || 'N/A';
+        document.getElementById('guild-role').textContent = player.guildRank;
+        document.getElementById('current-guild-level').textContent = player.guildLevel;
         document.getElementById('your-rank-display').textContent = player.guildRank;
         document.getElementById('your-contribution').textContent = player.guildPoints;
-
+        
         // Hide/show guild recruitment sections based on membership
         let inGuild = player.guild !== 'None';
         
@@ -808,10 +2296,72 @@ e="viewport" content="width=device-width, initial-scale=1">
         // Update bank displays
         if (document.getElementById('bank-gold')) {
           document.getElementById('bank-gold').textContent = player.guildBankGold;
-@@ -1887,6 +2361,563 @@
+          document.getElementById('bank-potions').textContent = player.guildBankPotions;
+          document.getElementById('bank-herbs').textContent = player.guildBankHerbs;
+        }
+        
+        // Update guild power
+        let guildPower = (player.guildLevel * 100) + (player.guildHallLevel * 200) + (player.guildPowerLevel * 100);
+        if (document.getElementById('guild-power')) document.getElementById('guild-power').textContent = guildPower;
+        if (document.getElementById('battle-guild-power')) document.getElementById('battle-guild-power').textContent = guildPower;
+        
+        // Show/hide controls based on rank
+        let guildMasterControls = document.getElementById('guild-master-controls');
+        let officerControls = document.getElementById('officer-controls');
+        
+        if (guildMasterControls) {
+          guildMasterControls.style.display = (player.guildRank === 'Guild Master' || player.guildRank === 'Co-Leader') ? 'block' : 'none';
+        }
+        
+        if (officerControls) {
+          officerControls.style.display = (player.guildRank === 'Officer' && player.guildRank !== 'Guild Master' && player.guildRank !== 'Co-Leader') ? 'block' : 'none';
+        }
+        
+        // Update permission checkboxes if Guild Master
+        if (player.guildRank === 'Guild Master' && player.guildPermissions) {
+          if (document.getElementById('perm-all-deposit')) document.getElementById('perm-all-deposit').checked = player.guildPermissions.deposit;
+          if (document.getElementById('perm-all-donate')) document.getElementById('perm-all-donate').checked = player.guildPermissions.donate;
+          if (document.getElementById('perm-veteran-borrow')) document.getElementById('perm-veteran-borrow').checked = player.guildPermissions.borrow;
+          if (document.getElementById('perm-elite-upgrade')) document.getElementById('perm-elite-upgrade').checked = player.guildPermissions.upgrade;
+        }
+        
+        // Update rank based on GP
+        updateGuildRank();
       }
     }
-
+    
+    function updateGuildRank() {
+      let oldRank = player.guildRank;
+      
+      if (player.guild === 'None') return;
+      if (player.guildRank === 'Guild Master') return; // Founder stays as master
+      
+      if (player.guildPoints >= 5000) player.guildRank = 'Co-Leader';
+      else if (player.guildPoints >= 3000) player.guildRank = 'Officer';
+      else if (player.guildPoints >= 1500) player.guildRank = 'Elite';
+      else if (player.guildPoints >= 500) player.guildRank = 'Veteran';
+      else if (player.guildPoints >= 100) player.guildRank = 'Member';
+      else player.guildRank = 'Recruit';
+      
+      if (oldRank !== player.guildRank) {
+        alert(`🎉 Rank Up! You are now a ${player.guildRank}!`);
+        updateGuildDisplay();
+      }
+    }
+    
+    function showGuildTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.guild-tab').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Show selected tab
+      let selectedTab = document.getElementById('guild-tab-' + tabName);
+      if (selectedTab) {
+        selectedTab.style.display = 'block';
+      }
+    }
+    
     // ECONOMY FUNCTIONS
     function updateNetWorth() {
       let silverValue = Math.floor(player.silver / 10); // 10 silver = 1 gold
@@ -1372,7 +2922,68 @@ e="viewport" content="width=device-width, initial-scale=1">
     function gymWorkout() {
       if (player.energy < 5) {
         document.getElementById("gym-message").textContent = "❌ Not enough energy! You need at least 5 energy.";
-@@ -1955,6 +2986,8 @@
+        return;
+      }
+      player.energy -= 5;
+      let happinessMultiplier = 1 + (player.happiness / 100);
+      let baseGain = 2;
+      let actualGain = Math.floor(baseGain * happinessMultiplier);
+      player.strength += actualGain;
+      player.xp += 3;
+      
+      // Check for level up
+      checkLevelUp();
+      
+      document.getElementById("gym-message").textContent = `✅ Workout complete! Gained ${actualGain} strength (${happinessMultiplier.toFixed(2)}x multiplier)`;
+      
+      // Broadcast to server if online
+      if (isOnline && socket) {
+        socket.emit('gym:workout', {
+          username: player.username,
+          gains: actualGain
+        });
+        socket.emit('player:update', player);
+      }
+      
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    function checkLevelUp() {
+      let xpNeeded = player.level * 100;
+      if (player.xp >= xpNeeded) {
+        player.level++;
+        player.xp = 0;
+        
+        // Every 5 levels, increase max health by 10%
+        if (player.level % 5 === 0) {
+          let healthIncrease = Math.floor(player.maxHealth * 0.10);
+          player.maxHealth += healthIncrease;
+          player.health = player.maxHealth; // Fully heal on level up
+          alert(`🎉 Level Up! You are now level ${player.level}!\n💚 Max Health increased by ${healthIncrease} (10%)! New max: ${player.maxHealth}`);
+        } else {
+          alert(`🎉 Level Up! You are now level ${player.level}!`);
+        }
+        
+        updateStats();
+        saveToLocalStorage();
+      }
+    }
+    
+    // Local storage functions
+    function saveToLocalStorage() {
+      localStorage.setItem('highWizardryPlayer', JSON.stringify(player));
+    }
+    
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('highWizardryPlayer');
+      if (saved) {
+        const savedPlayer = JSON.parse(saved);
+        Object.assign(player, savedPlayer);
+      }
+    }
+    
+    // Initialize game
     loadFromLocalStorage();
     updateStats();
     updateJobDisplay();
@@ -1380,3 +2991,208 @@ e="viewport" content="width=device-width, initial-scale=1">
     updateGymDisplay();
     checkDailyPayout(); // Check for payout on load
     initSocket();
+    
+    // Auto-save every 30 seconds
+    setInterval(saveToLocalStorage, 30000);
+    
+    // Update player on server every minute if online
+    setInterval(() => {
+      if (isOnline && socket) {
+        socket.emit('player:update', player);
+      }
+    }, 60000);
+    
+    // Auto-regenerate energy every 10 minutes
+    setInterval(() => {
+      if (player.energy < 100) {
+        player.energy = Math.min(100, player.energy + 10);
+        updateStats();
+        saveToLocalStorage();
+        console.log('Energy regenerated! Current energy:', player.energy);
+      }
+    }, 600000); // 10 minutes = 600,000 milliseconds
+    
+    // Auto-regenerate happiness every 10 minutes
+    setInterval(() => {
+      if (player.happiness < 100) {
+        player.happiness = Math.min(100, player.happiness + 5);
+        updateStats();
+        saveToLocalStorage();
+        console.log('Happiness increased! Current happiness:', player.happiness);
+      }
+    }, 600000); // 10 minutes = 600,000 milliseconds
+    
+    // MARKETPLACE FUNCTIONS
+    function listItemForSale() {
+      let itemSelect = document.getElementById('sell-item-select');
+      let priceInput = document.getElementById('sell-price');
+      let itemType = itemSelect.value;
+      let price = parseInt(priceInput.value);
+      
+      if (!itemType) {
+        alert('Please select an item to sell!');
+        return;
+      }
+      
+      if (!price || price < 1) {
+        alert('Please enter a valid price!');
+        return;
+      }
+      
+      // Check if player has the item
+      if (itemType === 'potion' && player.potions < 1) {
+        alert('You don\'t have any potions to sell!');
+        return;
+      }
+      if (itemType === 'herb' && player.herbs < 1) {
+        alert('You don\'t have any herbs to sell!');
+        return;
+      }
+      
+      // Calculate 10% listing fee
+      let fee = Math.floor(price * 0.10);
+      if (player.gold < fee) {
+        alert(`Not enough gold for listing fee! Fee: ${fee}g (10% of ${price}g)`);
+        return;
+      }
+      
+      // Deduct item and fee
+      if (itemType === 'potion') player.potions--;
+      if (itemType === 'herb') player.herbs--;
+      player.gold -= fee;
+      
+      // Add to marketplace
+      marketListings.push({
+        id: Date.now(),
+        seller: player.username,
+        item: itemType,
+        price: price
+      });
+      
+      alert(`✅ Listed ${itemType} for ${price}g! (Listing fee: ${fee}g)`);
+      updateMarketListings();
+      updateStats();
+      saveToLocalStorage();
+      
+      // Clear form
+      itemSelect.value = '';
+      priceInput.value = '';
+    }
+    
+    function updateMarketListings() {
+      let tbody = document.getElementById('market-listings');
+      if (marketListings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8b949e;">No items listed yet. Be the first!</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      marketListings.forEach(listing => {
+        let row = `<tr>
+          <td>${listing.seller}</td>
+          <td>${listing.item.charAt(0).toUpperCase() + listing.item.slice(1)}</td>
+          <td>${listing.price}g</td>
+          <td><button class="btn" onclick="buyFromMarket(${listing.id})">Buy</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+    
+    function buyFromMarket(listingId) {
+      let listing = marketListings.find(l => l.id === listingId);
+      if (!listing) {
+        alert('Item no longer available!');
+        return;
+      }
+      
+      if (player.username === listing.seller) {
+        alert('You can\'t buy your own listing!');
+        return;
+      }
+      
+      if (player.gold < listing.price) {
+        alert('Not enough gold!');
+        return;
+      }
+      
+      // Complete purchase
+      player.gold -= listing.price;
+      if (listing.item === 'potion') player.potions++;
+      if (listing.item === 'herb') player.herbs++;
+      
+      // Remove from marketplace
+      marketListings = marketListings.filter(l => l.id !== listingId);
+      
+      alert(`✅ Purchased ${listing.item} for ${listing.price}g from ${listing.seller}!`);
+      updateMarketListings();
+      updateStats();
+      saveToLocalStorage();
+    }
+    
+    // FORUM FUNCTIONS
+    function showForumCategory(category) {
+      let categoryNames = {
+        'general': '📢 General Discussion',
+        'trade': '💰 Trade Forum',
+        'help': '❓ Help & Guides',
+        'guild': '👥 Guild Recruitment',
+        'pvp': '⚔️ PvP & Arena'
+      };
+      
+      document.getElementById('forum-category-title').textContent = categoryNames[category] || category;
+      document.getElementById('forum-posts').style.display = 'block';
+    }
+
+    // --- CHAT DOCK LOGIC WITH MESSAGING ---
+    function toggleChat(id){
+      let chat = document.getElementById(id);
+      chat.style.display = (chat.style.display === "block") ? "none" : "block";
+      let messages = document.getElementById(id + '-messages');
+      if(messages) messages.scrollTop = messages.scrollHeight;
+    }
+    function sendChat(chatId){
+      let input = document.getElementById(chatId + '-input');
+      let messages = document.getElementById(chatId + '-messages');
+      if(input.value.trim() !== "") {
+        let username = player.username || "You";
+        let message = input.value;
+        
+        // Send to server if online
+        if (isOnline && socket) {
+          let channel = chatId.replace('-chat', '');
+          if (channel === 'player') channel = 'newplayer';
+          socket.emit('chat:message', {
+            channel: channel,
+            message: message,
+            username: username
+          });
+        } else {
+          // Offline mode - just add locally
+          let msg = document.createElement('div');
+          msg.innerHTML = `<b>${username}:</b>${message}`;
+          messages.appendChild(msg);
+          messages.scrollTop = messages.scrollHeight;
+        }
+        
+        input.value = "";
+      }
+      return false; // Prevent form submit
+    }
+    // NPC message demo
+    let npcMessages = [
+      "Buying herbs soon!", "Selling potions!", "Training magic!", "Going on a quest!",
+      "Welcome new player!", "Join the guild chat!", "Market event!", "Who's up for a duel?"
+    ];
+    function addChatMessages(){
+     ["player-chat","trade-chat","guild-chat","global-chat"].forEach(id=>{
+       let messages = document.getElementById(id+'-messages');
+       let msg = document.createElement('div');
+       msg.innerHTML = `<b>NPC:</b> ${npcMessages[Math.floor(Math.random()*npcMessages.length)]}`;
+       messages.appendChild(msg);
+       if(messages.parentNode.style.display === "block") messages.scrollTop = messages.scrollHeight;
+     });
+    }
+    setInterval(addChatMessages, 5500);
+  </script>
+</body>
+</html>
