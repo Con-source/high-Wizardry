@@ -1,254 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>High Wizardry - Online Multiplayer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- External Dependencies -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  
-  <!-- Local CSS -->
-  <link rel="stylesheet" href="./css/styles.css">
-  
-  <style>
-    /* Basic reset and layout */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    body {
-      background-color: #0a0e17;
-      color: #e6e6e6;
-      line-height: 1.6;
-    }
-    
-    .container {
-      display: flex;
-      min-height: calc(100vh - 50px);
-    }
-    
-    /* Header styles */
-    header {
-      background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
-      color: #e6e6e6;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #4cc9f0;
-    }
-    
-    /* Sidebar styles */
-    .sidebar {
-      width: 250px;
-      background: #0f3460;
-      padding: 15px;
-      border-right: 1px solid #1e3a8a;
-    }
-    
-    .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #4cc9f0;
-      margin-bottom: 20px;
-      text-align: center;
-      padding: 10px;
-      border-bottom: 1px solid #1e3a8a;
-    }
-    
-    .stats {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    
-    .stats-row {
-      margin: 8px 0;
-      font-size: 0.9rem;
-    }
-    
-    /* Main content area */
-    .main-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    
-    /* Buttons */
-    .menu-btn {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #1e3a8a;
-      color: #e6e6e6;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.3s ease;
-    }
-    
-    .menu-btn:hover {
-      background: #3b82f6;
-      transform: translateX(5px);
-    }
-    
-    .menu-btn i {
-      margin-right: 10px;
-      width: 20px;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Wizardry - Online Multiplayer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0e17;
+            color: #e6e6e6;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Layout */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #4cc9f0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0f3460;
+            padding: 20px 15px;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            border-right: 1px solid #1e3a8a;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 10px;
+            border-bottom: 1px solid #1e3a8a;
+        }
+        
+        .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #1e3a8a;
+        }
+        
+        .stats-row {
+            margin: 10px 0;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Buttons */
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #1e3a8a;
+            color: #e6e6e6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .menu-btn:hover {
+            background: #3b82f6;
+            transform: translateX(5px);
+        }
+        
+        .menu-btn i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .menu-btn.active {
+            background: #4cc9f0;
+            color: #0a0e17;
+            font-weight: 500;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            margin-top: 60px;
+            padding: 25px;
+            min-height: calc(100vh - 60px);
+            background: #0f172a;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        h2 {
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1e3a8a;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 100;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block !important;
+            }
+        }
+        
+        /* Connection Status */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .connection-status .fa-circle {
+            color: #4ade80;
+            font-size: 0.7rem;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #1e3a8a;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #e6e6e6;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <span>High Wizardry</span>
-    <span class="connection-status">
-      <i class="fa-solid fa-circle"></i>
-      <span id="online-count">0</span> Players Online
-    </span>
-  </header>
+    <header>
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <span>High Wizardry</span>
+        <span class="connection-status">
+            <i class="fa-solid fa-circle"></i>
+            <span id="online-count">0</span> Players Online
+        </span>
+    </header>
 
-  <div class="container">
-    <!-- Sidebar Navigation -->
-    <nav class="sidebar">
-      <div class="logo">High Wizardry</div>
-      <div class="stats">
-        <div class="stats-row"><b id="username">Player</b></div>
-        <div class="stats-row">Lvl <span id="level">1</span> | <span id="xp">0</span> xp</div>
-        <div class="stats-row">💰 <span id="gold">0</span>g <span id="silver">0</span>s</div>
-        <div class="stats-row">😊 Happiness: <span id="happiness">50</span>/100</div>
-        <div class="stats-row">🔪 Crime: <span id="crime">0</span>/100</div>
-        <div class="stats-row"><i class="fa-solid fa-bolt"></i> Energy: <span id="energy">100</span></div>
-        <div class="stats-row"><i class="fa-solid fa-droplet"></i> Mana: <span id="mana">5</span></div>
-        <div class="stats-row"><i class="fa-solid fa-heart"></i> Health: <span id="health">10</span></div>
-        <div class="stats-row" style="border-top:1px solid #2d333b; margin-top:8px; padding-top:8px;">🧠 Intelligence: <span id="intelligence">10</span></div>
-        <div class="stats-row">💪 Endurance: <span id="endurance">10</span></div>
-        <div class="stats-row">💬 Charisma: <span id="charisma">10</span></div>
-        <div class="stats-row">🎯 Dexterity: <span id="dexterity">10</span></div>
-      </div>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo">High Wizardry</div>
+            <div class="stats">
+                <div class="stats-row"><b id="username">Player</b></div>
+                <div class="stats-row">Lvl <span id="level">1</span> | <span id="xp">0</span> xp</div>
+                <div class="stats-row">💰 <span id="gold">0</span>g <span id="silver">0</span>s</div>
+                <div class="stats-row">😊 Happiness: <span id="happiness">50</span>/100</div>
+                <div class="stats-row">🔪 Crime: <span id="crime">0</span>/100</div>
+                <div class="stats-row"><i class="fa-solid fa-bolt"></i> Energy: <span id="energy">100</span></div>
+                <div class="stats-row"><i class="fa-solid fa-droplet"></i> Mana: <span id="mana">5</span></div>
+                <div class="stats-row"><i class="fa-solid fa-heart"></i> Health: <span id="health">10</span></div>
+                <div class="stats-row" style="border-top:1px solid #2d333b; margin-top:12px; padding-top:12px;">
+                    🧠 Intelligence: <span id="intelligence">10</span>
+                </div>
+                <div class="stats-row">💪 Endurance: <span id="endurance">10</span></div>
+                <div class="stats-row">💬 Charisma: <span id="charisma">10</span></div>
+                <div class="stats-row">🎯 Dexterity: <span id="dexterity">10</span></div>
+            </div>
 
-      <div class="menu">
-        <button class="menu-btn active" data-section="home">
-          <i class="fas fa-home"></i> Home
-        </button>
-        <button class="menu-btn" data-section="town">
-          <i class="fas fa-city"></i> Town Center
-        </button>
-        <button class="menu-btn" data-section="guild">
-          <i class="fas fa-users"></i> Guild Hall
-        </button>
-        <button class="menu-btn" data-section="inventory">
-          <i class="fas fa-backpack"></i> Inventory
-        </button>
-        <button class="menu-btn" data-section="market">
-          <i class="fas fa-coins"></i> Marketplace
-        </button>
-        <button class="menu-btn" data-section="bank">
-          <i class="fas fa-piggy-bank"></i> Wizard's Bank
-        </button>
-        <button class="menu-btn" data-section="stocks">
-          <i class="fas fa-chart-line"></i> Magical Stocks
-        </button>
-        <button class="menu-btn" data-section="tavern">
-          <i class="fas fa-beer"></i> Tavern
-        </button>
-        <button class="menu-btn" data-section="gym">
-          <i class="fas fa-dumbbell"></i> Wizard's Gym
-        </button>
-        <button class="menu-btn" data-section="crime">
-          <i class="fas fa-mask"></i> Dark Alleys
-        </button>
-      </div>
-    </nav>
+            <div class="menu">
+                <button class="menu-btn active" data-section="home">
+                    <i class="fas fa-home"></i> Home
+                </button>
+                <button class="menu-btn" data-section="town">
+                    <i class="fas fa-city"></i> Town Center
+                </button>
+                <button class="menu-btn" data-section="guild">
+                    <i class="fas fa-users"></i> Guild Hall
+                </button>
+                <button class="menu-btn" data-section="inventory">
+                    <i class="fas fa-backpack"></i> Inventory
+                </button>
+                <button class="menu-btn" data-section="market">
+                    <i class="fas fa-coins"></i> Marketplace
+                </button>
+                <button class="menu-btn" data-section="bank">
+                    <i class="fas fa-piggy-bank"></i> Wizard's Bank
+                </button>
+                <button class="menu-btn" data-section="stocks">
+                    <i class="fas fa-chart-line"></i> Magical Stocks
+                </button>
+                <button class="menu-btn" data-section="tavern">
+                    <i class="fas fa-beer"></i> Tavern
+                </button>
+                <button class="menu-btn" data-section="gym">
+                    <i class="fas fa-dumbbell"></i> Wizard's Gym
+                </button>
+                <button class="menu-btn" data-section="crime">
+                    <i class="fas fa-mask"></i> Dark Alleys
+                </button>
+            </div>
+        </nav>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <div id="home" class="content-section active">
-        <h2>Welcome to High Wizardry</h2>
-        <p>Your magical adventure begins here! Choose an option from the menu to get started.</p>
-      </div>
-      
-      <div id="town" class="content-section">
-        <h2>Town Center</h2>
-        <p>Explore the magical town and discover new opportunities.</p>
-      </div>
-      
-      <div id="guild" class="content-section">
-        <h2>Guild Hall</h2>
-        <p>Join or create a guild with other wizards.</p>
-      </div>
-      
-      <div id="inventory" class="content-section">
-        <h2>Inventory</h2>
-        <p>Your magical items will appear here.</p>
-      </div>
-      
-      <div id="market" class="content-section">
-        <h2>Marketplace</h2>
-        <p>Buy and sell magical items here.</p>
-      </div>
-      
-      <div id="bank" class="content-section">
-        <h2>Wizard's Bank</h2>
-        <p>Manage your magical finances here.</p>
-      </div>
-      
-      <div id="stocks" class="content-section">
-        <h2>Magical Stocks</h2>
-        <p>Invest in magical commodities.</p>
-      </div>
-      
-      <div id="tavern" class="content-section">
-        <h2>Tavern</h2>
-        <p>Relax and restore your energy here.</p>
-      </div>
-      
-      <div id="gym" class="content-section">
-        <h2>Wizard's Gym</h2>
-        <p>Train your magical abilities here.</p>
-      </div>
-      
-      <div id="crime" class="content-section">
-        <h2>Dark Alleys</h2>
-        <p>Engage in risky activities here.</p>
-      </div>
-    </main>
-  </div>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="home" class="content-section active">
+                <h2>Welcome to High Wizardry</h2>
+                <p>Your magical adventure begins here! Choose an option from the menu to get started.</p>
+                <div style="margin-top: 20px; padding: 20px; background: rgba(76, 201, 240, 0.1); border-radius: 8px; border-left: 4px solid #4cc9f0;">
+                    <h3>Getting Started</h3>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li>Visit the <strong>Town Center</strong> to explore the magical town</li>
+                        <li>Check your <strong>Inventory</strong> to see your items</li>
+                        <li>Visit the <strong>Tavern</strong> to restore your energy</li>
+                        <li>Train at the <strong>Wizard's Gym</strong> to improve your stats</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="town" class="content-section">
+                <h2>Town Center</h2>
+                <p>Explore the magical town and discover new opportunities.</p>
+            </div>
+            
+            <div id="guild" class="content-section">
+                <h2>Guild Hall</h2>
+                <p>Join or create a guild with other wizards.</p>
+            </div>
+            
+            <div id="inventory" class="content-section">
+                <h2>Inventory</h2>
+                <p>Your magical items will appear here.</p>
+            </div>
+            
+            <div id="market" class="content-section">
+                <h2>Marketplace</h2>
+                <p>Buy and sell magical items here.</p>
+            </div>
+            
+            <div id="bank" class="content-section">
+                <h2>Wizard's Bank</h2>
+                <p>Manage your magical finances here.</p>
+            </div>
+            
+            <div id="stocks" class="content-section">
+                <h2>Magical Stocks</h2>
+                <p>Invest in magical commodities.</p>
+            </div>
+            
+            <div id="tavern" class="content-section">
+                <h2>Tavern</h2>
+                <p>Relax and restore your energy here.</p>
+            </div>
+            
+            <div id="gym" class="content-section">
+                <h2>Wizard's Gym</h2>
+                <p>Train your magical abilities here.</p>
+            </div>
+            
+            <div id="crime" class="content-section">
+                <h2>Dark Alleys</h2>
+                <p>Engage in risky activities here.</p>
+            </div>
+        </main>
+    </div>
 
-  <script>
-    // Basic navigation between sections
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuButtons = document.querySelectorAll('.menu-btn');
-      const sections = document.querySelectorAll('.content-section');
-      
-      menuButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          // Remove active class from all buttons and sections
-          menuButtons.forEach(btn => btn.classList.remove('active'));
-          sections.forEach(section => section.classList.remove('active'));
-          
-          // Add active class to clicked button
-          this.classList.add('active');
-          
-          // Show corresponding section
-          const sectionId = this.getAttribute('data-section');
-          document.getElementById(sectionId).classList.add('active');
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation between sections
+            const menuButtons = document.querySelectorAll('.menu-btn');
+            const sections = document.querySelectorAll('.content-section');
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            
+            // Toggle mobile menu
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // Handle menu button clicks
+            menuButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and sections
+                    menuButtons.forEach(btn => btn.classList.remove('active'));
+                    sections.forEach(section => section.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const sectionId = this.getAttribute('data-section');
+                    document.getElementById(sectionId).classList.add('active');
+                    
+                    // Close mobile menu after selection
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Simulate online players count
+            function updateOnlineCount() {
+                const onlineCount = Math.floor(Math.random() * 50) + 50; // Random number between 50-100
+                document.getElementById('online-count').textContent = onlineCount;
+            }
+            
+            // Initial update and set interval
+            updateOnlineCount();
+            setInterval(updateOnlineCount, 10000); // Update every 10 seconds
+            
+            // Handle window resize for responsive design
+            function handleResize() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('active');
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            
+            // Initialize tooltips (if you add them later)
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
-      });
-      
-      // Simulate online players count
-      setInterval(() => {
-        const onlineCount = Math.floor(Math.random() * 100) + 1;
-        document.getElementById('online-count').textContent = onlineCount;
-      }, 5000);
-    });
-  </script>
+    </script>
 </body>
 </html>
