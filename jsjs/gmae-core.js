@@ -1,33 +1,200 @@
 /**
  * High Wizardry - Core Game Module
- * Handles all game state and logic
+ * Handles all game state and logic with improved stability
  */
+
+class GameError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = 'GameError';
+    this.code = code;
+  }
+}
+
+class GameState {
+  constructor(initialState) {
+    this._state = initialState;
+    this._listeners = new Set();
+    this._isUpdating = false;
+  }
+
+  get state() {
+    return this._state;
+  }
+
+  update(updates) {
+    if (this._isUpdating) {
+      console.warn('State update already in progress');
+      return;
+    }
+
+    try {
+      this._isUpdating = true;
+      this._state = {
+        ...this._state,
+        ...updates,
+        lastUpdated: Date.now()
+      };
+      this._notifyListeners();
+    } catch (error) {
+      console.error('State update failed:', error);
+      throw new GameError('Failed to update game state', 'STATE_UPDATE_ERROR');
+    } finally {
+      this._isUpdating = false;
+    }
+  }
+
+  subscribe(listener) {
+    this._listeners.add(listener);
+    return () => this._listeners.delete(listener);
+  }
+
+  _notifyListeners() {
+    for (const listener of this._listeners) {
+      try {
+        listener(this._state);
+      } catch (error) {
+        console.error('Listener error:', error);
+      }
+    }
+  }
+}
+
+class PerformanceMonitor {
+  constructor() {
+    this.frameTimes = [];
+    this.fps = 0;
+    this.lastFrameTime = performance.now();
+    this.longFrames = 0;
+  }
+
+  beginFrame() {
+    this.frameStart = performance.now();
+    
+    // Calculate FPS
+    const now = performance.now();
+    const delta = now - this.lastFrameTime;
+    this.lastFrameTime = now;
+    this.fps = Math.round(1000 / delta);
+    
+    this.frameTimes.push(delta);
+    if (this.frameTimes.length > 60) {
+      this.frameTimes.shift();
+    }
+
+    // Warn about long frames
+    if (delta > 16) { // More than 16ms is bad (60fps target)
+      this.longFrames++;
+      if (this.longFrames > 5) {
+        console.warn(`Performance warning: ${this.longFrames} long frames detected`);
+      }
+    } else {
+      this.longFrames = 0;
+    }
+  }
+
+  getAverageFPS() {
+    if (this.frameTimes.length === 0) return 0;
+    const sum = this.frameTimes.reduce((a, b) => a + b, 0);
+    return Math.round(1000 / (sum / this.frameTimes.length));
+  }
+}
 
 class GameCore {
     constructor() {
-        this.state = {
-            player: this.getInitialPlayerState(),
-            locations: this.getLocationsConfig(),
-            crimes: this.getCrimesConfig(),
-            lastUpdate: Date.now()
-        };
+        // Initialize performance monitoring
+        this.performance = new PerformanceMonitor();
+        this._initialized = false;
         
-        // Game settings
+        // Game settings with defaults
         this.settings = {
             autoSaveInterval: 60000, // 1 minute
             gameLoopInterval: 1000,  // 1 second
             energyRegenRate: 1,     // Energy points per second
-            saveKey: 'highWizardrySave'
+            saveKey: 'highWizardrySave',
+            maxSaveSize: 1024 * 1024, // 1MB max save size
+            version: '1.0.0'
         };
         
-        // Initialize game systems
-        this.setupEventListeners();
-        this.loadGame();
+        // Initialize game state with error handling
+        try {
+            this.state = new GameState({
+                player: this.getInitialPlayerState(),
+                locations: this.getLocationsConfig(),
+                crimes: this.getCrimesConfig(),
+                lastUpdate: Date.now(),
+                isPaused: false,
+                errors: []
+            });
+            
+            // Initialize game systems
+            this.setupEventListeners();
+            this.loadGame();
+            this._initialized = true;
+            
+            // Start auto-save
+            this.setupAutoSave();
+            
+            console.log('GameCore initialized successfully');
+        } catch (error) {
+            const errorMsg = `Failed to initialize GameCore: ${error.message}`;
+            console.error(errorMsg, error);
+            this.handleFatalError(error);
+        }
     }
     
-    // Initialize a new player state
-    getInitialPlayerState() {
-        return {
+    handleFatalError(error) {
+        // Log to error tracking service in production
+        if (typeof window !== 'undefined' && window.trackJs) {
+            window.trackJs.track(error);
+        }
+        
+        // Show error to user
+        const errorEvent = new CustomEvent('game:error', {
+            detail: {
+                message: 'A critical error occurred',
+                error: {
+                    message: error.message,
+                    stack: error.stack,
+                    code: error.code || 'UNKNOWN_ERROR'
+                },
+                timestamp: new Date().toISOString()
+            }
+        });
+        window.dispatchEvent(errorEvent);
+        
+        // Try to recover if possible
+        if (this._initialized) {
+            this.state.update({
+                errors: [...(this.state.state.errors || []), {
+                    message: error.message,
+                    timestamp: Date.now(),
+                    code: error.code || 'UNKNOWN_ERROR'
+                }]
+            });
+        }
+    }
+    
+    setupAutoSave() {
+        if (this._autoSaveInterval) {
+            clearInterval(this._autoSaveInterval);
+        }
+        
+        this._autoSaveInterval = setInterval(() => {
+            try {
+                this.saveGame();
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+            }
+        }, this.settings.autoSaveInterval);
+        
+        // Also save when page is being unloaded
+        window.addEventListener('beforeunload', () => this.saveGame());
+    }
+    
+    // Initialize a new player state with validation
+    getInitialPlayerState(overrides = {}) {
+        const defaultState = {
             name: 'Apprentice',
             level: 1,
             xp: 0,
@@ -60,8 +227,41 @@ class GameCore {
                 nextLevelXp: 1000,
                 successRate: 60
             },
-            lastAction: Date.now()
+            lastAction: Date.now(),
+            createdAt: Date.now(),
+            version: this.settings.version
         };
+        
+        // Validate and merge with overrides
+        return this.validatePlayerState({
+            ...defaultState,
+            ...overrides,
+            // Ensure these objects are properly merged
+            equipment: { ...defaultState.equipment, ...(overrides.equipment || {}) },
+            stats: { ...defaultState.stats, ...(overrides.stats || {}) },
+            crimes: { ...defaultState.crimes, ...(overrides.crimes || {}) }
+        });
+    }
+    
+    validatePlayerState(state) {
+        // Basic type checking and validation
+        if (typeof state.health !== 'number' || state.health < 0) {
+            console.warn('Invalid health value, resetting to max');
+            state.health = state.maxHealth || 100;
+        }
+        
+        if (state.energy < 0) state.energy = 0;
+        if (state.mana < 0) state.mana = 0;
+        
+        // Ensure stats are within bounds
+        const stats = ['strength', 'intelligence', 'dexterity', 'luck'];
+        stats.forEach(stat => {
+            if (typeof state.stats[stat] !== 'number' || state.stats[stat] < 1) {
+                state.stats[stat] = 10; // Default value
+            }
+        });
+        
+        return state;
     }
     
     // Game locations configuration
@@ -348,9 +548,66 @@ class GameCore {
     }
 }
 
+// Error boundary for game initialization
+function withErrorBoundary(gameInstance) {
+    const originalMethods = {};
+    const methodsToWrap = ['update', 'saveGame', 'loadGame'];
+    
+    methodsToWrap.forEach(methodName => {
+        if (typeof gameInstance[methodName] === 'function') {
+            originalMethods[methodName] = gameInstance[methodName].bind(gameInstance);
+            gameInstance[methodName] = (...args) => {
+                try {
+                    return originalMethods[methodName](...args);
+                } catch (error) {
+                    console.error(`Error in ${methodName}:`, error);
+                    gameInstance.handleFatalError(error);
+                    throw error; // Re-throw to allow caller to handle if needed
+                }
+            };
+        }
+    });
+    
+    return gameInstance;
+}
+
+// Create a singleton instance with error boundary
+const gameInstance = withErrorBoundary(new GameCore());
+
 // Export for Node.js/CommonJS
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-    module.exports = GameCore;
+    module.exports = {
+        GameCore,
+        game: gameInstance
+    };
+}
+
+// For browser global
+if (typeof window !== 'undefined') {
+    window.WizardCity = window.WizardCity || {};
+    window.WizardCity.Game = gameInstance;
+}
+
+// Add global error handler
+if (typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => {
+        console.error('Unhandled error:', event.error);
+        if (window.WizardCity?.Game) {
+            window.WizardCity.Game.handleFatalError(event.error);
+        }
+        // Prevent the default error handler
+        event.preventDefault();
+    });
+    
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('Unhandled promise rejection:', event.reason);
+        if (window.WizardCity?.Game) {
+            window.WizardCity.Game.handleFatalError(event.reason);
+        }
+        // Prevent the default handler
+        event.preventDefault();
+    });
 }
 
 // Make available globally
