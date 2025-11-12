@@ -6,7 +6,7 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize UI if available
-    if (typeof WizardUI !== 'undefined') {
+    if (typeof WizardUI !== 'undefined' && typeof WizardUI.init === 'function') {
         WizardUI.init();
     }
     
