@@ -3,197 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High Wizardry - Online Multiplayer</title>
+    <title>Wizard City - Online RPG</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --text: #ecf0f1;
+            --text-muted: #bdc3c7;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #1abc9c;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', sans-serif;
         }
-        
+
         body {
-            background-color: #0a0e17;
-            color: #e6e6e6;
+            background-color: #1a1f2e;
+            color: var(--text);
             line-height: 1.6;
-            overflow-x: hidden;
         }
-        
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        /* Player Info Bar */
-        .player-info {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border-bottom: 2px solid #4cc9f0;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        .stat-bar {
-            height: 20px;
-            border-radius: 10px;
-            margin-bottom: 5px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-        }
-        
-        .stat-fill {
-            height: 100%;
-            transition: width 0.3s ease;
-            position: relative;
-        }
-        
-        .energy-fill { background: linear-gradient(90deg, #4cc9f0, #3a86ff); }
-        .health-fill { background: linear-gradient(90deg, #f72585, #b5179e); }
-        .mana-fill { background: linear-gradient(90deg, #7209b7, #560bad); }
-        .crime-fill { background: linear-gradient(90deg, #f8961e, #f3722c); }
-        
-        .stat-text {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: white;
-            font-size: 12px;
-            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-        }
-        
-        .money-display {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-family: 'MedievalSharp', cursive;
-            font-size: 1.1em;
-        }
-        
-        .money-display i {
-            margin: 0 2px;
-        }
-        
-        .stat-icon {
-            width: 20px;
-            text-align: center;
-            margin-right: 5px;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #0f3460;
-            padding: 20px;
-            transition: all 0.3s;
-            border-right: 2px solid #4cc9f0;
-        }
-        
-        .location-btn {
-            display: block;
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            background: #16213e;
-            color: #e6e6e6;
-            border: none;
-            border-radius: 5px;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'MedievalSharp', cursive;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .location-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        .location-btn.active {
-            background: #4cc9f0;
-            color: #0a0e17;
-            font-weight: bold;
-        }
-        
-        .location-btn i {
-            margin-right: 8px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .location-btn:hover, .location-btn.active {
-            background: #1a1a2e;
-            transform: translateX(5px);
-        }
-        
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-        }
-        
-        .location-content {
-            display: none;
-            padding: 20px;
-            background: rgba(22, 33, 62, 0.8);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #4cc9f0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .location-content.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
+
         /* Header */
-        header {
-            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
-            color: #e6e6e6;
-            padding: 15px 20px;
+        .game-header {
+            background: var(--primary);
+            border-bottom: 3px solid var(--accent);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .player-stats {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-radius: 8px;
+            padding: 0 15px;
         }
-        
-        .logo {
-            font-size: 24px;
+
+        .stat-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            position: relative;
+            transition: width 0.3s ease;
+        }
+
+        .stat-text {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
             font-weight: bold;
-            color: #4cc9f0;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
         }
-        
-        .user-info {
+
+        .energy .stat-fill { background: linear-gradient(90deg, #3498db, #2980b9); }
+        .health .stat-fill { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .mana .stat-fill { background: linear-gradient(90deg, #9b59b6, #8e44ad); }
+        .crime .stat-fill { background: linear-gradient(90deg, #f39c12, #e67e22); }
+
+        .player-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-        
-        .online-count {
-            color: #4cc9f0;
-            font-weight: bold;
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid var(--accent);
+        }
+
+        .player-details {
+            text-align: right;
+        }
+
+        .player-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--accent);
+        }
+
+        .player-level {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        /* Main Layout */
+        .game-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background: var(--secondary);
+            padding: 15px 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .location-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.95em;
+        }
+
+        .location-btn:hover, .location-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .location-btn i {
+            width: 24px;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: #1a1f2e;
+        }
+
+        .location-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .location-title {
+            color: var(--accent);
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .location-desc {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: var(--secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .action-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .action-btn i {
+            font-size: 1.1em;
+        }
+
+        /* Game Log */
+        .game-log {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .log-entry:first-child {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--secondary);
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            border-left: 3px solid var(--accent);
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 0;
+            }
+            
+            .location-btn {
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                text-align: center;
+                padding: 10px 15px;
+            }
+            
+            .location-btn:hover, .location-btn.active {
+                border-left: none;
+                border-bottom: 3px solid var(--accent);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar with Locations -->
-        <div class="sidebar">
-            <h3 class="mb-4" style="color: #4cc9f0;">Locations</h3>
+    <!-- Game Header -->
+    <header class="game-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="player-stats">
+                        <div class="stat energy" style="width: 100%; max-width: 200px;">
+                            <div class="stat-fill" style="width: 75%;">
+                                <span class="stat-text">75/100</span>
+                            </div>
+                            <div class="stat-label">Energy</div>
+                        </div>
+                        <div class="stat health" style="width: 100%; max-width: 200px; margin: 0 15px;">
+                            <div class="stat-fill" style="width: 100%;">
+                                <span class="stat-text">100/100</span>
+                            </div>
+                            <div class="stat-label">Health</div>
+                        </div>
+                        <div class="stat mana" style="width: 100%; max-width: 200px;">
+                            <div class="stat-fill" style="width: 50%;">
+                                <span class="stat-text">50/100</span>
+                            </div>
+                            <div class="stat-label">Mana</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="player-info justify-content-end">
+                        <div class="player-details">
+                            <div class="player-name">Wizard Name</div>
+                            <div class="player-level">Level 5 | 1,250 XP</div>
+                            <div class="player-money">
+                                <i class="fas fa-coins text-warning"></i> 1,250 
+                                <i class="fas fa-gem text-info ms-2"></i> 25
+                            </div>
+                        </div>
+                        <div class="player-avatar">
+                            <i class="fas fa-hat-wizard"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <div class="game-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
             <button class="location-btn active" data-location="town-square">
                 <i class="fas fa-home"></i> Town Square
             </button>
@@ -212,226 +357,871 @@
             <button class="location-btn" data-location="arena">
                 <i class="fas fa-swords"></i> Dueling Arena
             </button>
-        </div>
-        
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <!-- Player Info Bar -->
-            <div class="player-info mb-4">
-                <div class="row align-items-center">
-                    <div class="col-md-2">
-                        <h4 class="mb-0"><i class="fas fa-hat-wizard me-2"></i>High Wizardry</h4>
-                    </div>
-                    <div class="col-md-7">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="d-flex align-items-center mb-1">
-                                    <i class="fas fa-bolt text-warning stat-icon"></i>
-                                    <div class="stat-bar w-100">
-                                        <div id="player-energy" class="stat-fill energy-fill" style="width: 100%">
-                                            <span id="energy-text" class="stat-text">100/100</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-heart text-danger stat-icon"></i>
-                                    <div class="stat-bar w-100">
-                                        <div id="player-health" class="stat-fill health-fill" style="width: 100%">
-                                            <span id="health-text" class="stat-text">100/100</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="d-flex align-items-center mb-1">
-                                    <i class="fas fa-magic text-info stat-icon"></i>
-                                    <div class="stat-bar w-100">
-                                        <div id="player-mana" class="stat-fill mana-fill" style="width: 100%">
-                                            <span id="mana-text" class="stat-text">100/100</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-mask text-warning stat-icon"></i>
-                                    <div class="stat-bar w-100">
-                                        <div id="crime-xp" class="stat-fill crime-fill" style="width: 0%">
-                                            <span id="crime-xp-text" class="stat-text">0/1000</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-1">
-                                    <span class="text-muted">Level:</span> 
-                                    <span class="text-white">1</span>
-                                    <span class="ms-3 text-muted">Crime:</span> 
-                                    <span id="crime-level" class="text-warning">1</span>
-                                </div>
-                                <div class="money-display d-inline-block">
-                                    <i class="fas fa-coins text-warning"></i>
-                                    <span id="money-amount">1,000 <i class="fas fa-coins text-secondary"></i> 0 <i class="fas fa-coins text-danger"></i> 0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <div class="text-muted small">
-                            <i class="far fa-clock me-1"></i> 
-                            <span id="game-time">00:00:00</span>
-                            <span class="ms-2">
-                                <i class="fas fa-users me-1"></i>
-                                <span id="online-count">0</span> online
-                            </span>
-                        </div>
-                    </div>
+            <button class="location-btn" data-location="bank">
+                <i class="fas fa-piggy-bank"></i> Wizard's Bank
+            </button>
+            <button class="location-btn" data-location="guild">
+                <i class="fas fa-users"></i> Guild Hall
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="location-header">
+                <h1 class="location-title">Town Square</h1>
+                <p class="location-desc">
+                    The bustling heart of the magical city. Wizards and adventurers from all realms gather here under the watchful gaze of the ancient wizard statues.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn">
+                    <i class="fas fa-comments"></i> Talk to Locals
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-comment-dots"></i> Hear Gossip
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-search"></i> Look Around
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-users"></i> Find Party
+                </button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Level</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1,250</div>
+                    <div class="stat-label">Experience</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1,250</div>
+                    <div class="stat-label">Gold</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">Gems</div>
                 </div>
             </div>
-            
-            <!-- Location Content Sections -->
-            <div id="location-town-square" class="location-content active">
-                <h2><i class="fas fa-home me-2"></i>Town Square</h2>
-                <p class="mb-4">The heart of the magical city. Wizards and adventurers from all realms gather here under the watchful gaze of the ancient wizard statues.</p>
-                
-                <div id="location-actions" class="mb-4">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="game-log" id="game-log">
-                    <!-- Game messages will appear here -->
-                </div>
+
+            <!-- Game Log -->
+            <div class="game-log" id="gameLog">
+                <div class="log-entry">Welcome to Wizard City! Your magical adventure begins here.</div>
+                <div class="log-entry">You have entered the Town Square.</div>
+                <div class="log-entry">You feel a strange energy in the air...</div>
             </div>
-            
-            <div id="location-magic-shop" class="location-content">
-                <h2><i class="fas fa-hat-wizard me-2"></i>Magic Shop</h2>
-                <p class="mb-4">Shelves upon shelves of magical ingredients, tomes, and artifacts line the walls. The air is thick with the scent of rare herbs and the hum of enchanted items.</p>
-                
-                <div id="location-actions">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="mt-4">
-                    <h5>Available Items</h5>
-                    <div class="row" id="shop-items">
-                        <!-- Shop items will be loaded here -->
-                    </div>
-                </div>
-            </div>
-            
-            <div id="location-tavern" class="location-content">
-                <h2><i class="fas fa-beer me-2"></i>The Drunken Wizard</h2>
-                <p class="mb-4">A cozy tavern where magical brews and tall tales flow as freely as the enchanted ale. The air is filled with laughter and the occasional burst of harmless magic.</p>
-                
-                <div id="location-actions">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="mt-4">
-                    <h5>Special Drinks</h5>
-                    <div class="row" id="tavern-drinks">
-                        <!-- Drink items will be loaded here -->
-                    </div>
-                </div>
-            </div>
-            
-            <div id="location-library" class="location-content">
-                <h2><i class="fas fa-book me-2"></i>Arcane Library</h2>
-                <p class="mb-4">Towering bookshelves stretch to the ceiling, filled with ancient tomes of forgotten knowledge. The air hums with latent magical energy.</p>
-                
-                <div id="location-actions">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="mt-4">
-                    <h5>Available Tomes</h5>
-                    <div class="row" id="library-tomes">
-                        <!-- Library tomes will be loaded here -->
-                    </div>
-                </div>
-            </div>
-            
-            <div id="location-alley" class="location-content">
-                <h2><i class="fas fa-mask me-2"></i>Dark Alley</h2>
-                <p class="mb-4">A shadowy corner of the city where the law holds little power. The perfect place for those who prefer to operate outside the rules.</p>
-                
-                <div id="location-actions">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="mt-4">
-                    <h5>Crime Opportunities</h5>
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Crime</th>
-                                    <th>Risk</th>
-                                    <th>Reward</th>
-                                    <th>Energy</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="crime-opportunities">
-                                <!-- Crime opportunities will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="location-arena" class="location-content">
-                <h2><i class="fas fa-swords me-2"></i>Dueling Arena</h2>
-                <p class="mb-4">The air crackles with magical energy as wizards test their skills against one another. The crowd roars with each spectacular spell.</p>
-                
-                <div id="location-actions">
-                    <!-- Action buttons will be added here by JavaScript -->
-                </div>
-                
-                <div class="mt-4">
-                    <h5>Available Duels</h5>
-                    <div class="row" id="duel-opponents">
-                        <!-- Duel opponents will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="game.js"></script>
     <script>
-        // Game log styles
-        .game-log {
-            height: 200px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #4cc9f0;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-        }
-        
-        .log-message {
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(76, 201, 240, 0.2);
-            color: #e6e6e6;
-        }
-        
-        .log-message:first-child {
-            color: #4cc9f0;
-            font-weight: bold;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .player-info .col-md-2 {
-                margin-bottom: 10px;
+        // Game state
+        const gameState = {
+            player: {
+                name: 'Wizard Name',
+                level: 5,
+                xp: 1250,
+                nextLevelXp: 2000,
+                energy: 75,
+                maxEnergy: 100,
+                health: 100,
+                maxHealth: 100,
+                mana: 50,
+                maxMana: 100,
+                gold: 5000,
+                gems: 25,
+                happiness: 50,
+                maxHappiness: 100,
+                intoxication: 0, // 0-100 scale
+                home: null, // Will store player's home type
+                location: 'town-square',
+                inventory: [],
+                stats: {
+                    intelligence: 10,
+                    wisdom: 8,
+                    charisma: 7,
+                    dexterity: 6,
+                    strength: 5
+                },
+                lastDrinkTime: 0, // Timestamp of last drink
+                rentDueDate: Date.now() + (7 * 24 * 60 * 60 * 1000) // 1 week from now
+            },
+            // Game items database
+            items: {
+                // Alcohol
+                'ale': { name: 'Mug of Ale', type: 'alcohol', value: 5, effect: { happiness: 5, intoxication: 10, energy: -2 }, description: 'A frothy mug of the local ale. Nothing special, but it gets the job done.' },
+                'wine': { name: 'Bottle of Elven Wine', type: 'alcohol', value: 15, effect: { happiness: 8, intoxication: 8, energy: 5 }, description: 'A fine elven wine that restores some energy while lifting your spirits.' },
+                'mead': { name: 'Honey Mead', type: 'alcohol', value: 10, effect: { happiness: 7, intoxication: 12, health: 5 }, description: 'Sweet and strong, this mead has minor healing properties.' },
+                'firewhisky': { name: 'Dragonfire Whisky', type: 'alcohol', value: 50, effect: { happiness: 15, intoxication: 25, health: -5, energy: 10 }, description: 'This potent drink burns all the way down. Not for the faint of heart.' },
+                'moonshine': { name: 'Moonshine', type: 'alcohol', value: 30, effect: { happiness: 10, intoxication: 30, health: -10, energy: 15 }, description: 'Brewed in secret by the local alchemist. Highly intoxicating but rough on the system.' },
+                
+                // Food
+                'bread': { name: 'Loaf of Bread', type: 'food', value: 3, effect: { energy: 10 }, description: 'A simple loaf of bread. Fills you up but not very exciting.' },
+                'cheese': { name: 'Wheel of Cheese', type: 'food', value: 8, effect: { energy: 15, happiness: 2 }, description: 'Aged cheddar that restores energy and lifts your mood.' },
+                'stew': { name: 'Hearty Stew', type: 'food', value: 12, effect: { energy: 25, health: 10 }, description: 'A warm, hearty stew that restores both health and energy.' },
+                
+                // Housing items
+                'candle': { name: 'Magical Candle', type: 'decoration', value: 25, effect: { happiness: 1 }, description: 'A simple magical candle that never burns out. Slightly increases happiness at home.' },
+                'tapestry': { name: 'Enchanted Tapestry', type: 'decoration', value: 100, effect: { happiness: 3 }, description: 'A beautiful tapestry that shifts patterns. Makes any home feel cozier.' },
+                'fountain': { name: 'Indoor Fountain', type: 'decoration', value: 500, effect: { happiness: 10 }, description: 'A magical fountain that creates soothing water patterns. Greatly increases happiness.' },
+                
+                // Consumables
+                'potion_healing': { name: 'Healing Potion', type: 'potion', value: 50, effect: { health: 50 }, description: 'Restores 50 health points.' },
+                'potion_mana': { name: 'Mana Potion', type: 'potion', value: 60, effect: { mana: 50 }, description: 'Restores 50 mana points.' },
+                'potion_energy': { name: 'Energy Elixir', type: 'potion', value: 40, effect: { energy: 50 }, description: 'Restores 50 energy points.' }
+            },
+            
+            // Housing types
+            housing: {
+                'tent': { name: 'Tent', price: 0, maxHappiness: 30, description: 'A simple canvas tent. Better than sleeping outside, but not by much.' },
+                'shack': { name: 'Wooden Shack', price: 5000, maxHappiness: 50, description: 'A small wooden shack with basic amenities.' },
+                'house': { name: 'Cozy Cottage', price: 25000, maxHappiness: 75, description: 'A comfortable cottage with a thatched roof and stone walls.' },
+                'tower': { name: 'Wizard\'s Tower', price: 100000, maxHappiness: 100, description: 'An impressive tower with magical enhancements and great views.' },
+                'mansion': { name: 'Magical Mansion', price: 500000, maxHappiness: 150, description: 'A grand mansion with enchanted rooms and luxurious furnishings.' },
+                'castle': { name: 'Enchanted Castle', price: 2500000, maxHappiness: 200, description: 'A magnificent castle with magical defenses and opulent interiors.' }
+            },
+            
+            // Game locations
+            locations: {
+                'town-square': {
+                    name: 'Town Square',
+                    description: 'The bustling heart of the magical city. Wizards and adventurers from all realms gather here under the watchful gaze of the ancient wizard statues.',
+                    actions: [
+                        { id: 'talk', name: 'Talk to Locals', icon: 'fa-comments', energy: 5 },
+                        { id: 'gossip', name: 'Hear Gossip', icon: 'fa-comment-dots', energy: 3 },
+                        { id: 'market', name: 'Visit Market', icon: 'fa-shopping-cart', energy: 2 },
+                        { id: 'advertise', name: 'Place Ad', icon: 'fa-bullhorn', energy: 10, cost: 100 }
+                    ]
+                },
+                'tavern': {
+                    name: 'The Drunken Wizard',
+                    description: 'A cozy tavern where magical brews and tall tales flow as freely as the enchanted ale. The air is filled with laughter and the occasional burst of harmless magic.',
+                    actions: [
+                        { id: 'order_drink', name: 'Order a Drink', icon: 'fa-beer', energy: 0 },
+                        { id: 'chat_bartender', name: 'Chat with Bartender', icon: 'fa-comment', energy: 5 },
+                        { id: 'play_darts', name: 'Play Darts', icon: 'fa-bullseye', energy: 10, cost: 10 },
+                        { id: 'brawl', name: 'Start a Bar Fight', icon: 'fa-fist-raised', energy: 30, risk: 'high' }
+                    ],
+                    drinks: ['ale', 'wine', 'mead', 'firewhisky', 'moonshine']
+                },
+                'market': {
+                    name: 'Market District',
+                    description: 'A bustling marketplace where merchants from across the realm sell their wares. The air is filled with the sounds of haggling and the smells of exotic spices.',
+                    actions: [
+                        { id: 'browse', name: 'Browse Wares', icon: 'fa-search', energy: 2 },
+                        { id: 'sell', name: 'Sell Items', icon: 'fa-coins', energy: 5 },
+                        { id: 'invest', name: 'Invest in Market', icon: 'fa-chart-line', energy: 10, cost: 1000 }
+                    ]
+                },
+                'estate': {
+                    name: 'Estate Agent',
+                    description: 'A well-appointed office where properties are bought and sold. Blueprints and miniature models of various homes are displayed on mahogany tables.',
+                    actions: [
+                        { id: 'view_properties', name: 'View Properties', icon: 'fa-home', energy: 5 },
+                        { id: 'pay_rent', name: 'Pay Rent', icon: 'fa-money-bill-wave', energy: 2 },
+                        { id: 'decorate', name: 'Buy Decorations', icon: 'fa-couch', energy: 5 }
+                    ]
+                },
+                'bank': {
+                    name: "Wizard's Bank",
+                    description: 'A secure vault where wizards store their gold and valuables. The goblin tellers are surprisingly trustworthy, as long as you have the right password.',
+                    actions: [
+                        { id: 'deposit', name: 'Deposit Gold', icon: 'fa-arrow-down', energy: 2 },
+                        { id: 'withdraw', name: 'Withdraw Gold', icon: 'fa-arrow-up', energy: 2 },
+                        { id: 'interest', name: 'Collect Interest', icon: 'fa-percentage', energy: 2 }
+                    ]
+                }
+            },
+            
+            // Initialize the game
+            init: function() {
+                // Set up player's initial home if they don't have one
+                if (!this.player.home) {
+                    this.player.home = {
+                        type: 'tent',
+                        decorations: [],
+                        happiness: 0
+                    };
+                }
+                
+                this.setupEventListeners();
+                this.updateUI();
+                this.setupGameLoop();
+                
+                // Initial game message
+                this.addToLog('Welcome to Wizard City! Your magical adventure begins here.');
+                this.addToLog('You have entered the Town Square.');
+                this.addToLog(`You currently live in a ${this.player.home.type}.`);
+            },
+            
+            // Set up the game loop for passive effects
+            setupGameLoop: function() {
+                // Process passive effects every 10 seconds
+                setInterval(() => {
+                    // Reduce intoxication over time
+                    if (this.player.intoxication > 0) {
+                        this.player.intoxication = Math.max(0, this.player.intoxication - 1);
+                        this.updateUI();
+                    }
+                    
+                    // Apply happiness from home
+                    this.updateHappiness();
+                    
+                    // Check rent due date
+                    this.checkRentDue();
+                    
+                }, 10000); // 10 seconds
+            },
+            
+            // Update player's happiness based on home and other factors
+            updateHappiness: function() {
+                if (!this.player.home) return;
+                
+                const homeType = this.player.home.type;
+                const maxHappiness = this.housing[homeType]?.maxHappiness || 30;
+                
+                // Base happiness from home type
+                let happiness = Math.min(30, maxHappiness * 0.3);
+                
+                // Add happiness from decorations
+                this.player.home.decorations.forEach(itemId => {
+                    const item = this.items[itemId];
+                    if (item?.effect?.happiness) {
+                        happiness += item.effect.happiness;
+                    }
+                });
+                
+                // Cap at max happiness for home type
+                this.player.happiness = Math.min(happiness, maxHappiness);
+                
+                // Update UI if happiness changes significantly
+                this.updateUI();
+            },
+            
+            // Check if rent is due
+            checkRentDue: function() {
+                if (this.player.home.type === 'tent') return; // No rent for tents
+                
+                const now = Date.now();
+                if (now >= this.player.rentDueDate) {
+                    const home = this.housing[this.player.home.type];
+                    const rent = home.price * 0.1; // 10% of home value as weekly rent
+                    
+                    if (this.player.gold >= rent) {
+                        this.player.gold -= rent;
+                        this.player.rentDueDate = now + (7 * 24 * 60 * 60 * 1000); // Next week
+                        this.addToLog(`Paid ${rent} gold in rent. Next payment due in 7 days.`);
+                    } else {
+                        // Can't pay rent - downgrade housing
+                        this.downgradeHousing();
+                    }
+                    
+                    this.updateUI();
+                }
+            },
+            
+            // Downgrade player's housing if they can't pay rent
+            downgradeHousing: function() {
+                const currentHome = this.player.home.type;
+                let newHome = 'tent';
+                
+                if (currentHome === 'mansion') newHome = 'tower';
+                else if (currentHome === 'tower') newHome = 'house';
+                else if (currentHome === 'house') newHome = 'shack';
+                else if (currentHome === 'shack') newHome = 'tent';
+                
+                this.player.home.type = newHome;
+                this.player.rentDueDate = Date.now() + (7 * 24 * 60 * 60 * 1000); // Reset rent due date
+                
+                this.addToLog(`You couldn't pay your rent! You've been moved to a ${newHome}.`);
+                this.updateHappiness();
+            },
+            
+            // Buy a new home
+            buyHome: function(homeType) {
+                const home = this.housing[homeType];
+                if (!home) return false;
+                
+                if (this.player.gold >= home.price) {
+                    this.player.gold -= home.price;
+                    this.player.home.type = homeType;
+                    this.player.rentDueDate = Date.now() + (7 * 24 * 60 * 60 * 1000); // Due in 1 week
+                    
+                    this.addToLog(`Congratulations! You are now the proud owner of a ${home.name}!`);
+                    this.addToLog(`Rent of ${Math.floor(home.price * 0.1)} gold will be due in 7 days.`);
+                    
+                    this.updateHappiness();
+                    this.updateUI();
+                    return true;
+                } else {
+                    this.addToLog(`You need ${home.price - this.player.gold} more gold to buy a ${home.name}.`, 'error');
+                    return false;
+                }
+            },
+            
+            // Buy a decoration for the home
+            buyDecoration: function(itemId) {
+                const item = this.items[itemId];
+                if (!item || item.type !== 'decoration') return false;
+                
+                if (this.player.gold >= item.value) {
+                    this.player.gold -= item.value;
+                    
+                    if (!this.player.home.decorations) {
+                        this.player.home.decorations = [];
+                    }
+                    
+                    this.player.home.decorations.push(itemId);
+                    this.updateHappiness();
+                    
+                    this.addToLog(`You've added ${item.name} to your home.`);
+                    this.updateUI();
+                    return true;
+                } else {
+                    this.addToLog(`You need ${item.value - this.player.gold} more gold to buy ${item.name}.`, 'error');
+                    return false;
+                }
+            },
+            
+            // Drink alcohol
+            drink: function(drinkId) {
+                const drink = this.items[drinkId];
+                if (!drink || drink.type !== 'alcohol') return false;
+                
+                // Check if player is too drunk
+                if (this.player.intoxication >= 80) {
+                    this.addToLog('You\'re too drunk to drink any more!', 'warning');
+                    return false;
+                }
+                
+                // Apply drink effects
+                const effects = [];
+                
+                if (drink.effect.happiness) {
+                    this.player.happiness = Math.min(100, this.player.happiness + drink.effect.happiness);
+                    effects.push(`+${drink.effect.happiness} happiness`);
+                }
+                
+                if (drink.effect.intoxication) {
+                    this.player.intoxication = Math.min(100, this.player.intoxication + drink.effect.intoxication);
+                    effects.push(`+${drink.effect.intoxication} intoxication`);
+                }
+                
+                if (drink.effect.energy) {
+                    this.player.energy = Math.min(100, this.player.energy + drink.effect.energy);
+                    if (drink.effect.energy > 0) {
+                        effects.push(`+${drink.effect.energy} energy`);
+                    } else {
+                        effects.push(`${drink.effect.energy} energy`);
+                    }
+                }
+                
+                if (drink.effect.health) {
+                    this.player.health = Math.min(100, this.player.health + drink.effect.health);
+                    if (drink.effect.health > 0) {
+                        effects.push(`+${drink.effect.health} health`);
+                    } else {
+                        effects.push(`${drink.effect.health} health`);
+                    }
+                }
+                
+                this.player.lastDrinkTime = Date.now();
+                this.addToLog(`You drink a ${drink.name}. (${effects.join(', ')})`);
+                
+                // Random drunken effects if very intoxicated
+                if (this.player.intoxication > 70) {
+                    this.drunkEffect();
+                }
+                
+                this.updateUI();
+                return true;
+            },
+            
+            // Random effects when drunk
+            drunkEffect: function() {
+                const effects = [
+                    { message: 'You feel lightheaded and stumble a bit.', effect: () => {} },
+                    { message: 'The room starts spinning. You might have had too much!', effect: () => { this.player.energy -= 5; } },
+                    { 
+                        message: 'In your drunken state, you start singing loudly. People give you strange looks.', 
+                        effect: () => { this.player.happiness += 5; }
+                    },
+                    { 
+                        message: 'You accidentally knock over a drink. The bartender glares at you.', 
+                        effect: () => { this.player.gold -= 5; }
+                    },
+                    { 
+                        message: 'You start telling everyone you love them. They seem uncomfortable.', 
+                        effect: () => { this.player.happiness += 3; this.player.energy -= 10; }
+                    }
+                ];
+                
+                const effect = effects[Math.floor(Math.random() * effects.length)];
+                this.addToLog(effect.message, 'warning');
+                effect.effect();
+            },
+            
+            // Set up event listeners
+            setupEventListeners: function() {
+                // Location buttons
+                document.querySelectorAll('.location-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const locationId = btn.getAttribute('data-location');
+                        this.changeLocation(locationId);
+                    });
+                });
+                
+                // Action buttons
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.action-btn')) {
+                        const action = e.target.closest('.action-btn').textContent.trim();
+                        this.performAction(action);
+                    }
+                });
+            },
+            
+            // Change location
+            changeLocation: function(locationId) {
+                const location = this.locations[locationId];
+                if (!location) return;
+                
+                // Update player location
+                this.player.location = locationId;
+                
+                // Update UI
+                document.querySelector('.location-title').textContent = location.name;
+                document.querySelector('.location-desc').textContent = location.description;
+                
+                // Update active button
+                document.querySelectorAll('.location-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-location') === locationId) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update action buttons
+                this.updateActionButtons(location.actions || []);
+                
+                // Add to log
+                this.addToLog(`You have entered the ${location.name}.`);
+            },
+            
+            // Update action buttons
+            updateActionButtons: function(actions) {
+                const container = document.querySelector('.action-buttons');
+                container.innerHTML = '';
+                
+                actions.forEach(action => {
+                    const button = document.createElement('button');
+                    button.className = 'action-btn';
+                    button.innerHTML = `<i class="fas ${action.icon}"></i> ${action.name}`;
+                    container.appendChild(button);
+                });
+            },
+            
+            // Perform an action
+            performAction: function(actionId) {
+                const location = this.locations[this.player.location];
+                const action = location.actions?.find(a => a.id === actionId);
+                
+                if (!action) {
+                    this.addToLog('Action not available here.', 'error');
+                    return;
+                }
+                
+                // Check energy
+                if (this.player.energy < (action.energy || 0)) {
+                    this.addToLog('You are too tired to do that right now.', 'warning');
+                    return;
+                }
+                
+                // Check cost
+                if (action.cost && this.player.gold < action.cost) {
+                    this.addToLog(`You need ${action.cost} gold to do that.`, 'error');
+                    return;
+                }
+                
+                // Handle specific actions
+                switch(actionId) {
+                    case 'order_drink':
+                        this.showDrinkMenu();
+                        return; // Don't consume energy yet
+                        
+                    case 'view_properties':
+                        this.showHousingMarket();
+                        return;
+                        
+                    case 'pay_rent':
+                        this.payRent();
+                        break;
+                        
+                    case 'decorate':
+                        this.showDecorationShop();
+                        return;
+                        
+                    default:
+                        // Generic action handling
+                        const responses = [
+                            `You ${action.name.toLowerCase()}.`,
+                            `You attempt to ${action.name.toLowerCase()}...`,
+                            `You focus on ${action.name.toLowerCase()}.`,
+                            `You prepare to ${action.name.toLowerCase()}.`
+                        ];
+                        
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        this.addToLog(randomResponse);
+                }
+                
+                // Apply action costs
+                if (action.energy) this.player.energy = Math.max(0, this.player.energy - action.energy);
+                if (action.cost) this.player.gold -= action.cost;
+                
+                // Handle risks
+                if (action.risk === 'high') {
+                    if (Math.random() < 0.3) { // 30% chance of something bad happening
+                        this.addToLog('Things didn\'t go as planned!', 'warning');
+                        this.player.health = Math.max(1, this.player.health - 10);
+                    }
+                }
+                
+                this.updateUI();
+            },
+            
+            // Show drink menu in the tavern
+            showDrinkMenu: function() {
+                const location = this.locations[this.player.location];
+                if (!location.drinks) return;
+                
+                // Create menu
+                let menu = '<div class="drink-menu">';
+                menu += '<h4>Available Drinks</h4>';
+                menu += '<div class="list-group">';
+                
+                location.drinks.forEach(drinkId => {
+                    const drink = this.items[drinkId];
+                    if (!drink) return;
+                    
+                    menu += `
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${drink.name}</h6>
+                                <small class="text-muted">${drink.description}</small>
+                                <div class="mt-1">
+                                    ${drink.effect.happiness ? `<span class="badge bg-success me-1">+${drink.effect.happiness} Happiness</span>` : ''}
+                                    ${drink.effect.energy ? `<span class="badge bg-info me-1">${drink.effect.energy > 0 ? '+' : ''}${drink.effect.energy} Energy</span>` : ''}
+                                    ${drink.effect.health ? `<span class="badge bg-danger me-1">${drink.effect.health > 0 ? '+' : ''}${drink.effect.health} Health</span>` : ''}
+                                    <span class="badge bg-warning">+${drink.effect.intoxication || 0} Intoxication</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary buy-drink" data-drink="${drinkId}">
+                                ${drink.value} <i class="fas fa-coins"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                menu += '</div></div>';
+                
+                // Show modal
+                this.showModal('Tavern Menu', menu);
+                
+                // Add event listeners to drink buttons
+                document.querySelectorAll('.buy-drink').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const drinkId = e.target.closest('.buy-drink').getAttribute('data-drink');
+                        if (this.player.gold >= this.items[drinkId].value) {
+                            this.player.gold -= this.items[drinkId].value;
+                            this.drink(drinkId);
+                            this.closeModal();
+                        } else {
+                            this.addToLog('Not enough gold for that drink!', 'error');
+                        }
+                    });
+                });
+            },
+            
+            // Show housing market
+            showHousingMarket: function() {
+                let content = '<div class="housing-market">';
+                content += '<h4>Available Properties</h4>';
+                content += '<div class="list-group">';
+                
+                Object.entries(this.housing).forEach(([id, home]) => {
+                    const isCurrentHome = this.player.home?.type === id;
+                    const canAfford = this.player.gold >= home.price;
+                    const rent = Math.floor(home.price * 0.1);
+                    
+                    content += `
+                        <div class="list-group-item ${isCurrentHome ? 'active' : ''}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">${home.name} ${isCurrentHome ? '(Current Home)' : ''}</h5>
+                                <span class="badge bg-${isCurrentHome ? 'light text-dark' : canAfford ? 'primary' : 'secondary'}">
+                                    ${home.price.toLocaleString()} <i class="fas fa-coins"></i>
+                                </span>
+                            </div>
+                            <p class="mb-1">${home.description}</p>
+                            <small>Max Happiness: ${home.maxHappiness} | Weekly Rent: ${rent} <i class="fas fa-coins"></i></small>
+                            ${!isCurrentHome ? `
+                                <div class="mt-2">
+                                    <button class="btn btn-sm ${canAfford ? 'btn-success' : 'btn-secondary'}" 
+                                            data-buy-home="${id}" 
+                                            ${!canAfford ? 'disabled' : ''}>
+                                        Buy Now
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                content += '</div></div>';
+                
+                this.showModal('Housing Market', content);
+                
+                // Add event listeners to buy buttons
+                document.querySelectorAll('[data-buy-home]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const homeId = e.target.getAttribute('data-buy-home');
+                        this.buyHome(homeId);
+                        this.closeModal();
+                    });
+                });
+            },
+            
+            // Show decoration shop
+            showDecorationShop: function() {
+                const decorations = Object.entries(this.items).filter(([_, item]) => item.type === 'decoration');
+                
+                let content = '<div class="decoration-shop">';
+                content += '<h4>Home Decorations</h4>';
+                content += '<div class="row">';
+                
+                decorations.forEach(([id, item]) => {
+                    const canAfford = this.player.gold >= item.value;
+                    const hasItem = this.player.home?.decorations?.includes(id);
+                    
+                    content += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 ${hasItem ? 'border-success' : ''}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${item.name}</h5>
+                                    <p class="card-text">${item.description}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success">+${item.effect.happiness || 0} Happiness</span>
+                                        <span class="text-muted">${item.value.toLocaleString()} <i class="fas fa-coins"></i></span>
+                                    </div>
+                                    ${!hasItem ? `
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm ${canAfford ? 'btn-primary' : 'btn-secondary'}" 
+                                                    data-buy-item="${id}" 
+                                                    ${!canAfford ? 'disabled' : ''}>
+                                                Buy
+                                            </button>
+                                        </div>
+                                    ` : '<div class="text-success mt-2">Owned</div>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content += '</div></div>';
+                
+                this.showModal('Decoration Shop', content);
+                
+                // Add event listeners to buy buttons
+                document.querySelectorAll('[data-buy-item]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const itemId = e.target.getAttribute('data-buy-item');
+                        this.buyDecoration(itemId);
+                        this.closeModal();
+                    });
+                });
+            },
+            
+            // Pay rent
+            payRent: function() {
+                if (this.player.home.type === 'tent') {
+                    this.addToLog('You don\'t need to pay rent for a tent!', 'info');
+                    return;
+                }
+                
+                const home = this.housing[this.player.home.type];
+                const rent = Math.floor(home.price * 0.1);
+                
+                if (this.player.gold >= rent) {
+                    this.player.gold -= rent;
+                    this.player.rentDueDate = Date.now() + (7 * 24 * 60 * 60 * 1000); // 1 week from now
+                    this.addToLog(`You paid ${rent} gold in rent. Next payment due in 7 days.`);
+                } else {
+                    this.addToLog(`You need ${rent} gold to pay rent!`, 'error');
+                }
+                
+                this.updateUI();
+            },
+            
+            // Show a modal dialog
+            showModal: function(title, content) {
+                // Close any existing modal
+                this.closeModal();
+                
+                // Create modal
+                const modal = document.createElement('div');
+                modal.className = 'modal fade show d-block';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.tabIndex = '-1';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-dialog-scrollable">
+                        <div class="modal-content bg-dark text-light">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                ${content}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to document
+                document.body.appendChild(modal);
+                document.body.classList.add('modal-open');
+                
+                // Add close handlers
+                modal.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+                    btn.addEventListener('click', () => this.closeModal());
+                });
+                
+                // Close when clicking outside
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) this.closeModal();
+                });
+                
+                // Store reference
+                this.currentModal = modal;
+            },
+            
+            // Close the current modal
+            closeModal: function() {
+                if (this.currentModal) {
+                    document.body.removeChild(this.currentModal);
+                    document.body.classList.remove('modal-open');
+                    this.currentModal = null;
+                }
+            },
+            
+            // Add message to game log
+            addToLog: function(message, type = 'info') {
+                const log = document.getElementById('gameLog');
+                const entry = document.createElement('div');
+                entry.className = `log-entry text-${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : type === 'success' ? 'success' : 'muted'}`;
+                
+                // Add timestamp
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+                
+                entry.innerHTML = `<span class="text-muted">[${timeString}]</span> ${message}`;
+                
+                // Add to top of log
+                log.insertBefore(entry, log.firstChild);
+                
+                // Keep log from getting too long
+                if (log.children.length > 50) {
+                    log.removeChild(log.lastChild);
+                }
+                
+                // Auto-scroll to top
+                log.scrollTop = 0;
+            },
+            
+            // Update UI elements
+            updateUI: function() {
+                // Update player stats
+                document.querySelector('.player-name').textContent = this.player.name;
+                document.querySelector('.player-level').textContent = 
+                    `Level ${this.player.level} | ${this.player.xp.toLocaleString()} XP`;
+                
+                // Update stat bars
+                this.updateStatBar('energy', this.player.energy, this.player.maxEnergy);
+                this.updateStatBar('health', this.player.health, this.player.maxHealth);
+                this.updateStatBar('mana', this.player.mana, this.player.maxMana);
+                this.updateStatBar('happiness', this.player.happiness, this.player.home ? (this.housing[this.player.home.type]?.maxHappiness || 100) : 100);
+                this.updateStatBar('intoxication', this.player.intoxication, 100);
+                
+                // Update money display
+                document.querySelector('.player-money').innerHTML = `
+                    <i class="fas fa-coins text-warning"></i> ${this.player.gold.toLocaleString()}
+                    <i class="fas fa-gem text-info ms-2"></i> ${this.player.gems}
+                `;
+                
+                // Update home info
+                const home = this.player.home ? this.housing[this.player.home.type] : null;
+                const homeElement = document.getElementById('player-home');
+                if (homeElement) {
+                    homeElement.textContent = home ? home.name : 'Homeless';
+                    homeElement.className = home ? 'text-success' : 'text-danger';
+                }
+                
+                // Update rent due date
+                const rentDueElement = document.getElementById('rent-due');
+                if (rentDueElement && this.player.rentDueDate) {
+                    const daysLeft = Math.ceil((this.player.rentDueDate - Date.now()) / (1000 * 60 * 60 * 24));
+                    rentDueElement.textContent = daysLeft > 0 ? `in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}` : 'TODAY!';
+                    rentDueElement.className = daysLeft <= 1 ? 'text-danger' : daysLeft <= 3 ? 'text-warning' : 'text-success';
+                }
+                
+                // Update stats grid
+                document.querySelectorAll('.stat-card')[0].querySelector('.stat-value').textContent = this.player.level;
+                document.querySelectorAll('.stat-card')[1].querySelector('.stat-value').textContent = this.player.happiness;
+                document.querySelectorAll('.stat-card')[2].querySelector('.stat-value').textContent = this.player.gold.toLocaleString();
+                document.querySelectorAll('.stat-card')[3].querySelector('.stat-value').textContent = this.player.home?.decorations?.length || 0;
+            },
+            
+            // Update a stat bar
+            updateStatBar: function(stat, current, max) {
+                const percent = Math.min(100, (current / max) * 100);
+                const bar = document.querySelector(`.stat.${stat} .stat-fill`);
+                const text = document.querySelector(`.stat.${stat} .stat-text`);
+                
+                if (bar) bar.style.width = `${percent}%`;
+                if (text) text.textContent = `${current}/${max}`;
             }
-            .stat-bar {
-                height: 16px;
-            }
-        }
+        };
+        
+        // Initialize the game when the page loads
+        window.onload = function() {
+            gameState.init();
+            
+            // Update game time every second
+            setInterval(() => {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true 
+                });
+                
+                // In a real game, you'd update the game time display here
+                // document.getElementById('gameTime').textContent = timeString;
+            }, 1000);
+        };
     </script>
 </body>
 </html>
