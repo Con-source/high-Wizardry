@@ -7,7 +7,7 @@
     
     <!-- Fonts & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
     <style>
@@ -75,10 +75,11 @@
         .sidebar {
             width: 250px;
             background: var(--bg-secondary);
-            padding: var(--spacing-md);
+            padding: var(--spacing-lg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            transition: var(--transition);
         }
         
         .player-card {
@@ -307,68 +308,61 @@
             margin-right: 5px;
         }
         
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #0f3460;
-            padding: 20px;
-            transition: all 0.3s;
-            border-right: 2px solid #4cc9f0;
-        }
         
         .location-btn {
             display: block;
             width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            background: #16213e;
-            color: #e6e6e6;
-            border: none;
-            border-radius: 5px;
+            padding: var(--spacing-md) var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             text-align: left;
             cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'MedievalSharp', cursive;
+            transition: var(--transition);
+            font-family: 'MedievalSharp', 'Cinzel', serif;
             position: relative;
             overflow: hidden;
         }
         
         .location-btn:hover {
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
         }
         
         .location-btn.active {
-            background: #4cc9f0;
-            color: #0a0e17;
+            background: var(--primary);
+            color: white;
             font-weight: bold;
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
         }
         
         .location-btn i {
-            margin-right: 8px;
+            margin-right: var(--spacing-sm);
             width: 20px;
             text-align: center;
-        }
-        
-        .location-btn:hover, .location-btn.active {
-            background: #1a1a2e;
-            transform: translateX(5px);
         }
         
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 20px;
+            padding: var(--spacing-lg);
+            background: var(--bg-primary);
+            overflow-y: auto;
         }
         
         .location-content {
             display: none;
-            padding: 20px;
-            background: rgba(22, 33, 62, 0.8);
+            padding: var(--spacing-lg);
+            background: var(--card-bg);
             border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #4cc9f0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
         .location-content.active {
@@ -488,19 +482,32 @@
 
     <!-- Game Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="wizard-city-ui.js"></script>
-    <script src="game-core.js"></script>
-    <script src="game-new.js"></script>
-    
     <script>
-        // Initialize the game when the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for all scripts to load
+        window.addEventListener('load', function() {
+            // Check for required elements
+            const requiredElements = ['log-entries', 'clear-log'];
+            const missingElements = [];
+            
+            requiredElements.forEach(id => {
+                if (!document.getElementById(id)) {
+                    missingElements.push(id);
+                }
+            });
+            
+            if (missingElements.length > 0) {
+                console.error('Missing required elements:', missingElements);
+                return;
+            }
+
             // Initialize WizardUI if available
             if (typeof WizardUI !== 'undefined') {
-                WizardUI.init();
+                try {
+                    WizardUI.init();
+                } catch (error) {
+                    console.error('Failed to initialize WizardUI:', error);
+                }
             }
-            
-            // The game will be initialized by game-new.js
             
             // Set focus to the game container for keyboard controls
             const gameContainer = document.querySelector('.game-container');
@@ -510,36 +517,68 @@
             }
             
             // Clear log button
-            document.getElementById('clear-log')?.addEventListener('click', () => {
-                const logEntries = document.getElementById('log-entries');
-                if (logEntries) {
-                    logEntries.innerHTML = '<div class="log-entry">Log cleared.</div>';
-                }
-            });
-            
-            // Navigation links
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const location = e.currentTarget.getAttribute('data-location');
-                    
-                    // Toggle active state
-                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    
-                    // Show/hide sections
-                    if (['inventory', 'skills', 'quests'].includes(location)) {
-                        document.querySelectorAll('main > section').forEach(section => {
-                            section.style.display = 'none';
-                        });
-                        document.getElementById(location).style.display = 'block';
-                    } else {
-                        document.querySelectorAll('main > section').forEach(section => {
-                            section.style.display = 'block';
-                        });
-                        document.getElementById('inventory').style.display = 'none';
+            const clearLogBtn = document.getElementById('clear-log');
+            if (clearLogBtn) {
+                clearLogBtn.addEventListener('click', () => {
+                    const logEntries = document.getElementById('log-entries');
+                    if (logEntries) {
+                        logEntries.innerHTML = '<div class="log-entry">Log cleared.</div>';
                     }
                 });
+            }
+            
+            // Navigation links
+            const navLinks = document.querySelectorAll('.nav-link');
+            if (navLinks.length > 0) {
+                navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const location = e.currentTarget.getAttribute('data-location');
+                        
+                        // Toggle active state
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        
+                        // Show/hide sections
+                        if (location && ['inventory', 'skills', 'quests'].includes(location)) {
+                            const sections = document.querySelectorAll('main > section');
+                            sections.forEach(section => {
+                                section.style.display = 'none';
+                            });
+                            const targetSection = document.getElementById(location);
+                            if (targetSection) {
+                                targetSection.style.display = 'block';
+                            }
+                        } else {
+                            const sections = document.querySelectorAll('main > section');
+                            sections.forEach(section => {
+                                section.style.display = 'block';
+                            });
+                            const inventory = document.getElementById('inventory');
+                            if (inventory) {
+                                inventory.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            }
+            
+            console.log('Game initialization complete');
+        });
+        
+        // Load other scripts after the initial setup
+        function loadScript(src, onload) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = onload;
+            script.onerror = () => console.error('Failed to load script:', src);
+            document.body.appendChild(script);
+        }
+        
+        // Load game scripts in order
+        loadScript('wizard-city-ui.js', function() {
+            loadScript('game-core.js', function() {
+                loadScript('game-new.js');
             });
         });
     </script>
