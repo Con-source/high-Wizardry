@@ -129,7 +129,7 @@ const Chat = (() => {
     
     // Create message object
     const messageObj = {
-      username: Player.getData().username || 'Player',
+      username: (typeof Player !== 'undefined' && Player.getData ? Player.getData().username : null) || 'Player',
       message: message,
       timestamp: new Date().toISOString(),
       type: 'player'
@@ -187,8 +187,9 @@ const Chat = (() => {
       case 'me':
         if (args.length > 1) {
           const action = args.slice(1).join(' ');
+          const username = (typeof Player !== 'undefined' && Player.getData ? Player.getData().username : null) || 'Player';
           addChatMessage({
-            username: '* ' + (Player.getData().username || 'Player'),
+            username: '* ' + username,
             message: action,
             timestamp: new Date().toISOString(),
             type: 'emote'
