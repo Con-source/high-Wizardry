@@ -387,14 +387,27 @@ const gameState = {
     
         // Initialize the game
     init: function() {
-        // Set up event listeners
-        document.querySelectorAll('.location-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // Set up event delegation for location buttons
+        document.addEventListener('click', (e) => {
+            // Handle location buttons
+            if (e.target.closest('.location-btn')) {
                 e.preventDefault();
+                const btn = e.target.closest('.location-btn');
                 const locationId = btn.getAttribute('data-location');
                 console.log('Changing to location:', locationId);
                 this.changeLocation(locationId);
-            });
+            }
+            
+            // Handle action buttons
+            if (e.target.closest('.action-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.action-btn');
+                const actionId = btn.getAttribute('data-action');
+                console.log('Performing action:', actionId);
+                if (actionId) {
+                    this.performAction({ id: actionId });
+                }
+            }
         });
         
         // Initialize player stats display
@@ -410,11 +423,24 @@ const gameState = {
         this.showMessage("Welcome to High Wizardry! The game is now running in real-time.");
         this.showMessage("Click on different locations to explore and perform actions.");
         
-        console.log('Game initialized');
-    }
+        // Log initialization
+        console.log('Game initialized with event delegation');
 };
 
 // Start the game when the page loads
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize WizardUI if available
+    if (typeof WizardUI !== 'undefined') {
+        WizardUI.init();
+    }
+    
+    // Initialize game state
     gameState.init();
-};
+    
+    // Set focus to the game container for keyboard controls
+    const gameContainer = document.querySelector('.game-container');
+    if (gameContainer) {
+        gameContainer.tabIndex = -1;
+        gameContainer.focus();
+    }
+});
