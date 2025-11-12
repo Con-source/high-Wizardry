@@ -355,149 +355,256 @@ class GameCore {
     
     // Main game loop
     gameLoop() {
-        const now = Date.now();
-        const deltaTime = (now - this.state.lastUpdate) / 1000; // in seconds
-        this.state.lastUpdate = now;
-        
-        // Regenerate energy
-        this.regenerateEnergy(deltaTime);
-        
-        // Update UI
-        this.updateUI();
-        
-        // Auto-save periodically
-        if (now - this.lastSaveTime > this.settings.autoSaveInterval) {
-            this.saveGame();
+        try {
+            this.performance.beginFrame();
+            
+            const now = Date.now();
+            const deltaTime = (now - (this.state.state.lastUpdate || now)) / 1000; // in seconds
+            
+            // Update last update time
+            this.state.update({ lastUpdate: now });
+            
+            // Regenerate energy
+            this.regenerateEnergy(deltaTime);
+            
+            // Update UI
+            this.updateUI();
+            
+            // Auto-save periodically
+            if (now - (this.lastSaveTime || 0) > this.settings.autoSaveInterval) {
+                this.saveGame();
+            }
+        } catch (error) {
+            console.error('Error in game loop:', error);
+            // Don't let game loop errors crash the entire game
         }
     }
     
     // Regenerate player energy
     regenerateEnergy(deltaTime) {
-        if (this.state.player.energy < this.state.player.maxEnergy) {
-            this.state.player.energy = Math.min(
-                this.state.player.maxEnergy,
-                this.state.player.energy + (this.settings.energyRegenRate * deltaTime)
-            );
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player) return;
+            
+            const player = currentState.player;
+            if (player.energy < player.maxEnergy) {
+                const newEnergy = Math.min(
+                    player.maxEnergy,
+                    player.energy + (this.settings.energyRegenRate * deltaTime)
+                );
+                
+                this.state.update({
+                    player: {
+                        ...player,
+                        energy: newEnergy
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error regenerating energy:', error);
         }
     }
     
     // Change player location
     changeLocation(locationId) {
-        if (this.state.locations[locationId]) {
-            this.state.player.location = locationId;
-            this.showMessage(`You moved to ${this.state.locations[locationId].name}.`);
-            this.updateUI();
-            return true;
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.locations) return false;
+            
+            if (currentState.locations[locationId]) {
+                this.state.update({
+                    player: {
+                        ...currentState.player,
+                        location: locationId
+                    }
+                });
+                this.showMessage(`You moved to ${currentState.locations[locationId].name}.`);
+                this.updateUI();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error changing location:', error);
+            return false;
         }
-        return false;
     }
     
     // Perform an action
     performAction(actionId) {
-        const location = this.state.locations[this.state.player.location];
-        const action = location.actions.find(a => a.id === actionId);
-        
-        if (!action) {
-            this.showMessage("That action isn't available here.", 'error');
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player || !currentState.locations) return false;
+            
+            const location = currentState.locations[currentState.player.location];
+            if (!location) return false;
+            
+            const action = location.actions.find(a => a.id === actionId);
+            
+            if (!action) {
+                this.showMessage("That action isn't available here.", 'error');
+                return false;
+            }
+            
+            // Check energy
+            if (action.energy && currentState.player.energy < action.energy) {
+                this.showMessage("You're too tired to do that right now.", 'warning');
+                return false;
+            }
+            
+            // Handle the action
+            const updatedPlayer = { ...currentState.player };
+            if (action.energy) {
+                updatedPlayer.energy = Math.max(0, updatedPlayer.energy - action.energy);
+            }
+            updatedPlayer.lastAction = Date.now();
+            
+            // Process different action types
+            if (action.xp) {
+                this.addXP(action.xp);
+            }
+            
+            if (action.crime) {
+                this.commitCrime(action.crime);
+            }
+            
+            this.state.update({ player: updatedPlayer });
+            this.showMessage(`You ${action.name.toLowerCase()}.`);
+            this.updateUI();
+            return true;
+        } catch (error) {
+            console.error('Error performing action:', error);
             return false;
         }
-        
-        // Check energy
-        if (this.state.player.energy < action.energy) {
-            this.showMessage("You're too tired to do that right now.", 'warning');
-            return false;
-        }
-        
-        // Handle the action
-        this.state.player.energy -= action.energy;
-        this.state.player.lastAction = Date.now();
-        
-        // Process different action types
-        if (action.xp) {
-            this.addXP(action.xp);
-        }
-        
-        if (action.crime) {
-            this.commitCrime(action.crime);
-        }
-        
-        this.showMessage(`You ${action.name.toLowerCase()}.`);
-        this.updateUI();
-        return true;
     }
     
     // Add XP to player
     addXP(amount) {
-        this.state.player.xp += amount;
-        if (this.state.player.xp >= this.state.player.nextLevelXp) {
-            this.levelUp();
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player) return;
+            
+            const player = { ...currentState.player };
+            player.xp += amount;
+            
+            if (player.xp >= player.nextLevelXp) {
+                this.levelUp();
+            } else {
+                this.state.update({ player });
+            }
+        } catch (error) {
+            console.error('Error adding XP:', error);
         }
     }
     
     // Level up the player
     levelUp() {
-        this.state.player.level++;
-        this.state.player.xp -= this.state.player.nextLevelXp;
-        this.state.player.nextLevelXp = Math.floor(this.state.player.nextLevelXp * 1.5);
-        this.state.player.maxHealth += 10;
-        this.state.player.health = this.state.player.maxHealth;
-        this.state.player.maxEnergy += 5;
-        this.state.player.energy = this.state.player.maxEnergy;
-        this.state.player.maxMana += 10;
-        this.state.player.mana = this.state.player.maxMana;
-        
-        this.showMessage(`Level up! You are now level ${this.state.player.level}!`, 'success');
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player) return;
+            
+            const player = { ...currentState.player };
+            player.level++;
+            player.xp -= player.nextLevelXp;
+            player.nextLevelXp = Math.floor(player.nextLevelXp * 1.5);
+            player.maxHealth += 10;
+            player.health = player.maxHealth;
+            player.maxEnergy += 5;
+            player.energy = player.maxEnergy;
+            player.maxMana += 10;
+            player.mana = player.maxMana;
+            
+            this.state.update({ player });
+            this.showMessage(`Level up! You are now level ${player.level}!`, 'success');
+        } catch (error) {
+            console.error('Error leveling up:', error);
+        }
     }
     
     // Commit a crime
     commitCrime(crimeId) {
-        const crime = this.state.crimes.find(c => c.id === crimeId);
-        if (!crime) return false;
-        
-        // Check success
-        const success = Math.random() * 100 < crime.successRate;
-        
-        if (success) {
-            // Success
-            const goldEarned = crime.baseCash * (0.8 + Math.random() * 0.4); // 80-120% of base
-            this.state.player.gold += Math.floor(goldEarned);
-            this.addXP(crime.baseXp);
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player || !currentState.crimes) return false;
             
-            // Increase crime XP
-            this.state.player.crimes.experience += crime.baseXp;
-            this.checkCrimeLevelUp();
+            const crime = currentState.crimes.find(c => c.id === crimeId);
+            if (!crime) return false;
             
-            this.showMessage(`Success! You stole ${Math.floor(goldEarned)} gold.`, 'success');
-        } else {
-            // Failed - go to jail
-            this.showMessage(`You were caught! Sentenced to ${crime.jailTime} minutes in jail.`, 'error');
-            this.state.player.energy = 0;
-            // Implement jail time logic here
+            // Check success
+            const success = Math.random() * 100 < crime.successRate;
+            
+            const player = { ...currentState.player };
+            
+            if (success) {
+                // Success
+                const goldEarned = crime.baseCash * (0.8 + Math.random() * 0.4); // 80-120% of base
+                player.gold += Math.floor(goldEarned);
+                
+                // Increase crime XP
+                player.crimes.experience += crime.baseXp;
+                
+                this.state.update({ player });
+                this.addXP(crime.baseXp);
+                this.checkCrimeLevelUp();
+                
+                this.showMessage(`Success! You stole ${Math.floor(goldEarned)} gold.`, 'success');
+            } else {
+                // Failed - go to jail
+                this.showMessage(`You were caught! Sentenced to ${crime.jailTime} minutes in jail.`, 'error');
+                player.energy = 0;
+                this.state.update({ player });
+                // Implement jail time logic here
+            }
+            
+            return success;
+        } catch (error) {
+            console.error('Error committing crime:', error);
+            return false;
         }
-        
-        return success;
     }
     
     // Check if player leveled up in crime
     checkCrimeLevelUp() {
-        if (this.state.player.crimes.experience >= this.state.player.crimes.nextLevelXp) {
-            this.state.player.crimes.level++;
-            this.state.player.crimes.experience -= this.state.player.crimes.nextLevelXp;
-            this.state.player.crimes.nextLevelXp = Math.floor(this.state.player.crimes.nextLevelXp * 1.5);
-            this.state.player.crimes.successRate = Math.min(95, this.state.player.crimes.successRate + 2);
+        try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player) return;
             
-            this.showMessage(`Your criminal reputation increased to level ${this.state.player.crimes.level}!`, 'success');
+            const player = { ...currentState.player };
+            if (player.crimes.experience >= player.crimes.nextLevelXp) {
+                player.crimes.level++;
+                player.crimes.experience -= player.crimes.nextLevelXp;
+                player.crimes.nextLevelXp = Math.floor(player.crimes.nextLevelXp * 1.5);
+                player.crimes.successRate = Math.min(95, player.crimes.successRate + 2);
+                
+                this.state.update({ player });
+                this.showMessage(`Your criminal reputation increased to level ${player.crimes.level}!`, 'success');
+            }
+        } catch (error) {
+            console.error('Error checking crime level up:', error);
         }
     }
     
     // Save game to localStorage
     saveGame() {
         try {
+            const currentState = this.state.state;
+            if (!currentState || !currentState.player) {
+                console.warn('Cannot save: invalid game state');
+                return false;
+            }
+            
             const saveData = {
-                player: this.state.player,
-                timestamp: Date.now()
+                player: currentState.player,
+                timestamp: Date.now(),
+                version: this.settings.version
             };
-            localStorage.setItem(this.settings.saveKey, JSON.stringify(saveData));
+            
+            const saveString = JSON.stringify(saveData);
+            if (saveString.length > this.settings.maxSaveSize) {
+                console.error('Save data too large');
+                return false;
+            }
+            
+            localStorage.setItem(this.settings.saveKey, saveString);
             this.lastSaveTime = Date.now();
             return true;
         } catch (e) {
@@ -512,7 +619,13 @@ class GameCore {
             const saveData = localStorage.getItem(this.settings.saveKey);
             if (saveData) {
                 const parsed = JSON.parse(saveData);
-                this.state.player = { ...this.getInitialPlayerState(), ...parsed.player };
+                
+                // Merge saved player data with initial state
+                const savedPlayer = this.validatePlayerState(parsed.player);
+                this.state.update({
+                    player: { ...this.getInitialPlayerState(), ...savedPlayer }
+                });
+                
                 this.lastSaveTime = parsed.timestamp || Date.now();
                 this.showMessage('Game loaded successfully!', 'success');
                 return true;
@@ -527,18 +640,31 @@ class GameCore {
     // Show a message in the game log
     showMessage(message, type = 'info') {
         // This will be implemented in the UI module
-        if (window.WizardUI) {
-            window.WizardUI.showNotification(message, { type });
-        } else {
-            console.log(`[${type}] ${message}`);
+        if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
+            // Use UI module if available but don't spam notifications
+            if (type === 'error' || type === 'warning') {
+                UI.showNotification(message, type);
+            }
         }
+        
+        // Always log to console
+        console.log(`[${type}] ${message}`);
     }
     
     // Update the UI
     updateUI() {
-        // This will be implemented in the UI module
-        if (window.GameUI) {
-            window.GameUI.update(this.state);
+        try {
+            // Update player UI if Player module exists
+            if (typeof Player !== 'undefined' && typeof Player.updateUI === 'function') {
+                Player.updateUI();
+            }
+            
+            // Update game UI if available
+            if (typeof GameUI !== 'undefined' && typeof GameUI.update === 'function') {
+                GameUI.update(this.state.state);
+            }
+        } catch (error) {
+            console.error('Error updating UI:', error);
         }
     }
     

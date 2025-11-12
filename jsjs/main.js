@@ -125,11 +125,14 @@ function showWelcomeModal() {
 // Global function to start the game
 window.startGame = function() {
   const nameInput = document.getElementById('player-name');
-  let playerName = nameInput ? nameInput.value.trim() : 'Wizard';
+  let playerName = 'Wizard';
   
-  // Validate name
-  if (!playerName) {
-    playerName = 'Wizard';
+  // Safely get the input value
+  if (nameInput && nameInput.value) {
+    const trimmed = nameInput.value.trim();
+    if (trimmed.length > 0) {
+      playerName = trimmed;
+    }
   }
   
   // Set player name if Player module exists
