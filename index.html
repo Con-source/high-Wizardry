@@ -247,5 +247,20 @@
       console.log('Game initialized successfully.');
     });
   </script>
+  <!-- Scripts -->
+<script src="wizard-city-ui.js"></script>
+<script src="game-core.js"></script>
+<script src="game-new.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.WizardCity?.Game) {
+      window.WizardCity.Game.startGameLoop();
+      console.log('Wizard City loaded successfully ✅');
+    } else {
+      console.error('GameCore not found!');
+    }
+  });
+</script>
 </body>
 </html>
