@@ -143,6 +143,11 @@ class GameCore {
         }
     }
     
+    // Helper getter for cleaner state access
+    get gameState() {
+        return this.state.state;
+    }
+    
     handleFatalError(error) {
         // Log to error tracking service in production
         if (typeof window !== 'undefined' && window.trackJs) {
@@ -356,8 +361,8 @@ class GameCore {
     // Main game loop
     gameLoop() {
         const now = Date.now();
-        const deltaTime = (now - this.state.lastUpdate) / 1000; // in seconds
-        this.state.lastUpdate = now;
+        const deltaTime = (now - this.gameState.lastUpdate) / 1000; // in seconds
+        this.state.update({ lastUpdate: now });
         
         // Regenerate energy
         this.regenerateEnergy(deltaTime);
@@ -373,19 +378,27 @@ class GameCore {
     
     // Regenerate player energy
     regenerateEnergy(deltaTime) {
-        if (this.state.player.energy < this.state.player.maxEnergy) {
-            this.state.player.energy = Math.min(
-                this.state.player.maxEnergy,
-                this.state.player.energy + (this.settings.energyRegenRate * deltaTime)
-            );
+        const player = this.gameState.player;
+        if (player.energy < player.maxEnergy) {
+            this.state.update({
+                player: { 
+                    ...player, 
+                    energy: Math.min(player.maxEnergy, player.energy + (this.settings.energyRegenRate * deltaTime))
+                }
+            });
         }
     }
     
     // Change player location
     changeLocation(locationId) {
-        if (this.state.locations[locationId]) {
-            this.state.player.location = locationId;
-            this.showMessage(`You moved to ${this.state.locations[locationId].name}.`);
+        const locations = this.gameState.locations;
+        const player = this.gameState.player;
+        
+        if (locations[locationId]) {
+            this.state.update({
+                player: { ...player, location: locationId }
+            });
+            this.showMessage(`You moved to ${locations[locationId].name}.`);
             this.updateUI();
             return true;
         }
@@ -394,7 +407,15 @@ class GameCore {
     
     // Perform an action
     performAction(actionId) {
-        const location = this.state.locations[this.state.player.location];
+        const player = this.gameState.player;
+        const locations = this.gameState.locations;
+        const location = locations[player.location];
+        
+        if (!location || !location.actions) {
+            this.showMessage("Invalid location.", 'error');
+            return false;
+        }
+        
         const action = location.actions.find(a => a.id === actionId);
         
         if (!action) {
@@ -403,14 +424,19 @@ class GameCore {
         }
         
         // Check energy
-        if (this.state.player.energy < action.energy) {
+        if (player.energy < action.energy) {
             this.showMessage("You're too tired to do that right now.", 'warning');
             return false;
         }
         
         // Handle the action
-        this.state.player.energy -= action.energy;
-        this.state.player.lastAction = Date.now();
+        this.state.update({
+            player: { 
+                ...player, 
+                energy: player.energy - action.energy,
+                lastAction: Date.now()
+            }
+        });
         
         // Process different action types
         if (action.xp) {
@@ -428,30 +454,48 @@ class GameCore {
     
     // Add XP to player
     addXP(amount) {
-        this.state.player.xp += amount;
-        if (this.state.player.xp >= this.state.player.nextLevelXp) {
+        const player = this.gameState.player;
+        const newXp = player.xp + amount;
+        this.state.update({
+            player: { ...player, xp: newXp }
+        });
+        if (newXp >= player.nextLevelXp) {
             this.levelUp();
         }
     }
     
     // Level up the player
     levelUp() {
-        this.state.player.level++;
-        this.state.player.xp -= this.state.player.nextLevelXp;
-        this.state.player.nextLevelXp = Math.floor(this.state.player.nextLevelXp * 1.5);
-        this.state.player.maxHealth += 10;
-        this.state.player.health = this.state.player.maxHealth;
-        this.state.player.maxEnergy += 5;
-        this.state.player.energy = this.state.player.maxEnergy;
-        this.state.player.maxMana += 10;
-        this.state.player.mana = this.state.player.maxMana;
+        const player = this.gameState.player;
+        const newLevel = player.level + 1;
+        const newNextLevelXp = Math.floor(player.nextLevelXp * 1.5);
+        const newMaxHealth = player.maxHealth + 10;
+        const newMaxEnergy = player.maxEnergy + 5;
+        const newMaxMana = player.maxMana + 10;
         
-        this.showMessage(`Level up! You are now level ${this.state.player.level}!`, 'success');
+        this.state.update({
+            player: {
+                ...player,
+                level: newLevel,
+                xp: player.xp - player.nextLevelXp,
+                nextLevelXp: newNextLevelXp,
+                maxHealth: newMaxHealth,
+                health: newMaxHealth,
+                maxEnergy: newMaxEnergy,
+                energy: newMaxEnergy,
+                maxMana: newMaxMana,
+                mana: newMaxMana
+            }
+        });
+        
+        this.showMessage(`Level up! You are now level ${newLevel}!`, 'success');
     }
     
     // Commit a crime
     commitCrime(crimeId) {
-        const crime = this.state.crimes.find(c => c.id === crimeId);
+        const crimes = this.gameState.crimes;
+        const player = this.gameState.player;
+        const crime = crimes.find(c => c.id === crimeId);
         if (!crime) return false;
         
         // Check success
@@ -460,18 +504,26 @@ class GameCore {
         if (success) {
             // Success
             const goldEarned = crime.baseCash * (0.8 + Math.random() * 0.4); // 80-120% of base
-            this.state.player.gold += Math.floor(goldEarned);
+            this.state.update({
+                player: {
+                    ...player,
+                    gold: player.gold + Math.floor(goldEarned),
+                    crimes: {
+                        ...player.crimes,
+                        experience: player.crimes.experience + crime.baseXp
+                    }
+                }
+            });
             this.addXP(crime.baseXp);
-            
-            // Increase crime XP
-            this.state.player.crimes.experience += crime.baseXp;
             this.checkCrimeLevelUp();
             
             this.showMessage(`Success! You stole ${Math.floor(goldEarned)} gold.`, 'success');
         } else {
             // Failed - go to jail
             this.showMessage(`You were caught! Sentenced to ${crime.jailTime} minutes in jail.`, 'error');
-            this.state.player.energy = 0;
+            this.state.update({
+                player: { ...player, energy: 0 }
+            });
             // Implement jail time logic here
         }
         
@@ -480,13 +532,28 @@ class GameCore {
     
     // Check if player leveled up in crime
     checkCrimeLevelUp() {
-        if (this.state.player.crimes.experience >= this.state.player.crimes.nextLevelXp) {
-            this.state.player.crimes.level++;
-            this.state.player.crimes.experience -= this.state.player.crimes.nextLevelXp;
-            this.state.player.crimes.nextLevelXp = Math.floor(this.state.player.crimes.nextLevelXp * 1.5);
-            this.state.player.crimes.successRate = Math.min(95, this.state.player.crimes.successRate + 2);
+        const player = this.gameState.player;
+        const crimes = player.crimes;
+        
+        if (crimes.experience >= crimes.nextLevelXp) {
+            const newLevel = crimes.level + 1;
+            const newNextLevelXp = Math.floor(crimes.nextLevelXp * 1.5);
+            const newSuccessRate = Math.min(95, crimes.successRate + 2);
             
-            this.showMessage(`Your criminal reputation increased to level ${this.state.player.crimes.level}!`, 'success');
+            this.state.update({
+                player: {
+                    ...player,
+                    crimes: {
+                        ...crimes,
+                        level: newLevel,
+                        experience: crimes.experience - crimes.nextLevelXp,
+                        nextLevelXp: newNextLevelXp,
+                        successRate: newSuccessRate
+                    }
+                }
+            });
+            
+            this.showMessage(`Your criminal reputation increased to level ${newLevel}!`, 'success');
         }
     }
     
@@ -494,7 +561,7 @@ class GameCore {
     saveGame() {
         try {
             const saveData = {
-                player: this.state.player,
+                player: this.gameState.player,
                 timestamp: Date.now()
             };
             localStorage.setItem(this.settings.saveKey, JSON.stringify(saveData));
@@ -512,7 +579,8 @@ class GameCore {
             const saveData = localStorage.getItem(this.settings.saveKey);
             if (saveData) {
                 const parsed = JSON.parse(saveData);
-                this.state.player = { ...this.getInitialPlayerState(), ...parsed.player };
+                const player = { ...this.getInitialPlayerState(), ...parsed.player };
+                this.state.update({ player });
                 this.lastSaveTime = parsed.timestamp || Date.now();
                 this.showMessage('Game loaded successfully!', 'success');
                 return true;
@@ -538,7 +606,7 @@ class GameCore {
     updateUI() {
         // This will be implemented in the UI module
         if (window.GameUI) {
-            window.GameUI.update(this.state);
+            window.GameUI.update(this.gameState);
         }
     }
     
