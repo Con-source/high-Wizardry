@@ -206,9 +206,18 @@
       <nav>
         <h4>Locations</h4>
         <button class="location-btn active" data-location="town-square"><i class="fas fa-home"></i> Town Square</button>
+        <button class="location-btn" data-location="home"><i class="fas fa-house-user"></i> My Home</button>
+        <button class="location-btn" data-location="hospital"><i class="fas fa-hospital"></i> Hospital</button>
+        <button class="location-btn" data-location="education"><i class="fas fa-graduation-cap"></i> Education</button>
+        <button class="location-btn" data-location="property"><i class="fas fa-building"></i> Property</button>
+        <button class="location-btn" data-location="quests"><i class="fas fa-scroll"></i> Quests</button>
+        <button class="location-btn" data-location="crimes"><i class="fas fa-mask"></i> Crimes</button>
+        <button class="location-btn" data-location="jail"><i class="fas fa-lock"></i> Jail</button>
+        <button class="location-btn" data-location="casino"><i class="fas fa-dice"></i> Casino</button>
+        <button class="location-btn" data-location="newspaper"><i class="fas fa-newspaper"></i> Newspaper</button>
+        <button class="location-btn" data-location="friends"><i class="fas fa-users"></i> Friends/Enemies</button>
         <button class="location-btn" data-location="magic-shop"><i class="fas fa-hat-wizard"></i> Magic Shop</button>
         <button class="location-btn" data-location="tavern"><i class="fas fa-beer"></i> The Drunken Wizard</button>
-        <button class="location-btn" data-location="alley"><i class="fas fa-mask"></i> Dark Alley</button>
       </nav>
     </div>
 
@@ -235,19 +244,460 @@
         <button id="clear-log" class="btn btn-sm btn-outline-light mt-2">Clear Log</button>
       </div>
 
-      <!-- Dark Alley Section -->
-      <div id="location-alley" class="location-content mt-4">
-        <h2><i class="fas fa-mask me-2"></i>Dark Alley</h2>
-        <p>A shadowy corner where the law holds little power.</p>
+      <!-- Location-specific content sections (initially hidden) -->
+      <div id="location-content-home" class="location-content" style="display: none;">
+        <h2><i class="fas fa-house-user me-2"></i>My Home</h2>
+        <p>Your personal sanctuary. A place to rest and manage your belongings.</p>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card bg-dark mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Home Status</h5>
+                <p><strong>Type:</strong> <span id="home-type">Basic Cottage</span></p>
+                <p><strong>Comfort Level:</strong> <span id="home-comfort">5/10</span></p>
+                <button class="btn btn-primary btn-sm" onclick="upgradeHome()">
+                  <i class="fas fa-hammer"></i> Upgrade Home (500 Gold)
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card bg-dark mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Rest & Recovery</h5>
+                <p>Restore your energy at home.</p>
+                <button class="btn btn-success btn-sm" onclick="restAtHome()">
+                  <i class="fas fa-bed"></i> Rest (Restore 50 Energy)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-hospital" class="location-content" style="display: none;">
+        <h2><i class="fas fa-hospital me-2"></i>Hospital</h2>
+        <p>Heal your wounds and restore your vitality.</p>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card bg-dark mb-3">
+              <div class="card-body text-center">
+                <h5 class="card-title">Minor Healing</h5>
+                <p class="text-muted">Restore 25 Health</p>
+                <p class="text-warning">Cost: 50 Gold</p>
+                <button class="btn btn-success btn-sm" onclick="heal(25, 50)">
+                  <i class="fas fa-plus-square"></i> Heal
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-dark mb-3">
+              <div class="card-body text-center">
+                <h5 class="card-title">Major Healing</h5>
+                <p class="text-muted">Restore 50 Health</p>
+                <p class="text-warning">Cost: 100 Gold</p>
+                <button class="btn btn-success btn-sm" onclick="heal(50, 100)">
+                  <i class="fas fa-plus-square"></i> Heal
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-dark mb-3">
+              <div class="card-body text-center">
+                <h5 class="card-title">Full Recovery</h5>
+                <p class="text-muted">Restore All Health</p>
+                <p class="text-warning">Cost: 200 Gold</p>
+                <button class="btn btn-success btn-sm" onclick="heal('full', 200)">
+                  <i class="fas fa-heart"></i> Full Heal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-education" class="location-content" style="display: none;">
+        <h2><i class="fas fa-graduation-cap me-2"></i>Education</h2>
+        <p>Train your skills and improve your abilities.</p>
+        <div class="row" id="education-courses">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-brain"></i> Intelligence Training</h5>
+                <p>Improve your magical knowledge and spellcasting.</p>
+                <p><strong>Current Level:</strong> <span id="intelligence-level">10</span></p>
+                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 100)">
+                  <i class="fas fa-book"></i> Train Intelligence
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-dumbbell"></i> Endurance Training</h5>
+                <p>Increase your stamina and physical resilience.</p>
+                <p><strong>Current Level:</strong> <span id="endurance-level">10</span></p>
+                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 100)">
+                  <i class="fas fa-running"></i> Train Endurance
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-comments"></i> Charisma Training</h5>
+                <p>Improve your social skills and persuasion.</p>
+                <p><strong>Current Level:</strong> <span id="charisma-level">10</span></p>
+                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 100)">
+                  <i class="fas fa-user-tie"></i> Train Charisma
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-hand-sparkles"></i> Dexterity Training</h5>
+                <p>Enhance your agility and precision.</p>
+                <p><strong>Current Level:</strong> <span id="dexterity-level">10</span></p>
+                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 100)">
+                  <i class="fas fa-hands"></i> Train Dexterity
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-property" class="location-content" style="display: none;">
+        <h2><i class="fas fa-building me-2"></i>Property Management</h2>
+        <p>View and manage your real estate investments.</p>
+        <div class="card bg-dark mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Your Properties</h5>
+            <div id="property-list">
+              <p class="text-muted">You don't own any properties yet.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-dark">
+          <div class="card-body">
+            <h5 class="card-title">Available Properties</h5>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th>Income/Day</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="available-properties">
+                  <tr>
+                    <td>Small Shop</td>
+                    <td>Commercial</td>
+                    <td>5,000 Gold</td>
+                    <td>50 Gold</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 5000, 50)">Buy</button></td>
+                  </tr>
+                  <tr>
+                    <td>Apartment</td>
+                    <td>Residential</td>
+                    <td>10,000 Gold</td>
+                    <td>100 Gold</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 10000, 100)">Buy</button></td>
+                  </tr>
+                  <tr>
+                    <td>Tavern</td>
+                    <td>Business</td>
+                    <td>25,000 Gold</td>
+                    <td>300 Gold</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 25000, 300)">Buy</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-quests" class="location-content" style="display: none;">
+        <h2><i class="fas fa-scroll me-2"></i>Quest Board</h2>
+        <p>Accept quests to earn rewards and experience.</p>
+        <div class="row" id="quest-list">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title">Gather Herbs</h5>
+                <p class="text-muted">Collect 10 magical herbs from the forest.</p>
+                <p><strong>Reward:</strong> 100 XP, 50 Gold</p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
+                <button class="btn btn-primary btn-sm" onclick="acceptQuest('herbs')">
+                  <i class="fas fa-check"></i> Accept Quest
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title">Defeat the Dark Mage</h5>
+                <p class="text-muted">Confront the dark mage threatening the village.</p>
+                <p><strong>Reward:</strong> 500 XP, 200 Gold</p>
+                <p><strong>Status:</strong> <span class="badge bg-warning">Requires Level 5</span></p>
+                <button class="btn btn-primary btn-sm" disabled>
+                  <i class="fas fa-lock"></i> Locked
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title">Deliver Message</h5>
+                <p class="text-muted">Deliver an urgent message to the neighboring town.</p>
+                <p><strong>Reward:</strong> 75 XP, 30 Gold</p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
+                <button class="btn btn-primary btn-sm" onclick="acceptQuest('message')">
+                  <i class="fas fa-check"></i> Accept Quest
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-crimes" class="location-content" style="display: none;">
+        <h2><i class="fas fa-mask me-2"></i>Criminal Activities</h2>
+        <p>Engage in illegal activities to earn quick money. Beware of consequences!</p>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i> Warning: Failed crimes may result in jail time!
+        </div>
         <div class="table-responsive">
           <table class="table table-dark table-hover">
             <thead>
               <tr>
-                <th>Crime</th><th>Risk</th><th>Reward</th><th>Energy</th><th>Action</th>
+                <th>Crime</th>
+                <th>Difficulty</th>
+                <th>Reward</th>
+                <th>Energy</th>
+                <th>Success Rate</th>
+                <th>Action</th>
               </tr>
             </thead>
-            <tbody id="crime-opportunities"></tbody>
+            <tbody id="crime-list">
+              <tr>
+                <td>Pickpocket</td>
+                <td><span class="badge bg-success">Easy</span></td>
+                <td>10-20 Gold</td>
+                <td>10</td>
+                <td>80%</td>
+                <td><button class="btn btn-sm btn-danger" onclick="commitCrime('pickpocket')">Attempt</button></td>
+              </tr>
+              <tr>
+                <td>Burglary</td>
+                <td><span class="badge bg-warning">Medium</span></td>
+                <td>50-100 Gold</td>
+                <td>25</td>
+                <td>60%</td>
+                <td><button class="btn btn-sm btn-danger" onclick="commitCrime('burglary')">Attempt</button></td>
+              </tr>
+              <tr>
+                <td>Bank Heist</td>
+                <td><span class="badge bg-danger">Hard</span></td>
+                <td>200-500 Gold</td>
+                <td>50</td>
+                <td>40%</td>
+                <td><button class="btn btn-sm btn-danger" onclick="commitCrime('heist')">Attempt</button></td>
+              </tr>
+            </tbody>
           </table>
+        </div>
+      </div>
+
+      <div id="location-content-jail" class="location-content" style="display: none;">
+        <h2><i class="fas fa-lock me-2"></i>Jail</h2>
+        <div id="jail-status">
+          <div class="card bg-dark">
+            <div class="card-body text-center">
+              <h5 class="card-title">You are not in jail</h5>
+              <p class="text-success">You are free to explore the city.</p>
+            </div>
+          </div>
+        </div>
+        <div id="jail-time-remaining" class="card bg-dark mt-3" style="display: none;">
+          <div class="card-body">
+            <h5 class="card-title text-danger">Currently Incarcerated</h5>
+            <p>You were caught committing a crime!</p>
+            <p><strong>Time Remaining:</strong> <span id="jail-timer">0:00</span></p>
+            <div class="progress">
+              <div id="jail-progress" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+            </div>
+            <button class="btn btn-warning mt-3" onclick="bustOut()">
+              <i class="fas fa-door-open"></i> Attempt Jailbreak (25% chance)
+            </button>
+            <button class="btn btn-primary mt-3" onclick="payBail()">
+              <i class="fas fa-coins"></i> Pay Bail (500 Gold)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-casino" class="location-content" style="display: none;">
+        <h2><i class="fas fa-dice me-2"></i>The Golden Dice Casino</h2>
+        <p>Try your luck at various games of chance!</p>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-dice"></i> Dice Roll</h5>
+                <p class="text-muted">Roll two dice. Get 7 or 11 to win 2x!</p>
+                <div class="input-group mb-3">
+                  <input type="number" id="dice-bet" class="form-control" placeholder="Bet amount" min="10">
+                </div>
+                <button class="btn btn-primary" onclick="playDice()">
+                  <i class="fas fa-dice"></i> Roll Dice
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-coins"></i> Coin Flip</h5>
+                <p class="text-muted">Heads or Tails? Win 2x your bet!</p>
+                <div class="input-group mb-3">
+                  <input type="number" id="coin-bet" class="form-control" placeholder="Bet amount" min="10">
+                </div>
+                <button class="btn btn-success me-2" onclick="playCoin('heads')">Heads</button>
+                <button class="btn btn-danger" onclick="playCoin('tails')">Tails</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-playing-card"></i> High Card</h5>
+                <p class="text-muted">Draw higher card than the dealer!</p>
+                <div class="input-group mb-3">
+                  <input type="number" id="card-bet" class="form-control" placeholder="Bet amount" min="10">
+                </div>
+                <button class="btn btn-primary" onclick="playHighCard()">
+                  <i class="fas fa-hand-holding"></i> Draw Card
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-newspaper" class="location-content" style="display: none;">
+        <h2><i class="fas fa-newspaper me-2"></i>The Daily Wizard</h2>
+        <p>Stay informed about events in the magical world.</p>
+        <div class="card bg-dark mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Latest News</h5>
+            <div id="news-feed">
+              <div class="news-item mb-3">
+                <h6><i class="fas fa-newspaper"></i> Dark Mage Spotted Near Village</h6>
+                <p class="text-muted small">Posted 2 hours ago</p>
+                <p>Villagers report sightings of a mysterious dark mage in the eastern forest. Adventurers are warned to be cautious.</p>
+              </div>
+              <hr>
+              <div class="news-item mb-3">
+                <h6><i class="fas fa-trophy"></i> Tournament Announced</h6>
+                <p class="text-muted small">Posted 5 hours ago</p>
+                <p>The Grand Wizard Tournament will be held next week. Register at the Town Hall to participate.</p>
+              </div>
+              <hr>
+              <div class="news-item mb-3">
+                <h6><i class="fas fa-store"></i> New Magic Shop Opening</h6>
+                <p class="text-muted small">Posted 1 day ago</p>
+                <p>A new enchantment shop is opening in the market district, offering rare magical items and services.</p>
+              </div>
+              <hr>
+              <div class="news-item mb-3">
+                <h6><i class="fas fa-exclamation-triangle"></i> Crime Rate Rising</h6>
+                <p class="text-muted small">Posted 2 days ago</p>
+                <p>City guards report an increase in theft and burglary. Citizens are advised to be vigilant.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-friends" class="location-content" style="display: none;">
+        <h2><i class="fas fa-users me-2"></i>Friends & Enemies</h2>
+        <p>Manage your social relationships.</p>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card bg-dark mb-3">
+              <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-user-friends"></i> Friends</h5>
+                <div id="friends-list">
+                  <div class="friend-item mb-2 p-2 border rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>MerlinTheWise</strong>
+                        <span class="badge bg-success ms-2">Online</span>
+                        <p class="text-muted small mb-0">Level 15 Wizard</p>
+                      </div>
+                      <button class="btn btn-sm btn-danger" onclick="removeFriend('MerlinTheWise')">
+                        <i class="fas fa-user-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="friend-item mb-2 p-2 border rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>ShadowMage</strong>
+                        <span class="badge bg-secondary ms-2">Offline</span>
+                        <p class="text-muted small mb-0">Level 12 Sorcerer</p>
+                      </div>
+                      <button class="btn btn-sm btn-danger" onclick="removeFriend('ShadowMage')">
+                        <i class="fas fa-user-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm mt-2" onclick="addFriend()">
+                  <i class="fas fa-user-plus"></i> Add Friend
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card bg-dark mb-3">
+              <div class="card-body">
+                <h5 class="card-title text-danger"><i class="fas fa-user-slash"></i> Enemies</h5>
+                <div id="enemies-list">
+                  <div class="enemy-item mb-2 p-2 border border-danger rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>DarkLord</strong>
+                        <span class="badge bg-danger ms-2">Hostile</span>
+                        <p class="text-muted small mb-0">Level 20 Warlock</p>
+                      </div>
+                      <button class="btn btn-sm btn-warning" onclick="attackEnemy('DarkLord')">
+                        <i class="fas fa-crosshairs"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-muted small mt-2">Enemies are created through PvP combat and hostile actions.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -282,6 +732,8 @@
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
   <script src="jsjs/chat.js"></script>
+  <script src="jsjs/locations.js"></script>
+  <script src="jsjs/actions.js"></script>
   <script src="jsjs/main.js"></script>
 
   <script>
