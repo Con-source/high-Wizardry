@@ -35,12 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 4. Initialize Game Core (if using separate game.js)
     // Note: game-core.js initializes automatically via singleton pattern
-    if (window.WizardCity && window.WizardCity.Game) {
+    if (window.HighWizardry && window.HighWizardry.Game) {
       console.log('✅ GameCore initialized');
       
       // Start game loop
-      if (typeof window.WizardCity.Game.startGameLoop === 'function') {
-        window.WizardCity.Game.startGameLoop();
+      if (typeof window.HighWizardry.Game.startGameLoop === 'function') {
+        window.HighWizardry.Game.startGameLoop();
         console.log('✅ Game loop started');
       }
     } else {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Expose modules to global scope for debugging
       window.DebugModules = {
         Player: typeof Player !== 'undefined' ? Player : null,
-        Game: window.WizardCity?.Game || null,
+        Game: window.HighWizardry?.Game || null,
         Chat: typeof Chat !== 'undefined' ? Chat : null,
         UI: typeof UI !== 'undefined' ? UI : null,
         CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null
@@ -223,8 +223,8 @@ window.addEventListener('online', () => {
   }
   
   // Attempt to reconnect to game services
-  if (window.WizardCity?.Game && typeof window.WizardCity.Game.reconnect === 'function') {
-    window.WizardCity.Game.reconnect();
+  if (window.HighWizardry?.Game && typeof window.HighWizardry.Game.reconnect === 'function') {
+    window.HighWizardry.Game.reconnect();
   }
 });
 
