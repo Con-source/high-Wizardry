@@ -710,16 +710,16 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 
 // For browser global
 if (typeof window !== 'undefined') {
-    window.WizardCity = window.WizardCity || {};
-    window.WizardCity.Game = gameInstance;
+    window.HighWizardry = window.HighWizardry || {};
+    window.HighWizardry.Game = gameInstance;
 }
 
 // Add global error handler
 if (typeof window !== 'undefined') {
     window.addEventListener('error', (event) => {
         console.error('Unhandled error:', event.error);
-        if (window.WizardCity?.Game) {
-            window.WizardCity.Game.handleFatalError(event.error);
+        if (window.HighWizardry?.Game) {
+            window.HighWizardry.Game.handleFatalError(event.error);
         }
         // Prevent the default error handler
         event.preventDefault();
@@ -728,8 +728,8 @@ if (typeof window !== 'undefined') {
     // Handle unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled promise rejection:', event.reason);
-        if (window.WizardCity?.Game) {
-            window.WizardCity.Game.handleFatalError(event.reason);
+        if (window.HighWizardry?.Game) {
+            window.HighWizardry.Game.handleFatalError(event.reason);
         }
         // Prevent the default handler
         event.preventDefault();
