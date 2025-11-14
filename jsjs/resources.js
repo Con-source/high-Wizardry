@@ -176,7 +176,12 @@ const Resources = (() => {
     const playerData = Player.getData();
     
     // Check energy
-    const energyCost = 10;
+    let energyCost = 10;
+    if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+      if (Guilds.hasGuildPerk('explorer', 'faster-gathering')) {
+        energyCost *= 0.75; // 25% reduction
+      }
+    }
     if (playerData.energy < energyCost) {
       if (typeof UI !== 'undefined' && UI.showNotification) {
         UI.showNotification('Not enough energy to gather resources!', 'warning');
