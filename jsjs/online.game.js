@@ -233,7 +233,14 @@ const onlineGame = {
         // Update player stats display
         document.getElementById('player-name').textContent = this.playerData.name;
         document.getElementById('player-level').textContent = `Level ${this.playerData.level}`;
-        document.getElementById('player-gold').textContent = this.playerData.gold.toLocaleString();
+        
+        // Handle currency display
+        const currencyEl = document.getElementById('player-currency');
+        if (currencyEl) {
+            const shillings = this.playerData.shillings || 0;
+            const pennies = this.playerData.pennies || 0;
+            currencyEl.textContent = `${shillings}/${pennies}`;
+        }
         
         // Update health bar
         const healthPercent = (this.playerData.health / this.playerData.maxHealth) * 100;

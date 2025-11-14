@@ -205,9 +205,8 @@ class GameCore {
             maxHealth: 100,
             mana: 100,
             maxMana: 100,
-            gold: 1000,
-            silver: 0,
-            copper: 0,
+            shillings: 83,  // 1000 pennies = 83 shillings + 4 pennies
+            pennies: 4,
             location: 'town-square',
             inventory: [],
             equipment: {
@@ -536,8 +535,11 @@ class GameCore {
             
             if (success) {
                 // Success
-                const goldEarned = crime.baseCash * (0.8 + Math.random() * 0.4); // 80-120% of base
-                player.gold += Math.floor(goldEarned);
+                const currencyEarned = crime.baseCash * (0.8 + Math.random() * 0.4); // 80-120% of base
+                const totalPennies = ((player.shillings || 0) * 12) + (player.pennies || 0);
+                const newTotal = totalPennies + Math.floor(currencyEarned);
+                player.shillings = Math.floor(newTotal / 12);
+                player.pennies = newTotal % 12;
                 
                 // Increase crime XP
                 player.crimes.experience += crime.baseXp;
@@ -546,7 +548,9 @@ class GameCore {
                 this.addXP(crime.baseXp);
                 this.checkCrimeLevelUp();
                 
-                this.showMessage(`Success! You stole ${Math.floor(goldEarned)} gold.`, 'success');
+                const earnedShillings = Math.floor(currencyEarned / 12);
+                const earnedPennies = Math.floor(currencyEarned) % 12;
+                this.showMessage(`Success! You stole ${earnedShillings} shillings and ${earnedPennies} pennies.`, 'success');
             } else {
                 // Failed - go to jail
                 this.showMessage(`You were caught! Sentenced to ${crime.jailTime} minutes in jail.`, 'error');
