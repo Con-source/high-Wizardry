@@ -24,7 +24,7 @@ const BlackMarket = (() => {
       vendor: {
         name: 'Grizelda the Fence',
         greeting: 'Psst! Looking for something... special?',
-        discount: 0.9, // 10% markup for dangerous location
+        discount: 1.10, // 10% markup for dangerous location
         riskLevel: 'high'
       }
     },
@@ -36,7 +36,7 @@ const BlackMarket = (() => {
       vendor: {
         name: 'Marcus the Smuggler',
         greeting: 'Welcome, friend. I have goods from across the realm.',
-        discount: 0.95, // 5% markup
+        discount: 1.05, // 5% markup
         riskLevel: 'medium'
       }
     },
@@ -230,7 +230,7 @@ const BlackMarket = (() => {
     
     // Select random items with appropriate rarity distribution
     const availableItems = [...itemsArray];
-    for (let i = 0; i < numItems && availableItems.length > 0; i++) {
+    while (inventory.length < numItems && availableItems.length > 0) {
       const randomIndex = Math.floor(Math.random() * availableItems.length);
       const item = availableItems.splice(randomIndex, 1)[0];
       
@@ -327,26 +327,32 @@ const BlackMarket = (() => {
   // Add item to smuggled goods inventory
   function addToSmuggledGoods(item) {
     const playerData = Player.getData();
-    const inventory = playerData.inventory || {};
+    // Shallow copy inventory to avoid mutating playerData directly
+    const inventory = { ...(playerData.inventory || {}) };
     
-    if (!inventory.smuggledGoods) {
-      inventory.smuggledGoods = [];
-    }
+    // Shallow copy smuggledGoods array to avoid mutating original
+    const smuggledGoods = Array.isArray(inventory.smuggledGoods)
+      ? [...inventory.smuggledGoods]
+      : [];
     
     // Check if item already exists
-    const existing = inventory.smuggledGoods.find(i => i.id === item.id);
-    if (existing) {
-      existing.quantity = (existing.quantity || 1) + 1;
+    const existingIndex = smuggledGoods.findIndex(i => i.id === item.id);
+    if (existingIndex !== -1) {
+      // Clone the item object to avoid mutating original
+      const updatedItem = { ...smuggledGoods[existingIndex] };
+      updatedItem.quantity = (updatedItem.quantity || 1) + 1;
+      smuggledGoods[existingIndex] = updatedItem;
     } else {
-      inventory.smuggledGoods.push({
+      smuggledGoods.push({
         ...item,
         quantity: 1,
         purchaseDate: Date.now()
       });
     }
     
+    inventory.smuggledGoods = smuggledGoods;
     Player.updateData({ inventory });
-    state.smuggledGoods = inventory.smuggledGoods;
+    state.smuggledGoods = smuggledGoods;
   }
 
   // Get player's smuggled goods
@@ -398,33 +404,36 @@ const BlackMarket = (() => {
         showNotification(`Successfully smuggled ${item.name}! Sold for ${profit} gold`, 'success');
       } else {
         // Add to regular inventory for crafting
-        const inventory = playerData.inventory;
+        const inventory = { ...playerData.inventory };
         if (!inventory.craftingMaterials) {
           inventory.craftingMaterials = [];
         }
-        inventory.craftingMaterials.push(item);
-        Player.updateData({ inventory: { ...playerData.inventory, craftingMaterials: inventory.craftingMaterials } });
+        inventory.craftingMaterials = [...inventory.craftingMaterials, item];
+        Player.updateData({ inventory });
         showNotification(`Successfully smuggled ${item.name}! Added to inventory`, 'success');
       }
       
-      // Remove from smuggled goods
-      item.quantity--;
-      if (item.quantity <= 0) {
-        smuggledGoods.splice(itemIndex, 1);
+      // Remove from smuggled goods - work on a fresh copy
+      const updatedSmuggledGoods = smuggledGoods.map(g => ({ ...g }));
+      updatedSmuggledGoods[itemIndex].quantity--;
+      if (updatedSmuggledGoods[itemIndex].quantity <= 0) {
+        updatedSmuggledGoods.splice(itemIndex, 1);
       }
       
-      Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods } });
+      Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods: updatedSmuggledGoods } });
       Player.addXP(50);
       addGameLog(`Successfully smuggled ${item.name}`);
       
     } else {
       // Failed - item confiscated
-      item.quantity--;
-      if (item.quantity <= 0) {
-        smuggledGoods.splice(itemIndex, 1);
+      // Work on a fresh copy to avoid mutating original playerData
+      const updatedSmuggledGoods = smuggledGoods.map(g => ({ ...g }));
+      updatedSmuggledGoods[itemIndex].quantity--;
+      if (updatedSmuggledGoods[itemIndex].quantity <= 0) {
+        updatedSmuggledGoods.splice(itemIndex, 1);
       }
       
-      Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods } });
+      Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods: updatedSmuggledGoods } });
       
       showNotification(`${item.name} was confiscated!`, 'error');
       addGameLog(`Failed to smuggle ${item.name} - confiscated`);
@@ -496,12 +505,14 @@ const BlackMarket = (() => {
     
     Player.addGold(sellPrice);
     
-    item.quantity--;
-    if (item.quantity <= 0) {
-      smuggledGoods.splice(itemIndex, 1);
+    // Work on a fresh copy to avoid mutating original playerData
+    const updatedSmuggledGoods = smuggledGoods.map(g => ({ ...g }));
+    updatedSmuggledGoods[itemIndex].quantity--;
+    if (updatedSmuggledGoods[itemIndex].quantity <= 0) {
+      updatedSmuggledGoods.splice(itemIndex, 1);
     }
     
-    Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods } });
+    Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods: updatedSmuggledGoods } });
     saveState();
     
     showNotification(`Sold ${item.name} for ${sellPrice} gold`, 'success');
@@ -590,6 +601,11 @@ const BlackMarket = (() => {
     }
   }
 
+  // Check if a location is a Black Market location
+  function isBlackMarketLocation(locationId) {
+    return ['goblin-outpost', 'abandoned-warehouse', 'shady-alley'].includes(locationId);
+  }
+
   // Public API
   return {
     init,
@@ -602,6 +618,7 @@ const BlackMarket = (() => {
     sellSmuggledItem,
     rotateAllInventories,
     activateGuildDiscount,
+    isBlackMarketLocation,
     getState: () => ({ ...state })
   };
 })();

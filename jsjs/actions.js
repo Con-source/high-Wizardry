@@ -547,7 +547,7 @@ function rotateVendorInventories() {
   showNotification('Vendor inventories have been updated!', 'success');
   
   // Refresh current location if it's a black market
-  if (typeof Locations !== 'undefined') {
+  if (typeof Locations !== 'undefined' && typeof BlackMarket !== 'undefined') {
     const currentLocation = Locations.getCurrentLocation();
     if (BlackMarket.isBlackMarketLocation(currentLocation)) {
       Locations.updateBlackMarketUI(currentLocation);

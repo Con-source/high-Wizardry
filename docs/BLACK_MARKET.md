@@ -11,13 +11,13 @@ The Black Market system allows players to purchase rare and illegal items from u
 1. **Goblin Outpost** (High Risk)
    - Vendor: Grizelda the Fence
    - Risk Level: High
-   - Markup: 10% (0.9x price modifier)
+   - Markup: 10% (1.10x price modifier)
    - Best for: High-risk, high-reward items
 
 2. **Abandoned Warehouse** (Medium Risk)
    - Vendor: Marcus the Smuggler
    - Risk Level: Medium
-   - Markup: 5% (0.95x price modifier)
+   - Markup: 5% (1.05x price modifier)
    - Best for: Balanced risk/reward
 
 3. **Shady Alley** (Low Risk)

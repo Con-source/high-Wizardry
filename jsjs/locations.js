@@ -158,8 +158,7 @@ const Locations = (() => {
     }
     
     // Update Black Market vendor UI if applicable
-    if (typeof BlackMarket !== 'undefined' && 
-        ['goblin-outpost', 'abandoned-warehouse', 'shady-alley'].includes(locationId)) {
+    if (typeof BlackMarket !== 'undefined' && BlackMarket.isBlackMarketLocation(locationId)) {
       updateBlackMarketUI(locationId);
     }
     
