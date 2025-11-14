@@ -1,0 +1,52 @@
+<div class="teleportation">
+  <h5 class="mt-3 mb-2">Teleportation</h5>
+
+  <div class="teleport-buttons" role="group" aria-label="Teleportation locations">
+    <button class="location-btn" data-location="enchanted-forest" aria-label="Teleport to Enchanted Forest">
+      <i class="fas fa-tree" aria-hidden="true"></i> Enchanted Forest
+    </button>
+
+    <button class="location-btn" data-location="arcane-temple" aria-label="Teleport to Arcane Temple">
+      <i class="fas fa-landmark" aria-hidden="true"></i> Arcane Temple
+    </button>
+
+    <button class="location-btn" data-location="crystal-peak-mines" aria-label="Teleport to Crystal Peak Mines">
+      <i class="fas fa-mountain" aria-hidden="true"></i> Crystal Peak Mines
+    </button>
+
+    <button class="location-btn" data-location="fair-alley" aria-label="Teleport to Fair Alleyway">
+      <i class="fas fa-store" aria-hidden="true"></i> Fair Alleyway
+    </button>
+
+    <button class="location-btn" data-location="guild-district" aria-label="Teleport to Guild District">
+      <i class="fas fa-shield-alt" aria-hidden="true"></i> Guild District
+    </button>
+
+    <button class="location-btn" data-location="smuggling-routes" aria-label="Teleport to Smuggling Routes">
+      <i class="fas fa-user-secret" aria-hidden="true"></i> Smuggling Routes
+    </button>
+  </div>
+</div>
+
+<script>
+  // Simple delegation to handle teleport button clicks.
+  // Replace the body of handleTeleport with your app's navigation/teleport logic.
+  (function () {
+    function handleTeleport(locationKey) {
+      // Example: dispatch a custom event your app can listen for
+      document.dispatchEvent(new CustomEvent('teleport:request', { detail: { location: locationKey } }));
+      // Or call your router/teleport function directly here
+      // teleportTo(locationKey);
+    }
+
+    document.addEventListener('click', function (ev) {
+      var btn = ev.target.closest && ev.target.closest('.location-btn');
+      if (!btn) return;
+      var locationKey = btn.getAttribute('data-location');
+      if (locationKey) {
+        ev.preventDefault();
+        handleTeleport(locationKey);
+      }
+    });
+  })();
+</script>
