@@ -53,6 +53,7 @@ const Player = (() => {
           endurance: 10,
           charisma: 10,
           dexterity: 10,
+          speed: 0,  // New stat for travel speed
           inventory: {
             potions: 3,
             herbs: 5,
