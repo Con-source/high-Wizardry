@@ -480,6 +480,81 @@ function addGameLog(message) {
   }
 }
 
+// Black Market Actions
+function purchaseBlackMarketItem(locationId, itemId) {
+  if (typeof BlackMarket === 'undefined') {
+    showNotification('Black Market system not available', 'error');
+    return;
+  }
+  
+  const success = BlackMarket.purchaseItem(locationId, itemId);
+  
+  if (success && typeof Locations !== 'undefined') {
+    // Refresh the vendor UI
+    Locations.updateBlackMarketUI(locationId);
+  }
+}
+
+function smuggleItem(itemId) {
+  if (typeof BlackMarket === 'undefined') {
+    showNotification('Black Market system not available', 'error');
+    return;
+  }
+  
+  BlackMarket.smuggleGoods(itemId);
+  
+  // Refresh smuggled goods UI
+  if (typeof Locations !== 'undefined') {
+    Locations.updateSmuggledGoodsUI();
+  }
+}
+
+function smuggleAllItems() {
+  if (typeof BlackMarket === 'undefined') {
+    showNotification('Black Market system not available', 'error');
+    return;
+  }
+  
+  BlackMarket.smuggleAllGoods();
+  
+  // Refresh smuggled goods UI
+  if (typeof Locations !== 'undefined') {
+    Locations.updateSmuggledGoodsUI();
+  }
+}
+
+function sellSmuggledItem(itemId) {
+  if (typeof BlackMarket === 'undefined') {
+    showNotification('Black Market system not available', 'error');
+    return;
+  }
+  
+  BlackMarket.sellSmuggledItem(itemId);
+  
+  // Refresh smuggled goods UI
+  if (typeof Locations !== 'undefined') {
+    Locations.updateSmuggledGoodsUI();
+  }
+}
+
+function rotateVendorInventories() {
+  if (typeof BlackMarket === 'undefined') {
+    showNotification('Black Market system not available', 'error');
+    return;
+  }
+  
+  BlackMarket.rotateAllInventories();
+  showNotification('Vendor inventories have been updated!', 'success');
+  
+  // Refresh current location if it's a black market
+  if (typeof Locations !== 'undefined') {
+    const currentLocation = Locations.getCurrentLocation();
+    if (['goblin-outpost', 'abandoned-warehouse', 'shady-alley'].includes(currentLocation)) {
+      Locations.updateBlackMarketUI(currentLocation);
+    }
+  }
+}
+
 // Export for Node.js/CommonJS
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = {
@@ -498,6 +573,11 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     playHighCard,
     addFriend,
     removeFriend,
-    attackEnemy
+    attackEnemy,
+    purchaseBlackMarketItem,
+    smuggleItem,
+    smuggleAllItems,
+    sellSmuggledItem,
+    rotateVendorInventories
   };
 }
