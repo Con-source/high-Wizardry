@@ -25,7 +25,31 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Player module not found');
     }
     
-    // 3. Initialize Chat system
+    // 3. Initialize Resources
+    if (typeof Resources !== 'undefined' && typeof Resources.init === 'function') {
+      Resources.init();
+      console.log('✅ Resources initialized');
+    } else {
+      console.warn('⚠️ Resources module not found');
+    }
+    
+    // 4. Initialize Guilds
+    if (typeof Guilds !== 'undefined' && typeof Guilds.init === 'function') {
+      Guilds.init();
+      console.log('✅ Guilds initialized');
+    } else {
+      console.warn('⚠️ Guilds module not found');
+    }
+    
+    // 5. Initialize Workshop
+    if (typeof Workshop !== 'undefined' && typeof Workshop.init === 'function') {
+      Workshop.init();
+      console.log('✅ Workshop initialized');
+    } else {
+      console.warn('⚠️ Workshop module not found');
+    }
+    
+    // 6. Initialize Chat system
     if (typeof Chat !== 'undefined' && typeof Chat.init === 'function') {
       Chat.init();
       console.log('✅ Chat initialized');
@@ -33,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Chat module not found');
     }
     
-    // 4. Initialize Game Core (if using separate game.js)
+    // 7. Initialize Game Core (if using separate game.js)
     // Note: game-core.js initializes automatically via singleton pattern
     if (window.HighWizardry && window.HighWizardry.Game) {
       console.log('✅ GameCore initialized');
@@ -72,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Game: window.HighWizardry?.Game || null,
         Chat: typeof Chat !== 'undefined' ? Chat : null,
         UI: typeof UI !== 'undefined' ? UI : null,
+        Resources: typeof Resources !== 'undefined' ? Resources : null,
+        Workshop: typeof Workshop !== 'undefined' ? Workshop : null,
+        Guilds: typeof Guilds !== 'undefined' ? Guilds : null,
+        Locations: typeof Locations !== 'undefined' ? Locations : null,
         CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null
       };
       console.log('Debug modules available at window.DebugModules');

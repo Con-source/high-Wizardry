@@ -151,9 +151,23 @@ function updatePropertyList() {
 function acceptQuest(questId) {
   if (typeof Player === 'undefined') return;
   
+  const playerData = Player.getData();
+  const questsCompleted = (playerData.questsCompleted || 0) + 1;
+  
+  Player.updateData({ questsCompleted });
+  Player.addXP(10);
+  
   showNotification(`Quest "${questId}" accepted!`, 'success');
   addGameLog(`You accepted a quest: ${questId}`);
-  Player.addXP(10);
+  
+  // Check if this unlocks new locations
+  if (typeof Locations !== 'undefined') {
+    if (questsCompleted === 5) {
+      if (Locations.tryUnlockLocation('enchanted-forest')) {
+        showNotification('New location unlocked: Enchanted Forest!', 'success');
+      }
+    }
+  }
 }
 
 // Crime Actions

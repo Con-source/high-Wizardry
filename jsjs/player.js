@@ -53,6 +53,13 @@ const Player = (() => {
           endurance: 10,
           charisma: 10,
           dexterity: 10,
+          questsCompleted: 0,
+          resources: {},
+          craftedItems: {},
+          guilds: {
+            memberships: [],
+            reputation: {}
+          },
           inventory: {
             potions: 3,
             herbs: 5,
