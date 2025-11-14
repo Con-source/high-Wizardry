@@ -199,7 +199,7 @@
           </div>
         </div>
         <div class="player-currency mt-2">
-          <i class="fas fa-coins"></i> <span id="gold-display">1,000</span> Gold
+          <i class="fas fa-coins"></i> <span id="currency-display">83 shillings, 4 pennies</span>
         </div>
       </div>
 
@@ -256,7 +256,7 @@
                 <p><strong>Type:</strong> <span id="home-type">Basic Cottage</span></p>
                 <p><strong>Comfort Level:</strong> <span id="home-comfort">5/10</span></p>
                 <button class="btn btn-primary btn-sm" onclick="upgradeHome()">
-                  <i class="fas fa-hammer"></i> Upgrade Home (500 Gold)
+                  <i class="fas fa-hammer"></i> Upgrade Home (500 shillings)
                 </button>
               </div>
             </div>
@@ -284,8 +284,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Minor Healing</h5>
                 <p class="text-muted">Restore 25 Health</p>
-                <p class="text-warning">Cost: 50 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(25, 50)">
+                <p class="text-warning">Cost: 50 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(25, 600)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -296,8 +296,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Major Healing</h5>
                 <p class="text-muted">Restore 50 Health</p>
-                <p class="text-warning">Cost: 100 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(50, 100)">
+                <p class="text-warning">Cost: 100 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(50, 1200)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -308,8 +308,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Full Recovery</h5>
                 <p class="text-muted">Restore All Health</p>
-                <p class="text-warning">Cost: 200 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal('full', 200)">
+                <p class="text-warning">Cost: 200 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal('full', 2400)">
                   <i class="fas fa-heart"></i> Full Heal
                 </button>
               </div>
@@ -328,8 +328,8 @@
                 <h5 class="card-title"><i class="fas fa-brain"></i> Intelligence Training</h5>
                 <p>Improve your magical knowledge and spellcasting.</p>
                 <p><strong>Current Level:</strong> <span id="intelligence-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 1200)">
                   <i class="fas fa-book"></i> Train Intelligence
                 </button>
               </div>
@@ -341,8 +341,8 @@
                 <h5 class="card-title"><i class="fas fa-dumbbell"></i> Endurance Training</h5>
                 <p>Increase your stamina and physical resilience.</p>
                 <p><strong>Current Level:</strong> <span id="endurance-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 1200)">
                   <i class="fas fa-running"></i> Train Endurance
                 </button>
               </div>
@@ -354,8 +354,8 @@
                 <h5 class="card-title"><i class="fas fa-comments"></i> Charisma Training</h5>
                 <p>Improve your social skills and persuasion.</p>
                 <p><strong>Current Level:</strong> <span id="charisma-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 1200)">
                   <i class="fas fa-user-tie"></i> Train Charisma
                 </button>
               </div>
@@ -367,8 +367,8 @@
                 <h5 class="card-title"><i class="fas fa-hand-sparkles"></i> Dexterity Training</h5>
                 <p>Enhance your agility and precision.</p>
                 <p><strong>Current Level:</strong> <span id="dexterity-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 1200)">
                   <i class="fas fa-hands"></i> Train Dexterity
                 </button>
               </div>
@@ -406,23 +406,23 @@
                   <tr>
                     <td>Small Shop</td>
                     <td>Commercial</td>
-                    <td>5,000 Gold</td>
-                    <td>50 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 5000, 50)">Buy</button></td>
+                    <td>5,000 shillings</td>
+                    <td>50 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 60000, 600)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Apartment</td>
                     <td>Residential</td>
-                    <td>10,000 Gold</td>
-                    <td>100 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 10000, 100)">Buy</button></td>
+                    <td>10,000 shillings</td>
+                    <td>100 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 120000, 1200)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Tavern</td>
                     <td>Business</td>
-                    <td>25,000 Gold</td>
-                    <td>300 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 25000, 300)">Buy</button></td>
+                    <td>25,000 shillings</td>
+                    <td>300 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 300000, 3600)">Buy</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -440,7 +440,7 @@
               <div class="card-body">
                 <h5 class="card-title">Gather Herbs</h5>
                 <p class="text-muted">Collect 10 magical herbs from the forest.</p>
-                <p><strong>Reward:</strong> 100 XP, 50 Gold</p>
+                <p><strong>Reward:</strong> 100 XP, 50 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('herbs')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -453,7 +453,7 @@
               <div class="card-body">
                 <h5 class="card-title">Defeat the Dark Mage</h5>
                 <p class="text-muted">Confront the dark mage threatening the village.</p>
-                <p><strong>Reward:</strong> 500 XP, 200 Gold</p>
+                <p><strong>Reward:</strong> 500 XP, 200 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-warning">Requires Level 5</span></p>
                 <button class="btn btn-primary btn-sm" disabled>
                   <i class="fas fa-lock"></i> Locked
@@ -466,7 +466,7 @@
               <div class="card-body">
                 <h5 class="card-title">Deliver Message</h5>
                 <p class="text-muted">Deliver an urgent message to the neighboring town.</p>
-                <p><strong>Reward:</strong> 75 XP, 30 Gold</p>
+                <p><strong>Reward:</strong> 75 XP, 30 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('message')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -499,7 +499,7 @@
               <tr>
                 <td>Pickpocket</td>
                 <td><span class="badge bg-success">Easy</span></td>
-                <td>10-20 Gold</td>
+                <td>10-20 shillings</td>
                 <td>10</td>
                 <td>80%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('pickpocket')">Attempt</button></td>
@@ -507,7 +507,7 @@
               <tr>
                 <td>Burglary</td>
                 <td><span class="badge bg-warning">Medium</span></td>
-                <td>50-100 Gold</td>
+                <td>50-100 shillings</td>
                 <td>25</td>
                 <td>60%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('burglary')">Attempt</button></td>
@@ -515,7 +515,7 @@
               <tr>
                 <td>Bank Heist</td>
                 <td><span class="badge bg-danger">Hard</span></td>
-                <td>200-500 Gold</td>
+                <td>200-500 shillings</td>
                 <td>50</td>
                 <td>40%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('heist')">Attempt</button></td>
@@ -547,7 +547,7 @@
               <i class="fas fa-door-open"></i> Attempt Jailbreak (25% chance)
             </button>
             <button class="btn btn-primary mt-3" onclick="payBail()">
-              <i class="fas fa-coins"></i> Pay Bail (500 Gold)
+              <i class="fas fa-coins"></i> Pay Bail (500 shillings)
             </button>
           </div>
         </div>

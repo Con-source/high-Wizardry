@@ -171,7 +171,7 @@ function showTutorial() {
           <li>Use the menu on the left to navigate</li>
           <li>Check your stats and inventory in the sidebar</li>
           <li>Chat with other players using the chat box</li>
-          <li>Complete quests to earn experience and gold</li>
+          <li>Complete quests to earn experience and currency</li>
           <li>Train your skills to become more powerful</li>
         </ol>
         <p>Good luck on your magical journey!</p>
