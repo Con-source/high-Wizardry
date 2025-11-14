@@ -549,7 +549,7 @@ function rotateVendorInventories() {
   // Refresh current location if it's a black market
   if (typeof Locations !== 'undefined') {
     const currentLocation = Locations.getCurrentLocation();
-    if (['goblin-outpost', 'abandoned-warehouse', 'shady-alley'].includes(currentLocation)) {
+    if (BlackMarket.isBlackMarketLocation(currentLocation)) {
       Locations.updateBlackMarketUI(currentLocation);
     }
   }
