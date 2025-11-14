@@ -73,6 +73,21 @@ const Locations = (() => {
       name: 'The Drunken Wizard',
       description: 'A cozy tavern where adventurers share stories and drinks.',
       contentId: null
+    },
+    'fair-alley': {
+      name: 'Fair Alleyway',
+      description: 'A bustling marketplace with merchants selling exotic goods and rare items.',
+      contentId: 'location-content-fair-alley'
+    },
+    'guild-district': {
+      name: 'Guild District',
+      description: 'Home to various guilds offering unique benefits and opportunities.',
+      contentId: 'location-content-guild-district'
+    },
+    'smuggling-routes': {
+      name: 'Smuggling Routes',
+      description: 'Shadowy paths used by smugglers for risky but lucrative trade.',
+      contentId: 'location-content-smuggling-routes'
     }
   };
   
@@ -100,8 +115,27 @@ const Locations = (() => {
       return;
     }
     
+    // Check if Travel module exists and if we should use it
+    const useTravel = typeof Travel !== 'undefined' && typeof Travel.isTraveling === 'function';
+    
+    // If not currently traveling and trying to change location, show travel modal
+    if (useTravel && !Travel.isTraveling() && currentLocation !== locationId) {
+      const travelCurrentLocation = Travel.getCurrentLocation();
+      
+      // Only trigger travel if we're not at the destination
+      if (travelCurrentLocation !== locationId) {
+        Travel.showTravelModal(locationId);
+        return;
+      }
+    }
+    
     const location = locationData[locationId];
     currentLocation = locationId;
+    
+    // Update Travel module's current location if available
+    if (useTravel && typeof Travel.setCurrentLocation === 'function') {
+      Travel.setCurrentLocation(locationId);
+    }
     
     // Update active button
     document.querySelectorAll('.location-btn').forEach(btn => {
