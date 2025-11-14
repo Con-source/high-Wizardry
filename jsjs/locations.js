@@ -203,24 +203,73 @@ const Locations = (() => {
     const container = document.getElementById(containerId);
     if (!container) return;
     
+    // Clear container
+    container.innerHTML = '';
+    
     if (inventory.length === 0) {
-      container.innerHTML = '<div class="alert alert-info">No items available at the moment. Check back later!</div>';
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-info';
+      alert.textContent = 'No items available at the moment. Check back later!';
+      container.appendChild(alert);
       return;
     }
     
-    container.innerHTML = inventory.map(item => `
-      <div class="vendor-item">
-        <div class="item-name">${item.name}</div>
-        <span class="item-rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
-        <div class="item-description">${item.description}</div>
-        <div class="item-uses"><i class="fas fa-info-circle"></i> ${item.uses}</div>
-        <div class="item-price"><i class="fas fa-coins"></i> ${item.price} Gold</div>
-        <div class="item-stock">Stock: ${item.stock}</div>
-        <button class="btn btn-danger btn-sm w-100 mt-2" onclick="purchaseBlackMarketItem('${locationId}', '${item.id}')">
-          <i class="fas fa-shopping-cart"></i> Purchase
-        </button>
-      </div>
-    `).join('');
+    // Create vendor items using DOM manipulation
+    inventory.forEach(item => {
+      const itemCard = document.createElement('div');
+      itemCard.className = 'vendor-item';
+      
+      const itemName = document.createElement('div');
+      itemName.className = 'item-name';
+      itemName.textContent = item.name;
+      itemCard.appendChild(itemName);
+      
+      const rarityBadge = document.createElement('span');
+      rarityBadge.className = `item-rarity ${item.rarity}`;
+      rarityBadge.textContent = item.rarity.toUpperCase();
+      itemCard.appendChild(rarityBadge);
+      
+      const itemDesc = document.createElement('div');
+      itemDesc.className = 'item-description';
+      itemDesc.textContent = item.description;
+      itemCard.appendChild(itemDesc);
+      
+      const itemUses = document.createElement('div');
+      itemUses.className = 'item-uses';
+      const usesIcon = document.createElement('i');
+      usesIcon.className = 'fas fa-info-circle';
+      usesIcon.setAttribute('aria-hidden', 'true');
+      itemUses.appendChild(usesIcon);
+      itemUses.appendChild(document.createTextNode(' ' + item.uses));
+      itemCard.appendChild(itemUses);
+      
+      const itemPrice = document.createElement('div');
+      itemPrice.className = 'item-price';
+      const priceIcon = document.createElement('i');
+      priceIcon.className = 'fas fa-coins';
+      priceIcon.setAttribute('aria-hidden', 'true');
+      itemPrice.appendChild(priceIcon);
+      itemPrice.appendChild(document.createTextNode(' ' + item.price + ' Shillings'));
+      itemCard.appendChild(itemPrice);
+      
+      const itemStock = document.createElement('div');
+      itemStock.className = 'item-stock';
+      itemStock.textContent = 'Stock: ' + item.stock;
+      itemCard.appendChild(itemStock);
+      
+      const purchaseBtn = document.createElement('button');
+      purchaseBtn.className = 'btn btn-danger btn-sm w-100 mt-2';
+      purchaseBtn.setAttribute('aria-label', `Purchase ${item.name} for ${item.price} shillings`);
+      purchaseBtn.onclick = () => purchaseBlackMarketItem(locationId, item.id);
+      const btnIcon = document.createElement('i');
+      btnIcon.className = 'fas fa-shopping-cart';
+      btnIcon.setAttribute('aria-hidden', 'true');
+      purchaseBtn.appendChild(btnIcon);
+      purchaseBtn.appendChild(document.createTextNode(' Purchase'));
+      itemCard.appendChild(purchaseBtn);
+      
+      container.appendChild(itemCard);
+    });
   }
   
   // Update smuggled goods UI
@@ -232,43 +281,112 @@ const Locations = (() => {
     
     if (!container) return;
     
+    // Clear container
+    container.innerHTML = '';
+    
     if (goods.length === 0) {
-      container.innerHTML = `
-        <div class="alert alert-info">
-          <i class="fas fa-box-open"></i> No smuggled goods. Visit Black Market vendors to acquire items!
-        </div>
-      `;
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-info';
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-box-open';
+      icon.setAttribute('aria-hidden', 'true');
+      alert.appendChild(icon);
+      alert.appendChild(document.createTextNode(' No smuggled goods. Visit Black Market vendors to acquire items!'));
+      container.appendChild(alert);
       return;
     }
     
-    container.innerHTML = `
-      <div class="card bg-dark">
-        <div class="card-body">
-          <h5 class="card-title">Your Smuggled Goods</h5>
-          ${goods.map(item => `
-            <div class="smuggled-item">
-              <div class="item-info">
-                <div>
-                  <strong>${item.name}</strong> 
-                  <span class="item-rarity ${item.rarity} ms-2">${item.rarity}</span>
-                </div>
-                <div class="text-muted small">${item.description}</div>
-                <div class="text-info small"><i class="fas fa-box"></i> Quantity: ${item.quantity}</div>
-                ${item.resaleValue ? `<div class="text-success small"><i class="fas fa-coins"></i> Resale Value: ${item.resaleValue} Gold</div>` : ''}
-              </div>
-              <div class="item-actions">
-                <button class="btn btn-warning btn-sm" onclick="smuggleItem('${item.id}')" title="Attempt to smuggle this item">
-                  <i class="fas fa-shipping-fast"></i> Smuggle
-                </button>
-                <button class="btn btn-info btn-sm" onclick="sellSmuggledItem('${item.id}')" title="Sell at 70% value">
-                  <i class="fas fa-hand-holding-usd"></i> Sell
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
+    // Create card structure
+    const card = document.createElement('div');
+    card.className = 'card bg-dark';
+    const cardBody = document.createElement('div');
+    cardBody.className = 'card-body';
+    
+    const cardTitle = document.createElement('h5');
+    cardTitle.className = 'card-title';
+    cardTitle.textContent = 'Your Smuggled Goods';
+    cardBody.appendChild(cardTitle);
+    
+    // Create smuggled items using DOM manipulation
+    goods.forEach(item => {
+      const smuggledItem = document.createElement('div');
+      smuggledItem.className = 'smuggled-item';
+      
+      const itemInfo = document.createElement('div');
+      itemInfo.className = 'item-info';
+      
+      const nameDiv = document.createElement('div');
+      const itemName = document.createElement('strong');
+      itemName.textContent = item.name;
+      nameDiv.appendChild(itemName);
+      nameDiv.appendChild(document.createTextNode(' '));
+      
+      const raritySpan = document.createElement('span');
+      raritySpan.className = `item-rarity ${item.rarity} ms-2`;
+      raritySpan.textContent = item.rarity;
+      nameDiv.appendChild(raritySpan);
+      itemInfo.appendChild(nameDiv);
+      
+      const descDiv = document.createElement('div');
+      descDiv.className = 'text-muted small';
+      descDiv.textContent = item.description;
+      itemInfo.appendChild(descDiv);
+      
+      const quantityDiv = document.createElement('div');
+      quantityDiv.className = 'text-info small';
+      const qtyIcon = document.createElement('i');
+      qtyIcon.className = 'fas fa-box';
+      qtyIcon.setAttribute('aria-hidden', 'true');
+      quantityDiv.appendChild(qtyIcon);
+      quantityDiv.appendChild(document.createTextNode(' Quantity: ' + item.quantity));
+      itemInfo.appendChild(quantityDiv);
+      
+      if (item.resaleValue) {
+        const resaleDiv = document.createElement('div');
+        resaleDiv.className = 'text-success small';
+        const resaleIcon = document.createElement('i');
+        resaleIcon.className = 'fas fa-coins';
+        resaleIcon.setAttribute('aria-hidden', 'true');
+        resaleDiv.appendChild(resaleIcon);
+        resaleDiv.appendChild(document.createTextNode(' Resale Value: ' + item.resaleValue + ' Shillings'));
+        itemInfo.appendChild(resaleDiv);
+      }
+      
+      smuggledItem.appendChild(itemInfo);
+      
+      const itemActions = document.createElement('div');
+      itemActions.className = 'item-actions';
+      
+      const smuggleBtn = document.createElement('button');
+      smuggleBtn.className = 'btn btn-warning btn-sm';
+      smuggleBtn.title = 'Attempt to smuggle this item';
+      smuggleBtn.setAttribute('aria-label', `Smuggle ${item.name}`);
+      smuggleBtn.onclick = () => smuggleItem(item.id);
+      const smuggleIcon = document.createElement('i');
+      smuggleIcon.className = 'fas fa-shipping-fast';
+      smuggleIcon.setAttribute('aria-hidden', 'true');
+      smuggleBtn.appendChild(smuggleIcon);
+      smuggleBtn.appendChild(document.createTextNode(' Smuggle'));
+      itemActions.appendChild(smuggleBtn);
+      
+      const sellBtn = document.createElement('button');
+      sellBtn.className = 'btn btn-info btn-sm';
+      sellBtn.title = 'Sell at 70% value';
+      sellBtn.setAttribute('aria-label', `Sell ${item.name}`);
+      sellBtn.onclick = () => sellSmuggledItem(item.id);
+      const sellIcon = document.createElement('i');
+      sellIcon.className = 'fas fa-hand-holding-usd';
+      sellIcon.setAttribute('aria-hidden', 'true');
+      sellBtn.appendChild(sellIcon);
+      sellBtn.appendChild(document.createTextNode(' Sell'));
+      itemActions.appendChild(sellBtn);
+      
+      smuggledItem.appendChild(itemActions);
+      cardBody.appendChild(smuggledItem);
+    });
+    
+    card.appendChild(cardBody);
+    container.appendChild(card);
   }
   
   // Public API

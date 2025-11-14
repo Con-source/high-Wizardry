@@ -71,11 +71,11 @@ Adjusted Risk = Total Risk * (Guild Discount ? 0.8 : 1.0)
 - Contraband items are sold for their resale value
 - Crafting materials are added to inventory
 - Player gains 50 XP
-- Gold is credited to player account
+- Shillings are credited to player account
 
 **Failure**:
 - Item is confiscated
-- No gold gained
+- No shillings gained
 - Epic/Legendary items: 30% chance of jail time (5 minutes)
 
 ### Vendor Rotation

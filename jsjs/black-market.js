@@ -291,7 +291,7 @@ const BlackMarket = (() => {
     
     // Check if player has enough gold
     if (playerData.gold < item.price) {
-      showNotification('Not enough gold!', 'error');
+      showNotification('Not enough shillings!', 'error');
       return false;
     }
     
@@ -318,7 +318,7 @@ const BlackMarket = (() => {
     saveInventories();
     saveState();
     
-    showNotification(`Purchased ${item.name} for ${item.price} gold`, 'success');
+    showNotification(`Purchased ${item.name} for ${item.price} shillings`, 'success');
     addGameLog(`Bought ${item.name} from Black Market`);
     
     return true;
@@ -401,7 +401,7 @@ const BlackMarket = (() => {
         // Sell contraband for profit
         profit = item.resaleValue;
         Player.addGold(profit);
-        showNotification(`Successfully smuggled ${item.name}! Sold for ${profit} gold`, 'success');
+        showNotification(`Successfully smuggled ${item.name}! Sold for ${profit} shillings`, 'success');
       } else {
         // Add to regular inventory for crafting
         const inventory = { ...playerData.inventory };
@@ -515,7 +515,7 @@ const BlackMarket = (() => {
     Player.updateData({ inventory: { ...playerData.inventory, smuggledGoods: updatedSmuggledGoods } });
     saveState();
     
-    showNotification(`Sold ${item.name} for ${sellPrice} gold`, 'success');
+    showNotification(`Sold ${item.name} for ${sellPrice} shillings`, 'success');
     addGameLog(`Sold ${item.name} from smuggled goods`);
     
     return true;
