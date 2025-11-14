@@ -25,6 +25,7 @@ const CONFIG = {
     endurance: 10,
     charisma: 10,
     dexterity: 10,
+    speed: 0,  // New stat for travel speed
     
     // Inventory
     inventory: {

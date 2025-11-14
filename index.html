@@ -218,6 +218,9 @@
         <button class="location-btn" data-location="friends"><i class="fas fa-users"></i> Friends/Enemies</button>
         <button class="location-btn" data-location="magic-shop"><i class="fas fa-hat-wizard"></i> Magic Shop</button>
         <button class="location-btn" data-location="tavern"><i class="fas fa-beer"></i> The Drunken Wizard</button>
+        <button class="location-btn" data-location="fair-alley"><i class="fas fa-store"></i> Fair Alleyway</button>
+        <button class="location-btn" data-location="guild-district"><i class="fas fa-shield-alt"></i> Guild District</button>
+        <button class="location-btn" data-location="smuggling-routes"><i class="fas fa-user-secret"></i> Smuggling Routes</button>
       </nav>
     </div>
 
@@ -700,6 +703,173 @@
           </div>
         </div>
       </div>
+
+      <div id="location-content-fair-alley" class="location-content" style="display: none;">
+        <h2><i class="fas fa-store me-2"></i>Fair Alleyway</h2>
+        <p>A bustling marketplace with merchants selling exotic goods and rare items.</p>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-gem"></i> Rare Artifacts</h5>
+                <p class="text-muted">Browse unique magical items.</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-shopping-cart"></i> Browse Shop
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-exchange-alt"></i> Trade Market</h5>
+                <p class="text-muted">Trade with other players.</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-handshake"></i> Open Trades
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-scroll"></i> Black Market</h5>
+                <p class="text-muted">Risky deals with rare rewards.</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-mask"></i> Enter Market
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-guild-district" class="location-content" style="display: none;">
+        <h2><i class="fas fa-shield-alt me-2"></i>Guild District</h2>
+        <p>Join a guild to gain unique benefits and participate in guild activities.</p>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-primary"><i class="fas fa-compass"></i> Explorer's Guild</h5>
+                <p>Reduce travel costs and times by 20%.</p>
+                <ul class="text-muted small">
+                  <li>Faster travel between all locations</li>
+                  <li>Reduced energy cost for exploration</li>
+                  <li>Access to secret locations</li>
+                </ul>
+                <p><strong>Fee:</strong> 1,000 Gold</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-coins"></i> Merchant's Guild</h5>
+                <p>Exclusive routes to trading hubs with better prices.</p>
+                <ul class="text-muted small">
+                  <li>10% better prices at all shops</li>
+                  <li>Access to exclusive trade routes</li>
+                  <li>Passive income from investments</li>
+                </ul>
+                <p><strong>Fee:</strong> 1,500 Gold</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-danger"><i class="fas fa-user-ninja"></i> Thieves' Guild</h5>
+                <p>Higher crime success rates and smuggling access.</p>
+                <ul class="text-muted small">
+                  <li>+15% crime success rate</li>
+                  <li>Access to smuggling routes</li>
+                  <li>Fence stolen goods for better prices</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,000 Gold</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-warning"><i class="fas fa-hat-wizard"></i> Arcane Society</h5>
+                <p>Enhanced magical abilities and spell access.</p>
+                <ul class="text-muted small">
+                  <li>+20% mana regeneration</li>
+                  <li>Access to powerful spells</li>
+                  <li>Reduced portal travel costs</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,500 Gold</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-smuggling-routes" class="location-content" style="display: none;">
+        <h2><i class="fas fa-user-secret me-2"></i>Smuggling Routes</h2>
+        <p>High-risk, high-reward smuggling operations. Requires Thieves' Guild membership.</p>
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Smuggling is illegal! High chance of getting caught by authorities.
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-warning">
+              <div class="card-body text-center">
+                <h5 class="card-title">Minor Contraband</h5>
+                <p class="text-muted">Low-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 100-200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-warning">Medium</span></p>
+                <p><strong>Time:</strong> 30 seconds (Fast Route)</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-danger">
+              <div class="card-body text-center">
+                <h5 class="card-title">Major Contraband</h5>
+                <p class="text-muted">High-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 300-500 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">High</span></p>
+                <p><strong>Time:</strong> 60 seconds (Fast Route)</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-primary">
+              <div class="card-body text-center">
+                <h5 class="card-title">Rare Goods</h5>
+                <p class="text-muted">Expert smuggling operation.</p>
+                <p><strong>Reward:</strong> 800-1,200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">Very High</span></p>
+                <p><strong>Time:</strong> 90 seconds (Fast Route)</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -732,6 +902,7 @@
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
   <script src="jsjs/chat.js"></script>
+  <script src="jsjs/travel.js"></script>
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
   <script src="jsjs/main.js"></script>
