@@ -403,7 +403,7 @@ const BlackMarket = (() => {
           inventory.craftingMaterials = [];
         }
         inventory.craftingMaterials.push(item);
-        Player.updateData({ inventory });
+        Player.updateData({ inventory: { ...playerData.inventory, craftingMaterials: inventory.craftingMaterials } });
         showNotification(`Successfully smuggled ${item.name}! Added to inventory`, 'success');
       }
       
