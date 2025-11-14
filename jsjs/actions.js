@@ -157,8 +157,8 @@ function acceptQuest(questId) {
   Player.updateData({ questsCompleted });
   Player.addXP(10);
   
-  showNotification(`Quest "${questId}" accepted!`, 'success');
-  addGameLog(`You accepted a quest: ${questId}`);
+  showNotification(`Quest "${questId}" completed!`, 'success');
+  addGameLog(`You completed a quest: ${questId}`);
   
   // Check if this unlocks new locations
   if (typeof Locations !== 'undefined') {

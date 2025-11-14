@@ -130,9 +130,9 @@ const Locations = (() => {
       contentId: 'location-content-crystal-peak-mines',
       unlocked: false,
       unlockRequirement: {
-        type: 'item',
-        value: 'mining-gear',
-        message: 'Requires Mining Gear from Merchant Guild'
+        type: 'level',
+        value: 10,
+        message: 'Reach Level 10 to unlock'
       },
       icon: 'fa-mountain'
     }

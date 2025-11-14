@@ -190,17 +190,36 @@ const Resources = (() => {
     }
     
     // Get available resources for location
-    const availableResources = getLocationResources(locationId);
+    let availableResources = getLocationResources(locationId);
     if (availableResources.length === 0) {
       console.warn(`No resources available at ${locationId}`);
       return false;
+    }
+    
+    // Explorer's Guild bonus-resources perk: Add extra resources to pool
+    if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+      if (Guilds.hasGuildPerk('explorer', 'bonus-resources')) {
+        // 20% chance to gather double resources
+        if (Math.random() < 0.2) {
+          // Will gather 2 resources instead of 1 at the end
+        }
+      }
     }
     
     // Reduce energy
     Player.updateData({ energy: playerData.energy - energyCost });
     
     // Random resource with weighted rarity
-    const weights = { common: 60, uncommon: 30, rare: 10 };
+    let weights = { common: 60, uncommon: 30, rare: 10 };
+    
+    // Explorer's Guild rare-finds perk: Increase rare drop rate
+    if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+      if (Guilds.hasGuildPerk('explorer', 'rare-finds')) {
+        // Increase rare chance from 10% to 20%, reduce common from 60% to 50%
+        weights = { common: 50, uncommon: 30, rare: 20 };
+      }
+    }
+    
     const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
     const rand = Math.random() * totalWeight;
     
@@ -216,14 +235,23 @@ const Resources = (() => {
     
     // Filter by rarity
     const possibleResources = availableResources.filter(r => r.rarity === selectedRarity);
+    let resource;
     if (possibleResources.length === 0) {
       // Fallback to any resource
-      const resource = availableResources[Math.floor(Math.random() * availableResources.length)];
-      addResource(resource.id, 1);
+      resource = availableResources[Math.floor(Math.random() * availableResources.length)];
     } else {
-      const resource = possibleResources[Math.floor(Math.random() * possibleResources.length)];
-      addResource(resource.id, 1);
+      resource = possibleResources[Math.floor(Math.random() * possibleResources.length)];
     }
+    
+    // Determine amount (bonus-resources perk)
+    let amount = 1;
+    if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+      if (Guilds.hasGuildPerk('explorer', 'bonus-resources') && Math.random() < 0.2) {
+        amount = 2; // 20% chance to gather 2 resources
+      }
+    }
+    
+    addResource(resource.id, amount);
     
     // Add XP
     if (typeof Player !== 'undefined' && Player.addXP) {

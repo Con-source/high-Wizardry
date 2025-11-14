@@ -121,6 +121,22 @@ const Workshop = (() => {
       rarity: 'legendary',
       sellValue: 1000,
       icon: 'fa-scroll'
+    },
+    
+    // Mining Gear - Required for Crystal Peak Mines
+    'mining-gear': {
+      id: 'mining-gear',
+      name: 'Mining Gear',
+      category: 'gear',
+      description: 'Essential equipment for mining in hazardous areas',
+      requirements: {
+        'obsidian': 2,
+        'raw-gems': 2
+      },
+      craftTime: 300000, // 5 minutes
+      rarity: 'uncommon',
+      stats: { endurance: 3 },
+      icon: 'fa-hard-hat'
     }
   };
   
@@ -183,7 +199,17 @@ const Workshop = (() => {
     
     // Consume resources
     for (const [resourceId, amount] of Object.entries(recipe.requirements)) {
-      Resources.removeResource(resourceId, amount);
+      // Artisan Guild resource-efficiency perk: 10% chance to save resources
+      let actualAmount = amount;
+      if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+        if (Guilds.hasGuildPerk('artisan', 'resource-efficiency') && Math.random() < 0.1) {
+          actualAmount = Math.max(1, amount - 1); // Save 1 resource (but use at least 1)
+          if (typeof UI !== 'undefined' && UI.showNotification) {
+            UI.showNotification(`Resource efficiency! Saved 1 ${resourceId}`, 'info');
+          }
+        }
+      }
+      Resources.removeResource(resourceId, actualAmount);
     }
     
     // Calculate craft time (with guild bonuses)
@@ -278,7 +304,22 @@ const Workshop = (() => {
       const playerData = Player.getData();
       const craftedItems = playerData.craftedItems || {};
       craftedItems[recipe.id] = (craftedItems[recipe.id] || 0) + 1;
-      Player.updateData({ craftedItems });
+      
+      // Apply Smuggler's Guild contraband boost
+      if (recipe.category === 'contraband' && recipe.sellValue) {
+        let actualValue = recipe.sellValue;
+        if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+          if (Guilds.hasGuildPerk('smuggler', 'contraband-boost')) {
+            actualValue = Math.floor(recipe.sellValue * 1.25); // 25% boost
+          }
+        }
+        // Store the boosted value with the item
+        const contrabandValues = playerData.contrabandValues || {};
+        contrabandValues[recipe.id] = actualValue;
+        Player.updateData({ craftedItems, contrabandValues });
+      } else {
+        Player.updateData({ craftedItems });
+      }
       
       // Add XP
       const xpReward = recipe.rarity === 'common' ? 10 : recipe.rarity === 'uncommon' ? 25 : recipe.rarity === 'rare' ? 50 : 100;
@@ -331,13 +372,47 @@ const Workshop = (() => {
         
         // Clean up expired items
         const now = Date.now();
-        craftingQueue = craftingQueue.filter(c => {
-          if (c.endTime <= now) {
-            completeCrafting(c.id);
-            return false;
+        const expired = craftingQueue.filter(c => c.endTime <= now);
+        
+        // Complete expired items (without modifying queue during iteration)
+        expired.forEach(c => {
+          const recipe = RECIPES[c.recipeId];
+          if (recipe) {
+            // Add item to player inventory
+            if (typeof Player !== 'undefined') {
+              const playerData = Player.getData();
+              const craftedItems = playerData.craftedItems || {};
+              craftedItems[recipe.id] = (craftedItems[recipe.id] || 0) + 1;
+              
+              // Apply contraband boost if applicable
+              if (recipe.category === 'contraband' && recipe.sellValue) {
+                let actualValue = recipe.sellValue;
+                if (typeof Guilds !== 'undefined' && Guilds.hasGuildPerk) {
+                  if (Guilds.hasGuildPerk('smuggler', 'contraband-boost')) {
+                    actualValue = Math.floor(recipe.sellValue * 1.25);
+                  }
+                }
+                const contrabandValues = playerData.contrabandValues || {};
+                contrabandValues[recipe.id] = actualValue;
+                Player.updateData({ craftedItems, contrabandValues });
+              } else {
+                Player.updateData({ craftedItems });
+              }
+              
+              // Add XP
+              const xpReward = recipe.rarity === 'common' ? 10 : recipe.rarity === 'uncommon' ? 25 : recipe.rarity === 'rare' ? 50 : 100;
+              Player.addXP(xpReward);
+            }
+            
+            if (typeof UI !== 'undefined' && UI.showNotification) {
+              UI.showNotification(`${recipe.name} crafted while you were away!`, 'success');
+            }
           }
-          return true;
         });
+        
+        // Remove expired items from queue
+        craftingQueue = craftingQueue.filter(c => c.endTime > now);
+        saveCraftingQueue();
       }
     } catch (error) {
       console.error('Failed to load crafting queue:', error);
