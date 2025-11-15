@@ -221,7 +221,7 @@ const onlineGame = {
         if (log) {
             const messageElement = document.createElement('div');
             messageElement.className = `log-message log-${type}`;
-            messageElement.textContent = [[${this.getFormattedTime()}] ${message}](cci:1://file:///C:/Users/kirat/CascadeProjects/game.js:340:4-344:5);
+            messageElement.textContent = `[${this.getFormattedTime()}] ${message}`;
             log.appendChild(messageElement);
             log.scrollTop = log.scrollHeight;
         }
