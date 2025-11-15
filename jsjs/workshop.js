@@ -8,7 +8,6 @@ const Workshop = (() => {
   function init() { loadCraftingQueue(); startCraftingTimer(); console.log('✅ Workshop module initialized'); return true; }
 
   function getRecipe(id) { return RECIPES[id] || null; }
-  function getAllRecipes() { return RECIPES; }
   function getRecipesByCategory(cat) { return Object.values(RECIPES).filter(r => r.category === cat); }
 
   function canCraft(recipeId) { if (typeof Resources === 'undefined' || typeof Resources.hasResources !== 'function') return false; const recipe = getRecipe(recipeId); if (!recipe) return false; return Resources.hasResources(recipe.requirements); }
