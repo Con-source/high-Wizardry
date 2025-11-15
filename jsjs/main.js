@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize UI first
+  if (typeof UI !== 'undefined' && typeof UI.init === 'function') { UI.init(); console.log('✅ UI initialized'); }
   // Initialize Player if present
   if (typeof Player !== 'undefined' && typeof Player.init === 'function') Player.init();
 
