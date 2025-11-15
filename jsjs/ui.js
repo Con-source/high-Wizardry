@@ -146,7 +146,7 @@ const UI = (() => {
   }
   
   // Show a notification
-  function showNotification(message, type = 'info', duration = CONFIG.UI.NOTIFICATION_DURATION) {
+  function showNotification(message, type = 'info', duration = CONFIG?.UI?.NOTIFICATION_DURATION || 5000) {
     const id = `notification-${Date.now()}`;
     const notification = document.createElement('div');
     notification.id = id;
@@ -159,16 +159,21 @@ const UI = (() => {
       </div>
     `;
     
-    const container = document.querySelector('.notification-container');
+    let container = document.querySelector('.notification-container');
     if (!container) {
       // Create notification container if it doesn't exist
-      const newContainer = document.createElement('div');
-      newContainer.className = 'notification-container';
-      document.body.appendChild(newContainer);
-      newContainer.appendChild(notification);
-    } else {
-      container.appendChild(notification);
+      container = document.createElement('div');
+      container.className = 'notification-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 400px;
+      `;
+      document.body.appendChild(container);
     }
+    container.appendChild(notification);
     
     // Add to state
     state.notifications.push({
@@ -485,9 +490,17 @@ const UI = (() => {
   // Update player stats in the UI
   function updatePlayerStats() {
     // This would update all player-related UI elements
-    // For now, we'll just log that stats were updated
-    if (CONFIG.DEBUG) {
-      console.log('Updating player stats in UI');
+    try {
+      // Check if Player module exists and update UI
+      if (typeof Player !== 'undefined' && typeof Player.updateUI === 'function') {
+        Player.updateUI();
+      }
+      
+      if (CONFIG?.DEBUG) {
+        console.log('Updating player stats in UI');
+      }
+    } catch (error) {
+      console.error('Error updating player stats:', error);
     }
   }
   

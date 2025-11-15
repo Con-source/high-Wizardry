@@ -1,4 +1,4 @@
-let player = {energy:100,maxEnergy:100,energyTimer:10,xp:0,level:1,magic:1,alchemy:1,health:10,mana:5,rep:0,herbs:0,potions:0,gold:0,guildPoints:0,guildName:"None"};
+let player = {energy:100,maxEnergy:100,energyTimer:10,xp:0,level:1,magic:1,alchemy:1,health:10,mana:5,rep:0,herbs:0,potions:0,shillings:0,pennies:0,guildPoints:0,guildName:"None"};
 
 if(localStorage.getItem('highWizardry')){
  player = JSON.parse(localStorage.getItem('highWizardry'));
@@ -23,7 +23,12 @@ function performAction(act){
  case 'grow': cost=10; xpGain=5; player.herbs++; break;
  case 'brew': cost=15; xpGain=10; if(player.herbs>0){player.herbs--;player.potions++;} break;
  case 'train': cost=20; xpGain=15; player.magic++; player.alchemy++; break;
- case 'quest': cost=25; xpGain=25; player.gold+=10; break;
+ case 'quest': cost=25; xpGain=25; 
+  const questReward = 10;
+  const totalPennies = (player.shillings * 12) + player.pennies + questReward;
+  player.shillings = Math.floor(totalPennies / 12);
+  player.pennies = totalPennies % 12;
+  break;
  }
  if(player.energy >= cost){
  player.energy -= cost;
@@ -49,8 +54,26 @@ function checkLevelUp(){
 }
 
 function buyItem(item){
- if(item === 'potion' && player.gold >= 10){ player.potions++; player.gold -= 10; }
- if(item === 'herb' && player.gold >= 5){ player.herbs++; player.gold -= 5; }
+ if(item === 'potion'){
+  const cost = 10;
+  const totalPennies = (player.shillings * 12) + player.pennies;
+  if(totalPennies >= cost){
+   player.potions++;
+   const newTotal = totalPennies - cost;
+   player.shillings = Math.floor(newTotal / 12);
+   player.pennies = newTotal % 12;
+  }
+ }
+ if(item === 'herb'){
+  const cost = 5;
+  const totalPennies = (player.shillings * 12) + player.pennies;
+  if(totalPennies >= cost){
+   player.herbs++;
+   const newTotal = totalPennies - cost;
+   player.shillings = Math.floor(newTotal / 12);
+   player.pennies = newTotal % 12;
+  }
+ }
  updateUI();
  saveGame();
 }
@@ -66,7 +89,8 @@ function updateUI(){
  document.getElementById('rep').innerText = player.rep;
  document.getElementById('herbs').innerText = player.herbs;
  document.getElementById('potions').innerText = player.potions;
- document.getElementById('gold').innerText = player.gold;
+ const currencyEl = document.getElementById('currency');
+ if(currencyEl) currencyEl.innerText = `${player.shillings}/${player.pennies}`;
 }
 
 function saveGame(){
