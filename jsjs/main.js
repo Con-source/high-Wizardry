@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof Guilds !== 'undefined' && typeof Guilds.init === 'function') { Guilds.init(); console.log('✅ Guilds initialized'); }
   if (typeof Workshop !== 'undefined' && typeof Workshop.init === 'function') { Workshop.init(); console.log('✅ Workshop initialized'); }
   if (typeof Locations !== 'undefined' && typeof Locations.init === 'function') { Locations.init(); console.log('✅ Locations initialized'); }
+  if (typeof Locations !== 'undefined' && typeof Locations.init === 'function') { Locations.init(); console.log('✅ Locations initialized'); }
   if (typeof Chat !== 'undefined' && typeof Chat.init === 'function') { Chat.init(); console.log('✅ Chat initialized'); }
 
   // Teleport event listener wiring
