@@ -30,7 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Chat module not found');
     }
     
-    // 4. Initialize Black Market system
+    // 4. Initialize Community system (Player Search & Profiles)
+    if (typeof Community !== 'undefined' && typeof Community.init === 'function') {
+      Community.init();
+      console.log('✅ Community initialized');
+    } else {
+      console.warn('⚠️ Community module not found');
+    }
+    
+    // 5. Initialize Black Market system
     if (typeof BlackMarket !== 'undefined' && typeof BlackMarket.init === 'function') {
       BlackMarket.init();
       console.log('✅ Black Market initialized');
@@ -38,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Black Market module not found');
     }
     
-    // 5. Initialize Game Core (if using separate game.js)
+    // 6. Initialize Game Core (if using separate game.js)
     // Note: game-core.js initializes automatically via singleton pattern
     if (window.HighWizardry && window.HighWizardry.Game) {
       console.log('✅ GameCore initialized');
@@ -77,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Game: window.HighWizardry?.Game || null,
         Chat: typeof Chat !== 'undefined' ? Chat : null,
         UI: typeof UI !== 'undefined' ? UI : null,
+        Community: typeof Community !== 'undefined' ? Community : null,
         Resources: typeof Resources !== 'undefined' ? Resources : null,
         Workshop: typeof Workshop !== 'undefined' ? Workshop : null,
         Guilds: typeof Guilds !== 'undefined' ? Guilds : null,

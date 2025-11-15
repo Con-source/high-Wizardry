@@ -578,6 +578,193 @@
     .map-location:hover span {
       color: white;
     }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+    }
+
+    .modal-dialog {
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(42, 42, 60, 0.95) 100%);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.show .modal-dialog {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      color: var(--primary-light);
+      margin: 0;
+      font-family: 'Cinzel', serif;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* Player Profile Styles */
+    .player-profile {
+      color: var(--text-primary);
+    }
+
+    .player-profile .profile-header {
+      text-align: center;
+    }
+
+    .player-profile .stat-box,
+    .player-profile .activity-stat {
+      transition: transform 0.2s ease;
+    }
+
+    .player-profile .stat-box:hover,
+    .player-profile .activity-stat:hover {
+      transform: translateY(-3px);
+    }
+
+    .player-profile .stat-item {
+      padding: 0.5rem;
+    }
+
+    .player-profile .achievement-item {
+      transition: transform 0.2s ease;
+    }
+
+    .player-profile .achievement-item:hover {
+      transform: translateX(5px);
+    }
+
+    /* Notification Styles */
+    .notification-container {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 10000;
+      max-width: 400px;
+    }
+
+    .notification {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .notification-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .notification-message {
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .notification-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 1rem;
+      transition: color 0.2s;
+    }
+
+    .notification-close:hover {
+      color: var(--danger);
+    }
+
+    .notification-info {
+      border-left-color: var(--info);
+    }
+
+    .notification-success {
+      border-left-color: var(--success);
+    }
+
+    .notification-warning {
+      border-left-color: var(--warning);
+    }
+
+    .notification-error {
+      border-left-color: var(--danger);
+    }
   </style>
 </head>
 <body>
@@ -1172,7 +1359,31 @@
 
       <div id="location-content-friends" class="location-content" style="display: none;">
         <h2><i class="fas fa-users me-2"></i>Friends & Enemies</h2>
-        <p>Manage your social relationships.</p>
+        <p>Manage your social relationships and discover new players.</p>
+        
+        <!-- Player Search Section -->
+        <div class="card bg-dark mb-3">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fas fa-search me-2"></i>Player Search</h5>
+            <p class="text-muted small">Search for other players by username to view their profiles and add them as friends.</p>
+            <div class="input-group mb-3">
+              <input type="text" 
+                     id="player-search-input" 
+                     class="form-control" 
+                     placeholder="Enter player username..." 
+                     aria-label="Player search">
+              <button class="btn btn-primary" 
+                      type="button" 
+                      id="player-search-btn">
+                <i class="fas fa-search me-1"></i> Search
+              </button>
+            </div>
+            <div id="player-search-results">
+              <p class="text-muted small text-center">Enter a username to search for players</p>
+            </div>
+          </div>
+        </div>
+        
         <div class="row">
           <div class="col-md-6">
             <div class="card bg-dark mb-3">
@@ -1617,6 +1828,7 @@
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
   <script src="jsjs/chat.js"></script>
+  <script src="jsjs/community.js"></script>
   <script src="jsjs/travel.js"></script>
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
