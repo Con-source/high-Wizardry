@@ -113,5 +113,4 @@ const Resources = (() => {
   return { init, getPlayerResources, getResourceInfo, getLocationResources, addResource, removeResource, hasResources, gatherResources, updateResourceUI, RESOURCE_TYPES };
 })();
 
-if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => { Resources.init(); });
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = Resources;
