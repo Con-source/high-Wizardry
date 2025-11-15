@@ -283,8 +283,41 @@ function releaseFromJail() {
   updateJailUI();
 }
 
-  // Safely increment persisted questsCompleted
+function bustOut() {
+  if (typeof Player === 'undefined') return;
+  
   const playerData = Player.getData();
+  if (!playerData.inJail) {
+    showNotification('You are not in jail!', 'error');
+    return;
+  }
+  
+  // 25% chance to escape
+  if (Math.random() < 0.25) {
+    releaseFromJail();
+    showNotification('Jailbreak successful! You escaped!', 'success');
+    addGameLog('You successfully broke out of jail');
+  } else {
+    // Failed attempt - add more time
+    const additionalTime = 5 * 60 * 1000; // 5 minutes
+    Player.updateData({ 
+      jailReleaseTime: playerData.jailReleaseTime + additionalTime
+    });
+    showNotification('Jailbreak failed! Your sentence was extended.', 'error');
+    addGameLog('Your jailbreak attempt failed and your sentence was extended');
+    updateJailUI();
+  }
+}
+
+function payBail() {
+  if (typeof Player === 'undefined') return;
+  
+  const playerData = Player.getData();
+  if (!playerData.inJail) {
+    showNotification('You are not in jail!', 'error');
+    return;
+  }
+  
   const bailCost = 6000; // 500 gold equivalent = 6000 pennies
   
   if (Player.getTotalPennies() < bailCost) {
@@ -410,19 +443,4 @@ function playHighCard() {
   }
   
   betInput.value = '';
-}
-
-  // Notify player
-  if (typeof showNotification === 'function') showNotification(`Quest "${questId}" completed!`, 'success');
-  if (typeof addGameLog === 'function') addGameLog(`You completed a quest: ${questId}`);
-
-  // Try to unlock any quest-based locations
-  if (typeof Locations !== 'undefined' && typeof Locations.tryUnlockLocation === 'function') {
-    // Example: enchanted forest unlocks at 5 quests
-    if (questsCompleted >= 5) {
-      if (Locations.tryUnlockLocation('enchanted-forest')) {
-        if (typeof showNotification === 'function') showNotification('New location unlocked: Enchanted Forest!', 'success');
-      }
-    }
-  }
 }
