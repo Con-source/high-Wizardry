@@ -154,7 +154,53 @@ const Workshop = (() => {
     }).join('');
   }
 
-  function updateRecipeList() { const container = document.getElementById('recipe-list'); if (!container) return; const categories = { 'battle-items':'Battle Items','weapons':'Weapons','gear':'Gear','contraband':'Contraband' }; let html = ''; for (const [catId, catName] of Object.entries(categories)) { const recipes = getRecipesByCategory(catId); if (recipes.length===0) continue; html += `<h5 class="mt-3 mb-2">${catName}</h5>`; html += recipes.map(recipe => { const canCraftNow = canCraft(recipe.id); const requirementsList = Object.entries(recipe.requirements).map(([rid, amt])=>{ const r = Resources.RESOURCE_TYPES[rid]; const playerRes = Resources.getPlayerResources(); const has = playerRes[rid]||0; return `<small class="${has>=amt?'text-success':'text-danger'}">${r.name}: ${has}/${amt}</small>`;}).join(', '); const craftTimeMin = Math.floor(recipe.craftTime/60000); const craftTimeSec = Math.floor((recipe.craftTime%60000)/1000); return `<div class="recipe-card mb-2 p-2 border rounded ${canCraftNow?'':'opacity-75'}"><div class="d-flex justify-content-between align-items-start"><div><strong><i class="fas ${recipe.icon}"></i> ${recipe.name}</strong><p class="text-muted small mb-1">${recipe.description}</p><div class="small">${requirementsList}</div><small class="text-info">Time: ${craftTimeMin}m ${craftTimeSec}s</small></div><button class="btn btn-primary btn-sm" onclick="Workshop.startCrafting('${recipe.id}')}" ${canCraftNow?'':'disabled'}><i class="fas fa-hammer"></i> Craft</button></div></div>`; }).join(''); } container.innerHTML = html; }
+  function updateRecipeList() {
+    const container = document.getElementById('recipe-list');
+    if (!container) return;
+    const categories = {
+      'battle-items': 'Battle Items',
+      'weapons': 'Weapons',
+      'gear': 'Gear',
+      'contraband': 'Contraband'
+    };
+    let html = '';
+    for (const [catId, catName] of Object.entries(categories)) {
+      const recipes = getRecipesByCategory(catId);
+      if (recipes.length === 0) continue;
+      html += `<h5 class="mt-3 mb-2">${catName}</h5>`;
+      html += recipes.map(recipe => {
+        const canCraftNow = canCraft(recipe.id);
+        const requirementsList = Object.entries(recipe.requirements)
+          .map(([rid, amt]) => {
+            const r = Resources.RESOURCE_TYPES[rid];
+            const playerRes = Resources.getPlayerResources();
+            const has = playerRes[rid] || 0;
+            return `<small class="${has >= amt ? 'text-success' : 'text-danger'}">${r.name}: ${has}/${amt}</small>`;
+          })
+          .join(', ');
+        const craftTimeMin = Math.floor(recipe.craftTime / 60000);
+        const craftTimeSec = Math.floor((recipe.craftTime % 60000) / 1000);
+        return `
+          <div class="recipe-card mb-2 p-2 border rounded ${canCraftNow ? '' : 'opacity-75'}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong><i class="fas ${recipe.icon}"></i> ${recipe.name}</strong>
+                <p class="text-muted small mb-1">${recipe.description}</p>
+                <div class="small">${requirementsList}</div>
+                <small class="text-info">Time: ${craftTimeMin}m ${craftTimeSec}s</small>
+              </div>
+              <button class="btn btn-primary btn-sm"
+                onclick="Workshop.startCrafting('${recipe.id}')"
+                ${canCraftNow ? '' : 'disabled'}>
+                <i class="fas fa-hammer"></i> Craft
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    container.innerHTML = html;
+  }
 
   return { init, getAllRecipes:()=>RECIPES, getRecipe, getRecipesByCategory, canCraft, startCrafting, fastTrackCrafting, getCraftingQueue, updateWorkshopUI, RECIPES };
 })();
