@@ -205,5 +205,4 @@ const Workshop = (() => {
   return { init, getAllRecipes:()=>RECIPES, getRecipe, getRecipesByCategory, canCraft, startCrafting, fastTrackCrafting, getCraftingQueue, updateWorkshopUI, RECIPES };
 })();
 
-if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', ()=>{ Workshop.init(); });
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = Workshop;
