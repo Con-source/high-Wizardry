@@ -344,7 +344,7 @@
           </div>
         </div>
         <div class="player-currency mt-2">
-          <i class="fas fa-coins"></i> <span id="gold-display">1,000</span> Gold
+          <i class="fas fa-coins"></i> <span id="currency-display">83 shillings, 4 pennies</span>
         </div>
       </div>
 
@@ -381,10 +381,9 @@
         <button class="location-btn" data-location="friends"><i class="fas fa-users"></i> Friends/Enemies</button>
         <button class="location-btn" data-location="magic-shop"><i class="fas fa-hat-wizard"></i> Magic Shop</button>
         <button class="location-btn" data-location="tavern"><i class="fas fa-beer"></i> The Drunken Wizard</button>
-        <h5 class="mt-3 mb-2">Teleportation</h5>
-        <button class="location-btn" data-location="enchanted-forest"><i class="fas fa-tree"></i> Enchanted Forest</button>
-        <button class="location-btn" data-location="arcane-temple"><i class="fas fa-landmark"></i> Arcane Temple</button>
-        <button class="location-btn" data-location="crystal-peak-mines"><i class="fas fa-mountain"></i> Crystal Peak Mines</button>
+        <button class="location-btn" data-location="fair-alley"><i class="fas fa-store"></i> Fair Alleyway</button>
+        <button class="location-btn" data-location="guild-district"><i class="fas fa-shield-alt"></i> Guild District</button>
+        <button class="location-btn" data-location="smuggling-routes"><i class="fas fa-user-secret"></i> Smuggling Routes</button>
       </nav>
     </div>
 
@@ -453,7 +452,7 @@
                 <p><strong>Type:</strong> <span id="home-type">Basic Cottage</span></p>
                 <p><strong>Comfort Level:</strong> <span id="home-comfort">5/10</span></p>
                 <button class="btn btn-primary btn-sm" onclick="upgradeHome()">
-                  <i class="fas fa-hammer"></i> Upgrade Home (500 Gold)
+                  <i class="fas fa-hammer"></i> Upgrade Home (500 shillings)
                 </button>
               </div>
             </div>
@@ -481,8 +480,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Minor Healing</h5>
                 <p class="text-muted">Restore 25 Health</p>
-                <p class="text-warning">Cost: 50 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(25, 50)">
+                <p class="text-warning">Cost: 50 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(25, 600)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -493,8 +492,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Major Healing</h5>
                 <p class="text-muted">Restore 50 Health</p>
-                <p class="text-warning">Cost: 100 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(50, 100)">
+                <p class="text-warning">Cost: 100 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(50, 1200)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -505,8 +504,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Full Recovery</h5>
                 <p class="text-muted">Restore All Health</p>
-                <p class="text-warning">Cost: 200 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal('full', 200)">
+                <p class="text-warning">Cost: 200 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal('full', 2400)">
                   <i class="fas fa-heart"></i> Full Heal
                 </button>
               </div>
@@ -525,8 +524,8 @@
                 <h5 class="card-title"><i class="fas fa-brain"></i> Intelligence Training</h5>
                 <p>Improve your magical knowledge and spellcasting.</p>
                 <p><strong>Current Level:</strong> <span id="intelligence-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 1200)">
                   <i class="fas fa-book"></i> Train Intelligence
                 </button>
               </div>
@@ -538,8 +537,8 @@
                 <h5 class="card-title"><i class="fas fa-dumbbell"></i> Endurance Training</h5>
                 <p>Increase your stamina and physical resilience.</p>
                 <p><strong>Current Level:</strong> <span id="endurance-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 1200)">
                   <i class="fas fa-running"></i> Train Endurance
                 </button>
               </div>
@@ -551,8 +550,8 @@
                 <h5 class="card-title"><i class="fas fa-comments"></i> Charisma Training</h5>
                 <p>Improve your social skills and persuasion.</p>
                 <p><strong>Current Level:</strong> <span id="charisma-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 1200)">
                   <i class="fas fa-user-tie"></i> Train Charisma
                 </button>
               </div>
@@ -564,8 +563,8 @@
                 <h5 class="card-title"><i class="fas fa-hand-sparkles"></i> Dexterity Training</h5>
                 <p>Enhance your agility and precision.</p>
                 <p><strong>Current Level:</strong> <span id="dexterity-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 1200)">
                   <i class="fas fa-hands"></i> Train Dexterity
                 </button>
               </div>
@@ -603,23 +602,23 @@
                   <tr>
                     <td>Small Shop</td>
                     <td>Commercial</td>
-                    <td>5,000 Gold</td>
-                    <td>50 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 5000, 50)">Buy</button></td>
+                    <td>5,000 shillings</td>
+                    <td>50 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 60000, 600)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Apartment</td>
                     <td>Residential</td>
-                    <td>10,000 Gold</td>
-                    <td>100 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 10000, 100)">Buy</button></td>
+                    <td>10,000 shillings</td>
+                    <td>100 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 120000, 1200)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Tavern</td>
                     <td>Business</td>
-                    <td>25,000 Gold</td>
-                    <td>300 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 25000, 300)">Buy</button></td>
+                    <td>25,000 shillings</td>
+                    <td>300 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 300000, 3600)">Buy</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -637,7 +636,7 @@
               <div class="card-body">
                 <h5 class="card-title">Gather Herbs</h5>
                 <p class="text-muted">Collect 10 magical herbs from the forest.</p>
-                <p><strong>Reward:</strong> 100 XP, 50 Gold</p>
+                <p><strong>Reward:</strong> 100 XP, 50 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('herbs')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -650,7 +649,7 @@
               <div class="card-body">
                 <h5 class="card-title">Defeat the Dark Mage</h5>
                 <p class="text-muted">Confront the dark mage threatening the village.</p>
-                <p><strong>Reward:</strong> 500 XP, 200 Gold</p>
+                <p><strong>Reward:</strong> 500 XP, 200 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-warning">Requires Level 5</span></p>
                 <button class="btn btn-primary btn-sm" disabled>
                   <i class="fas fa-lock"></i> Locked
@@ -663,7 +662,7 @@
               <div class="card-body">
                 <h5 class="card-title">Deliver Message</h5>
                 <p class="text-muted">Deliver an urgent message to the neighboring town.</p>
-                <p><strong>Reward:</strong> 75 XP, 30 Gold</p>
+                <p><strong>Reward:</strong> 75 XP, 30 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('message')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -696,7 +695,7 @@
               <tr>
                 <td>Pickpocket</td>
                 <td><span class="badge bg-success">Easy</span></td>
-                <td>10-20 Gold</td>
+                <td>10-20 shillings</td>
                 <td>10</td>
                 <td>80%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('pickpocket')">Attempt</button></td>
@@ -704,7 +703,7 @@
               <tr>
                 <td>Burglary</td>
                 <td><span class="badge bg-warning">Medium</span></td>
-                <td>50-100 Gold</td>
+                <td>50-100 shillings</td>
                 <td>25</td>
                 <td>60%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('burglary')">Attempt</button></td>
@@ -712,7 +711,7 @@
               <tr>
                 <td>Bank Heist</td>
                 <td><span class="badge bg-danger">Hard</span></td>
-                <td>200-500 Gold</td>
+                <td>200-500 shillings</td>
                 <td>50</td>
                 <td>40%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('heist')">Attempt</button></td>
@@ -744,7 +743,7 @@
               <i class="fas fa-door-open"></i> Attempt Jailbreak (25% chance)
             </button>
             <button class="btn btn-primary mt-3" onclick="payBail()">
-              <i class="fas fa-coins"></i> Pay Bail (500 Gold)
+              <i class="fas fa-coins"></i> Pay Bail (500 shillings)
             </button>
           </div>
         </div>
@@ -926,6 +925,41 @@
           <div class="col-md-12">
             <div id="guild-list">
               <!-- Guilds will be populated by Guilds module -->
+      <div id="location-content-fair-alley" class="location-content" style="display: none;">
+        <h2><i class="fas fa-store me-2"></i>Fair Alleyway</h2>
+        <p>A bustling marketplace with merchants selling exotic goods and rare items.</p>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-gem"></i> Rare Artifacts</h5>
+                <p class="text-muted">Browse unique magical items.</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-shopping-cart"></i> Browse Shop
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-exchange-alt"></i> Trade Market</h5>
+                <p class="text-muted">Trade with other players.</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-handshake"></i> Open Trades
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-scroll"></i> Black Market</h5>
+                <p class="text-muted">Risky deals with rare rewards.</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-mask"></i> Enter Market
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -949,92 +983,127 @@
                 <p class="text-muted small">Energy Cost: 10</p>
                 <button class="btn btn-success" onclick="Resources.gatherResources('enchanted-forest')">
                   <i class="fas fa-leaf"></i> Gather Resources
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card bg-dark mb-3">
-              <div class="card-body">
-                <h5 class="card-title">Available Resources</h5>
-                <ul class="list-unstyled">
-                  <li><i class="fas fa-leaf text-secondary"></i> Glow Moss (Common)</li>
-                  <li><i class="fas fa-apple-alt text-secondary"></i> Mystic Berries (Common)</li>
-                  <li><i class="fas fa-tint text-info"></i> Elemental Water (Uncommon)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Arcane Temple Content -->
-      <div id="location-content-arcane-temple" class="location-content" style="display: none;">
-        <h2><i class="fas fa-landmark me-2"></i>Arcane Temple</h2>
-        <p>A ruined temple where arcane experiments went awry.</p>
-        
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle"></i> <strong>Area Info:</strong> Rich source of rare arcane materials for powerful crafting.
-        </div>
-        
+      <div id="location-content-guild-district" class="location-content" style="display: none;">
+        <h2><i class="fas fa-shield-alt me-2"></i>Guild District</h2>
+        <p>Join a guild to gain unique benefits and participate in guild activities.</p>
         <div class="row">
-          <div class="col-md-6">
-            <div class="card bg-dark mb-3">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
               <div class="card-body">
-                <h5 class="card-title">Gather Resources</h5>
-                <p>Search for arcane artifacts in the ruins.</p>
-                <p class="text-muted small">Energy Cost: 10</p>
-                <button class="btn btn-success" onclick="Resources.gatherResources('arcane-temple')">
-                  <i class="fas fa-gem"></i> Gather Resources
+                <h5 class="card-title text-primary"><i class="fas fa-compass"></i> Explorer's Guild</h5>
+                <p>Reduce travel costs and times by 20%.</p>
+                <ul class="text-muted small">
+                  <li>Faster travel between all locations</li>
+                  <li>Reduced energy cost for exploration</li>
+                  <li>Access to secret locations</li>
+                </ul>
+                <p><strong>Fee:</strong> 1,000 Gold</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
                 </button>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card bg-dark mb-3">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
               <div class="card-body">
-                <h5 class="card-title">Available Resources</h5>
-                <ul class="list-unstyled">
-                  <li><i class="fas fa-gem text-warning"></i> Arcane Crystals (Rare)</li>
-                  <li><i class="fas fa-scroll text-warning"></i> Enchanted Scrolls (Rare)</li>
+                <h5 class="card-title text-success"><i class="fas fa-coins"></i> Merchant's Guild</h5>
+                <p>Exclusive routes to trading hubs with better prices.</p>
+                <ul class="text-muted small">
+                  <li>10% better prices at all shops</li>
+                  <li>Access to exclusive trade routes</li>
+                  <li>Passive income from investments</li>
                 </ul>
+                <p><strong>Fee:</strong> 1,500 Gold</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-danger"><i class="fas fa-user-ninja"></i> Thieves' Guild</h5>
+                <p>Higher crime success rates and smuggling access.</p>
+                <ul class="text-muted small">
+                  <li>+15% crime success rate</li>
+                  <li>Access to smuggling routes</li>
+                  <li>Fence stolen goods for better prices</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,000 Gold</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-warning"><i class="fas fa-hat-wizard"></i> Arcane Society</h5>
+                <p>Enhanced magical abilities and spell access.</p>
+                <ul class="text-muted small">
+                  <li>+20% mana regeneration</li>
+                  <li>Access to powerful spells</li>
+                  <li>Reduced portal travel costs</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,500 Gold</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Crystal Peak Mines Content -->
-      <div id="location-content-crystal-peak-mines" class="location-content" style="display: none;">
-        <h2><i class="fas fa-mountain me-2"></i>Crystal Peak Mines</h2>
-        <p>Hazardous mines filled with monsters yet rich in minerals.</p>
-        
+      <div id="location-content-smuggling-routes" class="location-content" style="display: none;">
+        <h2><i class="fas fa-user-secret me-2"></i>Smuggling Routes</h2>
+        <p>High-risk, high-reward smuggling operations. Requires Thieves' Guild membership.</p>
         <div class="alert alert-danger">
-          <i class="fas fa-skull-crossbones"></i> <strong>Area Info:</strong> Dangerous mining area with valuable rare minerals and gems.
+          <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Smuggling is illegal! High chance of getting caught by authorities.
         </div>
-        
         <div class="row">
-          <div class="col-md-6">
-            <div class="card bg-dark mb-3">
-              <div class="card-body">
-                <h5 class="card-title">Gather Resources</h5>
-                <p>Mine for valuable minerals and gems.</p>
-                <p class="text-muted small">Energy Cost: 10</p>
-                <button class="btn btn-success" onclick="Resources.gatherResources('crystal-peak-mines')">
-                  <i class="fas fa-hammer"></i> Mine Resources
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-warning">
+              <div class="card-body text-center">
+                <h5 class="card-title">Minor Contraband</h5>
+                <p class="text-muted">Low-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 100-200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-warning">Medium</span></p>
+                <p><strong>Time:</strong> 30 seconds (Fast Route)</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
                 </button>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card bg-dark mb-3">
-              <div class="card-body">
-                <h5 class="card-title">Available Resources</h5>
-                <ul class="list-unstyled">
-                  <li><i class="fas fa-circle text-info"></i> Obsidian (Uncommon)</li>
-                  <li><i class="fas fa-gem text-info"></i> Raw Gems (Uncommon)</li>
-                  <li><i class="fas fa-moon text-warning"></i> Lunar Powder (Rare)</li>
-                </ul>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-danger">
+              <div class="card-body text-center">
+                <h5 class="card-title">Major Contraband</h5>
+                <p class="text-muted">High-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 300-500 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">High</span></p>
+                <p><strong>Time:</strong> 60 seconds (Fast Route)</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-primary">
+              <div class="card-body text-center">
+                <h5 class="card-title">Rare Goods</h5>
+                <p class="text-muted">Expert smuggling operation.</p>
+                <p><strong>Reward:</strong> 800-1,200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">Very High</span></p>
+                <p><strong>Time:</strong> 90 seconds (Fast Route)</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
               </div>
             </div>
           </div>
@@ -1116,9 +1185,7 @@
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
   <script src="jsjs/chat.js"></script>
-  <script src="jsjs/resources.js"></script>
-  <script src="jsjs/guilds.js"></script>
-  <script src="jsjs/workshop.js"></script>
+  <script src="jsjs/travel.js"></script>
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
   <script src="jsjs/main.js"></script>

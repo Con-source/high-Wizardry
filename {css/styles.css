@@ -418,3 +418,322 @@ h2 {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Travel UI Styles */
+.travel-ui {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--secondary-bg);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  min-width: 400px;
+  border: 2px solid var(--accent-color);
+  display: none;
+}
+
+.travel-ui-content h4 {
+  color: var(--accent-color);
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 22px;
+}
+
+.travel-info {
+  margin-bottom: 20px;
+}
+
+.travel-info p {
+  margin: 8px 0;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.travel-info strong {
+  color: var(--accent-color);
+}
+
+#travel-timer {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--warning-color);
+  font-family: 'Courier New', monospace;
+}
+
+#cancel-travel-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Travel Selection Modal */
+.travel-selection-modal .modal-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.travel-modal p {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
+.travel-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.travel-option {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.travel-option:hover:not(.disabled) {
+  border-color: var(--accent-color);
+  background: rgba(163, 113, 247, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.travel-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.travel-option-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: var(--accent-color);
+}
+
+.travel-option-description {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.travel-option-costs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.cost-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--text-color);
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.cost-item.insufficient {
+  color: var(--danger-color);
+  opacity: 0.7;
+}
+
+.cost-item i {
+  font-size: 12px;
+}
+
+.travel-select-btn {
+  width: 100%;
+}
+
+/* Modal Improvements */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show {
+  opacity: 1;
+}
+
+.modal-dialog {
+  background: var(--secondary-bg);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--accent-color);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+
+.modal-header {
+  background: var(--accent-color);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 22px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-body {
+  padding: 25px;
+  color: var(--text-color);
+}
+
+.modal-footer {
+  padding: 15px 25px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Notification Styles */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  background: var(--secondary-bg);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-left: 4px solid var(--info-color);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-success {
+  border-left-color: var(--success-color);
+}
+
+.notification-warning {
+  border-left-color: var(--warning-color);
+}
+
+.notification-error {
+  border-left-color: var(--danger-color);
+}
+
+.notification-info {
+  border-left-color: var(--info-color);
+}
+
+.notification-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.notification-message {
+  flex: 1;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.notification-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.notification-close:hover {
+  color: var(--text-color);
+}
+
+/* Responsive Travel UI */
+@media (max-width: 768px) {
+  .travel-ui {
+    min-width: 90%;
+    max-width: 90%;
+  }
+  
+  .modal-dialog {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .notification-container {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
