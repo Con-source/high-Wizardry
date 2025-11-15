@@ -81,8 +81,25 @@ const Workshop = (() => {
     item.endTime = Date.now(); completeCrafting(craftingId); if (typeof UI !== 'undefined' && UI.showNotification) UI.showNotification(`Fast-tracked ${recipe.name} for ${cost} gold!`, 'success'); return true;
   }
 
-  function startCraftingTimer() { if (queueInterval) clearInterval(queueInterval); queueInterval = setInterval(() => { const now = Date.now(); const toComplete = craftingQueue.filter(c => c.endTime <= now); // copy list
-    toComplete.forEach(c => { try { completeCrafting(c.id); } catch (err) { console.error('Error completing craft', err); } }); if (craftingQueue.length > 0) updateWorkshopUI(); }, 1000); }
+  function startCraftingTimer() { 
+    if (queueInterval) clearInterval(queueInterval); 
+    queueInterval = setInterval(() => { 
+      const now = Date.now(); 
+      const toComplete = craftingQueue.filter(c => c.endTime <= now); // copy list
+      let anyCompleted = false;
+      toComplete.forEach(c => { 
+        try { 
+          completeCrafting(c.id); 
+          anyCompleted = true;
+        } catch (err) { 
+          console.error('Error completing craft', err); 
+        } 
+      }); 
+      if (anyCompleted) {
+        updateWorkshopUI();
+      }
+    }, 1000); 
+  }
 
   function saveCraftingQueue() { try { localStorage.setItem('highWizardry_craftingQueue', JSON.stringify(craftingQueue)); } catch (e) { console.error('Failed to save crafting queue', e); } }
   function loadCraftingQueue() { try { const saved = localStorage.getItem('highWizardry_craftingQueue'); if (saved) { craftingQueue = JSON.parse(saved); const now = Date.now(); const expired = craftingQueue.filter(c => c.endTime <= now); expired.forEach(c => { const recipe = getRecipe(c.recipeId); if (recipe && typeof Player !== 'undefined' && typeof Player.getData === 'function') { const playerData = Player.getData(); const crafted = playerData.craftedItems || {};
