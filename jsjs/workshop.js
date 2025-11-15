@@ -1,6 +1,79 @@
 /* Workshop module - keep queue handling safe and stable */
 const Workshop = (() => {
-  const RECIPES = { /* same as PR: health-potion, energy-potion, energy-crystal, arcane-staff, crystal-wand, obsidian-shield, moonlight-elixir, forbidden-scroll, mining-gear */ };
+  const RECIPES = {
+    "health-potion": {
+      id: "health-potion",
+      name: "Health Potion",
+      category: "alchemy",
+      requirements: { "herb": 5, "crystal": 2 },
+      craftTime: 60000, // 1 minute
+      output: { "health-potion": 1 }
+    },
+    "energy-potion": {
+      id: "energy-potion",
+      name: "Energy Potion",
+      category: "alchemy",
+      requirements: { "herb": 3, "essence": 2 },
+      craftTime: 60000, // 1 minute
+      output: { "energy-potion": 1 }
+    },
+    "energy-crystal": {
+      id: "energy-crystal",
+      name: "Energy Crystal",
+      category: "enchanting",
+      requirements: { "crystal": 5, "essence": 3 },
+      craftTime: 120000, // 2 minutes
+      output: { "energy-crystal": 1 }
+    },
+    "arcane-staff": {
+      id: "arcane-staff",
+      name: "Arcane Staff",
+      category: "crafting",
+      requirements: { "wood": 10, "crystal": 5, "essence": 2 },
+      craftTime: 300000, // 5 minutes
+      output: { "arcane-staff": 1 }
+    },
+    "crystal-wand": {
+      id: "crystal-wand",
+      name: "Crystal Wand",
+      category: "crafting",
+      requirements: { "wood": 5, "crystal": 8 },
+      craftTime: 180000, // 3 minutes
+      output: { "crystal-wand": 1 }
+    },
+    "obsidian-shield": {
+      id: "obsidian-shield",
+      name: "Obsidian Shield",
+      category: "crafting",
+      requirements: { "obsidian": 10, "iron": 5, "essence": 2 },
+      craftTime: 420000, // 7 minutes
+      output: { "obsidian-shield": 1 }
+    },
+    "moonlight-elixir": {
+      id: "moonlight-elixir",
+      name: "Moonlight Elixir",
+      category: "alchemy",
+      requirements: { "herb": 8, "moonstone": 2, "essence": 3 },
+      craftTime: 180000, // 3 minutes
+      output: { "moonlight-elixir": 1 }
+    },
+    "forbidden-scroll": {
+      id: "forbidden-scroll",
+      name: "Forbidden Scroll",
+      category: "enchanting",
+      requirements: { "parchment": 2, "essence": 5, "shadow-ink": 1 },
+      craftTime: 600000, // 10 minutes
+      output: { "forbidden-scroll": 1 }
+    },
+    "mining-gear": {
+      id: "mining-gear",
+      name: "Mining Gear",
+      category: "crafting",
+      requirements: { "iron": 8, "leather": 4, "crystal": 2 },
+      craftTime: 240000, // 4 minutes
+      output: { "mining-gear": 1 }
+    }
+  };
 
   let craftingQueue = [];
   let queueInterval = null;
