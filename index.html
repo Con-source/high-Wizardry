@@ -301,6 +301,94 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Black Market Vendor Styles */
+    .vendor-inventory {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .vendor-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .vendor-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(108, 92, 231, 0.3);
+    }
+
+    .vendor-item .item-name {
+      color: var(--primary-light);
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vendor-item .item-rarity {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vendor-item .item-rarity.common { background: #95a5a6; }
+    .vendor-item .item-rarity.uncommon { background: #27ae60; }
+    .vendor-item .item-rarity.rare { background: #3498db; }
+    .vendor-item .item-rarity.epic { background: #9b59b6; }
+    .vendor-item .item-rarity.legendary { background: #e67e22; }
+
+    .vendor-item .item-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vendor-item .item-uses {
+      font-style: italic;
+      color: var(--info);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vendor-item .item-price {
+      color: var(--warning);
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+
+    .vendor-item .item-stock {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .smuggled-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .smuggled-item .item-info {
+      flex: 1;
+    }
+
+    .smuggled-item .item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -1188,6 +1276,7 @@
   <script src="jsjs/travel.js"></script>
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
+  <script src="jsjs/black-market.js"></script>
   <script src="jsjs/main.js"></script>
 
   <script>

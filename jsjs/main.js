@@ -30,7 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Chat module not found');
     }
     
-    // 4. Initialize Game Core (if using separate game.js)
+    // 4. Initialize Black Market system
+    if (typeof BlackMarket !== 'undefined' && typeof BlackMarket.init === 'function') {
+      BlackMarket.init();
+      console.log('✅ Black Market initialized');
+    } else {
+      console.warn('⚠️ Black Market module not found');
+    }
+    
+    // 5. Initialize Game Core (if using separate game.js)
     // Note: game-core.js initializes automatically via singleton pattern
     if (window.HighWizardry && window.HighWizardry.Game) {
       console.log('✅ GameCore initialized');
@@ -69,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Game: window.HighWizardry?.Game || null,
         Chat: typeof Chat !== 'undefined' ? Chat : null,
         UI: typeof UI !== 'undefined' ? UI : null,
+        BlackMarket: typeof BlackMarket !== 'undefined' ? BlackMarket : null,
         CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null
       };
       console.log('Debug modules available at window.DebugModules');
