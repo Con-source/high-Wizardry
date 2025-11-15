@@ -77,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Game: window.HighWizardry?.Game || null,
         Chat: typeof Chat !== 'undefined' ? Chat : null,
         UI: typeof UI !== 'undefined' ? UI : null,
+        Resources: typeof Resources !== 'undefined' ? Resources : null,
+        Workshop: typeof Workshop !== 'undefined' ? Workshop : null,
+        Guilds: typeof Guilds !== 'undefined' ? Guilds : null,
+        Locations: typeof Locations !== 'undefined' ? Locations : null,
         BlackMarket: typeof BlackMarket !== 'undefined' ? BlackMarket : null,
         CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null
       };
@@ -255,7 +259,3 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-
-// Debug modules
-window.DebugModules = { Player: typeof Player !== 'undefined' ? Player : null, Game: window.HighWizardry?.Game || null, Chat: typeof Chat !== 'undefined' ? Chat : null, UI: typeof UI !== 'undefined' ? UI : null, Resources: typeof Resources !== 'undefined' ? Resources : null, Workshop: typeof Workshop !== 'undefined' ? Workshop : null, Guilds: typeof Guilds !== 'undefined' ? Guilds : null, Locations: typeof Locations !== 'undefined' ? Locations : null, CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null };
-console.log('Debug modules available at window.DebugModules');
