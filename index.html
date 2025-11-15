@@ -28,7 +28,9 @@
       --text-primary: #f8f9fa;
       --text-secondary: #adb5bd;
       --border-color: #2d3748;
-      --card-bg: rgba(26, 26, 46, 0.8);
+      --card-bg: rgba(26, 26, 46, 0.9);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
 
     body {
@@ -64,26 +66,30 @@
     }
 
     .player-card {
-      background: var(--card-bg);
-      border-radius: 8px;
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(42, 42, 60, 0.9) 100%);
+      border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
       text-align: center;
       border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
     }
 
     .player-avatar {
       font-size: 3rem;
       color: var(--primary);
       margin-bottom: 0.5rem;
+      text-shadow: 0 2px 8px rgba(108, 92, 231, 0.5);
     }
 
     .player-level {
-      background: rgba(108, 92, 231, 0.2);
+      background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(162, 155, 254, 0.2));
       color: var(--primary-light);
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-block;
     }
 
     .location-btn {
@@ -91,44 +97,118 @@
       width: 100%;
       padding: 0.75rem 1rem;
       margin-bottom: 0.5rem;
-      background: var(--bg-tertiary);
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(42, 42, 60, 0.7) 100%);
       color: var(--text-primary);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
+      border-radius: 8px;
       text-align: left;
       cursor: pointer;
       font-family: 'MedievalSharp', serif;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .location-btn:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary);
-      transform: translateY(-2px);
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      border-color: var(--primary-light);
+      transform: translateX(5px);
+      box-shadow: 0 4px 8px rgba(108, 92, 231, 0.4);
     }
 
     .location-btn.active {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
       color: white;
       font-weight: bold;
+      border-color: var(--primary-light);
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.6);
     }
 
     .main-content {
       flex: 1;
-      padding: 1.5rem;
-      background: var(--bg-primary);
+      padding: 2rem;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(15, 15, 26, 0.95) 100%);
       overflow-y: auto;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .location-header {
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(42, 42, 60, 0.8) 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 1.5rem;
+    }
+
+    .location-header h2 {
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 8px rgba(162, 155, 254, 0.3);
+    }
+
+    .location-header p {
+      color: var(--text-secondary);
+      margin-bottom: 0;
     }
 
     .game-log {
-      background: var(--card-bg);
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(26, 26, 46, 0.95) 100%);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1rem;
+      border-radius: 12px;
+      padding: 1.5rem;
       margin-top: 1.5rem;
       max-height: 300px;
       overflow-y: auto;
       font-family: 'Courier New', monospace;
+      box-shadow: var(--shadow);
+    }
+
+    .log-entry {
+      padding: 0.25rem 0;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(45, 55, 72, 0.3);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(42, 42, 60, 0.8) 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 8px rgba(108, 92, 231, 0.5);
+    }
+
+    .stat-card-title {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-light);
     }
 
     .game-header {
@@ -146,6 +226,68 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
 
+    .card.bg-dark {
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(42, 42, 60, 0.8) 100%) !important;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      border-radius: 12px;
+    }
+
+    .card-title {
+      color: var(--primary-light);
+      font-family: 'Cinzel', serif;
+      text-shadow: 0 2px 4px rgba(162, 155, 254, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      border: none;
+      box-shadow: 0 4px 8px rgba(108, 92, 231, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(108, 92, 231, 0.6);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--secondary) 0%, #01d5a7 100%);
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 184, 148, 0.4);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 184, 148, 0.6);
+    }
+
+    .alert {
+      border-radius: 8px;
+      border-left: 4px solid;
+      box-shadow: var(--shadow);
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, rgba(116, 185, 255, 0.15) 0%, rgba(116, 185, 255, 0.05) 100%);
+      border-left-color: var(--info);
+    }
+
+    .alert-warning {
+      background: linear-gradient(135deg, rgba(253, 203, 110, 0.15) 0%, rgba(253, 203, 110, 0.05) 100%);
+      border-left-color: var(--warning);
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, rgba(255, 118, 117, 0.15) 0%, rgba(255, 118, 117, 0.05) 100%);
+      border-left-color: var(--danger);
+    }
+
+    h4, h5 {
+      color: var(--primary-light);
+      font-family: 'Cinzel', serif;
+    }
+
     @media (max-width: 768px) {
       .game-container {
         flex-direction: column;
@@ -154,6 +296,9 @@
         width: 100%;
         max-height: 200px;
         overflow-y: auto;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -287,7 +432,23 @@
           </div>
         </div>
         <div class="player-currency mt-2">
-          <i class="fas fa-coins"></i> <span id="gold-display">1,000</span> Gold
+          <i class="fas fa-coins"></i> <span id="currency-display">83 shillings, 4 pennies</span>
+        </div>
+      </div>
+
+      <!-- Resource Inventory -->
+      <div class="card player-card">
+        <h5 class="mb-2">Resources</h5>
+        <div id="resource-inventory">
+          <p class="text-muted small">No resources yet</p>
+        </div>
+      </div>
+
+      <!-- Crafting Queue -->
+      <div class="card player-card">
+        <h5 class="mb-2">Crafting</h5>
+        <div id="crafting-queue">
+          <p class="text-muted small">No items being crafted</p>
         </div>
       </div>
 
@@ -297,6 +458,8 @@
         <button class="location-btn" data-location="home"><i class="fas fa-house-user"></i> My Home</button>
         <button class="location-btn" data-location="hospital"><i class="fas fa-hospital"></i> Hospital</button>
         <button class="location-btn" data-location="education"><i class="fas fa-graduation-cap"></i> Education</button>
+        <button class="location-btn" data-location="workshop"><i class="fas fa-hammer"></i> Workshop</button>
+        <button class="location-btn" data-location="guilds"><i class="fas fa-users-cog"></i> Guilds</button>
         <button class="location-btn" data-location="property"><i class="fas fa-building"></i> Property</button>
         <button class="location-btn" data-location="quests"><i class="fas fa-scroll"></i> Quests</button>
         <button class="location-btn" data-location="crimes"><i class="fas fa-mask"></i> Crimes</button>
@@ -306,19 +469,47 @@
         <button class="location-btn" data-location="friends"><i class="fas fa-users"></i> Friends/Enemies</button>
         <button class="location-btn" data-location="magic-shop"><i class="fas fa-hat-wizard"></i> Magic Shop</button>
         <button class="location-btn" data-location="tavern"><i class="fas fa-beer"></i> The Drunken Wizard</button>
-        <h5 class="mt-3 text-danger"><i class="fas fa-skull-crossbones"></i> Black Market</h5>
-        <button class="location-btn" data-location="goblin-outpost"><i class="fas fa-campground"></i> Goblin Outpost</button>
-        <button class="location-btn" data-location="abandoned-warehouse"><i class="fas fa-warehouse"></i> Abandoned Warehouse</button>
-        <button class="location-btn" data-location="shady-alley"><i class="fas fa-mask"></i> Shady Alley</button>
-        <button class="location-btn" data-location="smuggled-goods"><i class="fas fa-box"></i> Smuggled Goods</button>
+        <button class="location-btn" data-location="fair-alley"><i class="fas fa-store"></i> Fair Alleyway</button>
+        <button class="location-btn" data-location="guild-district"><i class="fas fa-shield-alt"></i> Guild District</button>
+        <button class="location-btn" data-location="smuggling-routes"><i class="fas fa-user-secret"></i> Smuggling Routes</button>
       </nav>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
-      <div class="location-header mb-3">
+      <div class="location-header">
         <h2 id="location-name">Town Square</h2>
         <p id="location-description">The bustling heart of the magical city. Wizards and adventurers gather here.</p>
+      </div>
+
+      <!-- Dashboard Stats (shown in Town Square) -->
+      <div id="dashboard-stats" class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon"><i class="fas fa-star"></i></div>
+          <div class="stat-card-title">Experience</div>
+          <div class="stat-card-value"><span id="dashboard-xp">0</span> XP</div>
+          <div class="progress mt-2" style="height: 6px;">
+            <div id="dashboard-xp-bar" class="progress-bar bg-warning" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon"><i class="fas fa-scroll"></i></div>
+          <div class="stat-card-title">Quests Completed</div>
+          <div class="stat-card-value"><span id="dashboard-quests">0</span></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon"><i class="fas fa-hammer"></i></div>
+          <div class="stat-card-title">Items Crafted</div>
+          <div class="stat-card-value"><span id="dashboard-crafted">0</span></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon"><i class="fas fa-users-cog"></i></div>
+          <div class="stat-card-title">Guild Memberships</div>
+          <div class="stat-card-value"><span id="dashboard-guilds">0</span></div>
+        </div>
       </div>
 
       <div class="action-buttons mb-3" id="action-buttons">
@@ -349,7 +540,7 @@
                 <p><strong>Type:</strong> <span id="home-type">Basic Cottage</span></p>
                 <p><strong>Comfort Level:</strong> <span id="home-comfort">5/10</span></p>
                 <button class="btn btn-primary btn-sm" onclick="upgradeHome()">
-                  <i class="fas fa-hammer"></i> Upgrade Home (500 Gold)
+                  <i class="fas fa-hammer"></i> Upgrade Home (500 shillings)
                 </button>
               </div>
             </div>
@@ -377,8 +568,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Minor Healing</h5>
                 <p class="text-muted">Restore 25 Health</p>
-                <p class="text-warning">Cost: 50 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(25, 50)">
+                <p class="text-warning">Cost: 50 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(25, 600)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -389,8 +580,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Major Healing</h5>
                 <p class="text-muted">Restore 50 Health</p>
-                <p class="text-warning">Cost: 100 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal(50, 100)">
+                <p class="text-warning">Cost: 100 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal(50, 1200)">
                   <i class="fas fa-plus-square"></i> Heal
                 </button>
               </div>
@@ -401,8 +592,8 @@
               <div class="card-body text-center">
                 <h5 class="card-title">Full Recovery</h5>
                 <p class="text-muted">Restore All Health</p>
-                <p class="text-warning">Cost: 200 Gold</p>
-                <button class="btn btn-success btn-sm" onclick="heal('full', 200)">
+                <p class="text-warning">Cost: 200 shillings</p>
+                <button class="btn btn-success btn-sm" onclick="heal('full', 2400)">
                   <i class="fas fa-heart"></i> Full Heal
                 </button>
               </div>
@@ -421,8 +612,8 @@
                 <h5 class="card-title"><i class="fas fa-brain"></i> Intelligence Training</h5>
                 <p>Improve your magical knowledge and spellcasting.</p>
                 <p><strong>Current Level:</strong> <span id="intelligence-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('intelligence', 1200)">
                   <i class="fas fa-book"></i> Train Intelligence
                 </button>
               </div>
@@ -434,8 +625,8 @@
                 <h5 class="card-title"><i class="fas fa-dumbbell"></i> Endurance Training</h5>
                 <p>Increase your stamina and physical resilience.</p>
                 <p><strong>Current Level:</strong> <span id="endurance-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('endurance', 1200)">
                   <i class="fas fa-running"></i> Train Endurance
                 </button>
               </div>
@@ -447,8 +638,8 @@
                 <h5 class="card-title"><i class="fas fa-comments"></i> Charisma Training</h5>
                 <p>Improve your social skills and persuasion.</p>
                 <p><strong>Current Level:</strong> <span id="charisma-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('charisma', 1200)">
                   <i class="fas fa-user-tie"></i> Train Charisma
                 </button>
               </div>
@@ -460,8 +651,8 @@
                 <h5 class="card-title"><i class="fas fa-hand-sparkles"></i> Dexterity Training</h5>
                 <p>Enhance your agility and precision.</p>
                 <p><strong>Current Level:</strong> <span id="dexterity-level">10</span></p>
-                <p class="text-warning">Cost: 100 Gold | Time: 1 hour</p>
-                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 100)">
+                <p class="text-warning">Cost: 100 shillings | Time: 1 hour</p>
+                <button class="btn btn-primary btn-sm" onclick="trainStat('dexterity', 1200)">
                   <i class="fas fa-hands"></i> Train Dexterity
                 </button>
               </div>
@@ -499,23 +690,23 @@
                   <tr>
                     <td>Small Shop</td>
                     <td>Commercial</td>
-                    <td>5,000 Gold</td>
-                    <td>50 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 5000, 50)">Buy</button></td>
+                    <td>5,000 shillings</td>
+                    <td>50 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('shop', 60000, 600)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Apartment</td>
                     <td>Residential</td>
-                    <td>10,000 Gold</td>
-                    <td>100 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 10000, 100)">Buy</button></td>
+                    <td>10,000 shillings</td>
+                    <td>100 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('apartment', 120000, 1200)">Buy</button></td>
                   </tr>
                   <tr>
                     <td>Tavern</td>
                     <td>Business</td>
-                    <td>25,000 Gold</td>
-                    <td>300 Gold</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 25000, 300)">Buy</button></td>
+                    <td>25,000 shillings</td>
+                    <td>300 shillings</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="buyProperty('tavern', 300000, 3600)">Buy</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -533,7 +724,7 @@
               <div class="card-body">
                 <h5 class="card-title">Gather Herbs</h5>
                 <p class="text-muted">Collect 10 magical herbs from the forest.</p>
-                <p><strong>Reward:</strong> 100 XP, 50 Gold</p>
+                <p><strong>Reward:</strong> 100 XP, 50 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('herbs')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -546,7 +737,7 @@
               <div class="card-body">
                 <h5 class="card-title">Defeat the Dark Mage</h5>
                 <p class="text-muted">Confront the dark mage threatening the village.</p>
-                <p><strong>Reward:</strong> 500 XP, 200 Gold</p>
+                <p><strong>Reward:</strong> 500 XP, 200 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-warning">Requires Level 5</span></p>
                 <button class="btn btn-primary btn-sm" disabled>
                   <i class="fas fa-lock"></i> Locked
@@ -559,7 +750,7 @@
               <div class="card-body">
                 <h5 class="card-title">Deliver Message</h5>
                 <p class="text-muted">Deliver an urgent message to the neighboring town.</p>
-                <p><strong>Reward:</strong> 75 XP, 30 Gold</p>
+                <p><strong>Reward:</strong> 75 XP, 30 shillings</p>
                 <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
                 <button class="btn btn-primary btn-sm" onclick="acceptQuest('message')">
                   <i class="fas fa-check"></i> Accept Quest
@@ -592,7 +783,7 @@
               <tr>
                 <td>Pickpocket</td>
                 <td><span class="badge bg-success">Easy</span></td>
-                <td>10-20 Gold</td>
+                <td>10-20 shillings</td>
                 <td>10</td>
                 <td>80%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('pickpocket')">Attempt</button></td>
@@ -600,7 +791,7 @@
               <tr>
                 <td>Burglary</td>
                 <td><span class="badge bg-warning">Medium</span></td>
-                <td>50-100 Gold</td>
+                <td>50-100 shillings</td>
                 <td>25</td>
                 <td>60%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('burglary')">Attempt</button></td>
@@ -608,7 +799,7 @@
               <tr>
                 <td>Bank Heist</td>
                 <td><span class="badge bg-danger">Hard</span></td>
-                <td>200-500 Gold</td>
+                <td>200-500 shillings</td>
                 <td>50</td>
                 <td>40%</td>
                 <td><button class="btn btn-sm btn-danger" onclick="commitCrime('heist')">Attempt</button></td>
@@ -640,7 +831,7 @@
               <i class="fas fa-door-open"></i> Attempt Jailbreak (25% chance)
             </button>
             <button class="btn btn-primary mt-3" onclick="payBail()">
-              <i class="fas fa-coins"></i> Pay Bail (500 Gold)
+              <i class="fas fa-coins"></i> Pay Bail (500 shillings)
             </button>
           </div>
         </div>
@@ -794,93 +985,216 @@
         </div>
       </div>
 
-      <!-- Black Market Locations -->
-      <div id="location-content-goblin-outpost" class="location-content" style="display: none;">
-        <h2><i class="fas fa-campground me-2"></i>Goblin Outpost</h2>
-        <div class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> High-risk area. Purchases here are illegal and subject to confiscation!
-        </div>
-        <div class="card bg-dark mb-3">
-          <div class="card-body">
-            <h5 class="card-title">Grizelda the Fence</h5>
-            <p class="text-muted">"Psst! Looking for something... special?"</p>
-            <p><strong>Risk Level:</strong> <span class="badge bg-danger">High</span></p>
-          </div>
-        </div>
-        <div id="goblin-vendor-inventory" class="vendor-inventory">
-          <!-- Inventory will be populated by JavaScript -->
-        </div>
-      </div>
-
-      <div id="location-content-abandoned-warehouse" class="location-content" style="display: none;">
-        <h2><i class="fas fa-warehouse me-2"></i>Abandoned Warehouse</h2>
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-circle"></i> <strong>Caution:</strong> Medium-risk area. Smuggled goods may be confiscated.
-        </div>
-        <div class="card bg-dark mb-3">
-          <div class="card-body">
-            <h5 class="card-title">Marcus the Smuggler</h5>
-            <p class="text-muted">"Welcome, friend. I have goods from across the realm."</p>
-            <p><strong>Risk Level:</strong> <span class="badge bg-warning">Medium</span></p>
-          </div>
-        </div>
-        <div id="warehouse-vendor-inventory" class="vendor-inventory">
-          <!-- Inventory will be populated by JavaScript -->
-        </div>
-      </div>
-
-      <div id="location-content-shady-alley" class="location-content" style="display: none;">
-        <h2><i class="fas fa-mask me-2"></i>Shady Alley</h2>
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i> Low-risk area. Relatively safe for black market dealings.
-        </div>
-        <div class="card bg-dark mb-3">
-          <div class="card-body">
-            <h5 class="card-title">The Shadow Broker</h5>
-            <p class="text-muted">"Looking to make a deal? Keep it quiet..."</p>
-            <p><strong>Risk Level:</strong> <span class="badge bg-info">Low</span></p>
-          </div>
-        </div>
-        <div id="alley-vendor-inventory" class="vendor-inventory">
-          <!-- Inventory will be populated by JavaScript -->
-        </div>
-      </div>
-
-      <div id="location-content-smuggled-goods" class="location-content" style="display: none;">
-        <h2><i class="fas fa-box me-2"></i>Smuggled Goods</h2>
-        <p>Manage your illegally acquired items. Smuggle them for profit or use in crafting.</p>
+      <!-- Workshop Content -->
+      <div id="location-content-workshop" class="location-content" style="display: none;">
+        <h2><i class="fas fa-hammer me-2"></i>Workshop</h2>
+        <p>Craft powerful items and equipment using gathered resources.</p>
         
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle"></i> <strong>Risk Assessment:</strong> Each smuggling attempt has a chance of failure based on item rarity and risk level.
-        </div>
-
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <div class="card bg-dark">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card bg-dark mb-3">
               <div class="card-body">
-                <h5 class="card-title">Smuggling Risk</h5>
-                <p id="smuggling-risk-display" class="text-warning"><strong>30%</strong> Base Risk</p>
-                <p class="text-muted small">Risk increases with rarer items. Guild perks reduce risk.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card bg-dark">
-              <div class="card-body">
-                <h5 class="card-title">Quick Actions</h5>
-                <button class="btn btn-warning btn-sm w-100 mb-2" onclick="smuggleAllItems()" aria-label="Smuggle all items">
-                  <i class="fas fa-shipping-fast" aria-hidden="true"></i> Smuggle All Items
-                </button>
-                <button class="btn btn-info btn-sm w-100" onclick="rotateVendorInventories()" aria-label="Check new stock at vendors">
-                  <i class="fas fa-sync" aria-hidden="true"></i> Check New Stock
-                </button>
+                <h5 class="card-title">Available Recipes</h5>
+                <div id="recipe-list">
+                  <!-- Recipes will be populated by Workshop module -->
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div id="smuggled-goods-inventory">
-          <!-- Smuggled goods will be populated by JavaScript -->
+      <!-- Guilds Content -->
+      <div id="location-content-guilds" class="location-content" style="display: none;">
+        <h2><i class="fas fa-users-cog me-2"></i>Guild Hall</h2>
+        <p>Join guilds to gain special perks and benefits for crafting, gathering, and more.</p>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <div id="guild-list">
+              <!-- Guilds will be populated by Guilds module -->
+      <div id="location-content-fair-alley" class="location-content" style="display: none;">
+        <h2><i class="fas fa-store me-2"></i>Fair Alleyway</h2>
+        <p>A bustling marketplace with merchants selling exotic goods and rare items.</p>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-gem"></i> Rare Artifacts</h5>
+                <p class="text-muted">Browse unique magical items.</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-shopping-cart"></i> Browse Shop
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-exchange-alt"></i> Trade Market</h5>
+                <p class="text-muted">Trade with other players.</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-handshake"></i> Open Trades
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-scroll"></i> Black Market</h5>
+                <p class="text-muted">Risky deals with rare rewards.</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-mask"></i> Enter Market
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enchanted Forest Content -->
+      <div id="location-content-enchanted-forest" class="location-content" style="display: none;">
+        <h2><i class="fas fa-tree me-2"></i>Enchanted Forest</h2>
+        <p>A mystical woodland filled with magical creatures and rare herbs.</p>
+        
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> <strong>Explorer's Guild Bonus:</strong> Members gain increased rare resource drops and bonus gathering chances.
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card bg-dark mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Gather Resources</h5>
+                <p>Search for magical resources in the forest.</p>
+                <p class="text-muted small">Energy Cost: 10</p>
+                <button class="btn btn-success" onclick="Resources.gatherResources('enchanted-forest')">
+                  <i class="fas fa-leaf"></i> Gather Resources
+      <div id="location-content-guild-district" class="location-content" style="display: none;">
+        <h2><i class="fas fa-shield-alt me-2"></i>Guild District</h2>
+        <p>Join a guild to gain unique benefits and participate in guild activities.</p>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-primary"><i class="fas fa-compass"></i> Explorer's Guild</h5>
+                <p>Reduce travel costs and times by 20%.</p>
+                <ul class="text-muted small">
+                  <li>Faster travel between all locations</li>
+                  <li>Reduced energy cost for exploration</li>
+                  <li>Access to secret locations</li>
+                </ul>
+                <p><strong>Fee:</strong> 1,000 Gold</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-coins"></i> Merchant's Guild</h5>
+                <p>Exclusive routes to trading hubs with better prices.</p>
+                <ul class="text-muted small">
+                  <li>10% better prices at all shops</li>
+                  <li>Access to exclusive trade routes</li>
+                  <li>Passive income from investments</li>
+                </ul>
+                <p><strong>Fee:</strong> 1,500 Gold</p>
+                <button class="btn btn-success btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-danger"><i class="fas fa-user-ninja"></i> Thieves' Guild</h5>
+                <p>Higher crime success rates and smuggling access.</p>
+                <ul class="text-muted small">
+                  <li>+15% crime success rate</li>
+                  <li>Access to smuggling routes</li>
+                  <li>Fence stolen goods for better prices</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,000 Gold</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="card bg-dark">
+              <div class="card-body">
+                <h5 class="card-title text-warning"><i class="fas fa-hat-wizard"></i> Arcane Society</h5>
+                <p>Enhanced magical abilities and spell access.</p>
+                <ul class="text-muted small">
+                  <li>+20% mana regeneration</li>
+                  <li>Access to powerful spells</li>
+                  <li>Reduced portal travel costs</li>
+                </ul>
+                <p><strong>Fee:</strong> 2,500 Gold</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Join Guild
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="location-content-smuggling-routes" class="location-content" style="display: none;">
+        <h2><i class="fas fa-user-secret me-2"></i>Smuggling Routes</h2>
+        <p>High-risk, high-reward smuggling operations. Requires Thieves' Guild membership.</p>
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Smuggling is illegal! High chance of getting caught by authorities.
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-warning">
+              <div class="card-body text-center">
+                <h5 class="card-title">Minor Contraband</h5>
+                <p class="text-muted">Low-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 100-200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-warning">Medium</span></p>
+                <p><strong>Time:</strong> 30 seconds (Fast Route)</p>
+                <button class="btn btn-warning btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-danger">
+              <div class="card-body text-center">
+                <h5 class="card-title">Major Contraband</h5>
+                <p class="text-muted">High-risk smuggling operation.</p>
+                <p><strong>Reward:</strong> 300-500 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">High</span></p>
+                <p><strong>Time:</strong> 60 seconds (Fast Route)</p>
+                <button class="btn btn-danger btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-dark border-primary">
+              <div class="card-body text-center">
+                <h5 class="card-title">Rare Goods</h5>
+                <p class="text-muted">Expert smuggling operation.</p>
+                <p><strong>Reward:</strong> 800-1,200 Gold</p>
+                <p><strong>Risk:</strong> <span class="text-danger">Very High</span></p>
+                <p><strong>Time:</strong> 90 seconds (Fast Route)</p>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-box"></i> Start Smuggling
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -903,8 +1217,52 @@
           document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('active'));
           e.currentTarget.classList.add('active');
           document.getElementById('location-name').textContent = e.currentTarget.textContent.trim();
+          
+          // Show/hide dashboard based on location
+          const dashboardStats = document.getElementById('dashboard-stats');
+          if (dashboardStats) {
+            if (e.currentTarget.dataset.location === 'town-square') {
+              dashboardStats.style.display = 'grid';
+            } else {
+              dashboardStats.style.display = 'none';
+            }
+          }
         });
       });
+
+      // Update dashboard stats
+      function updateDashboard() {
+        if (typeof Player !== 'undefined') {
+          const playerData = Player.getData();
+          
+          // Update XP
+          const xpEl = document.getElementById('dashboard-xp');
+          if (xpEl) xpEl.textContent = playerData.xp || 0;
+          
+          // Update quests completed
+          const questsEl = document.getElementById('dashboard-quests');
+          if (questsEl) questsEl.textContent = playerData.questsCompleted || 0;
+          
+          // Update items crafted
+          const craftedEl = document.getElementById('dashboard-crafted');
+          if (craftedEl) {
+            const craftedItems = playerData.craftedItems || {};
+            const totalCrafted = Object.values(craftedItems).reduce((sum, count) => sum + count, 0);
+            craftedEl.textContent = totalCrafted;
+          }
+          
+          // Update guild count
+          const guildsEl = document.getElementById('dashboard-guilds');
+          if (guildsEl) {
+            const guilds = playerData.guilds || { memberships: [] };
+            guildsEl.textContent = guilds.memberships.length;
+          }
+        }
+      }
+
+      // Update dashboard periodically
+      setInterval(updateDashboard, 1000);
+      updateDashboard();
 
       console.log('Game initialized successfully.');
     });
@@ -915,6 +1273,7 @@
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
   <script src="jsjs/chat.js"></script>
+  <script src="jsjs/travel.js"></script>
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
   <script src="jsjs/black-market.js"></script>

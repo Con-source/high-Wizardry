@@ -9,8 +9,8 @@ const CONFIG = {
     username: 'Player',
     level: 1,
     xp: 0,
-    gold: 100,
-    silver: 0,
+    shillings: 8,  // Starting with 100 pennies = 8 shillings + 4 pennies
+    pennies: 4,
     health: 100,
     maxHealth: 100,
     mana: 50,
@@ -25,6 +25,7 @@ const CONFIG = {
     endurance: 10,
     charisma: 10,
     dexterity: 10,
+    speed: 0,  // New stat for travel speed
     
     // Inventory
     inventory: {

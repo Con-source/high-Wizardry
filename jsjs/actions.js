@@ -8,16 +8,16 @@ function upgradeHome() {
   if (typeof Player === 'undefined') return;
   
   const playerData = Player.getData();
-  const cost = 500;
+  const cost = 6000; // 500 gold equivalent = 6000 pennies = 500 shillings
   
-  if (playerData.gold < cost) {
-    showNotification('Not enough gold to upgrade your home!', 'error');
+  if (Player.getTotalPennies() < cost) {
+    showNotification('Not enough currency to upgrade your home!', 'error');
     return;
   }
   
-  Player.removeGold(cost);
+  Player.removeCurrency(cost);
   showNotification('Home upgraded successfully!', 'success');
-  addGameLog('You upgraded your home for 500 gold');
+  addGameLog(`You upgraded your home for ${Player.formatCurrency(cost)}`);
 }
 
 function restAtHome() {
@@ -43,8 +43,8 @@ function heal(amount, cost) {
   
   const playerData = Player.getData();
   
-  if (playerData.gold < cost) {
-    showNotification('Not enough gold for healing!', 'error');
+  if (Player.getTotalPennies() < cost) {
+    showNotification('Not enough currency for healing!', 'error');
     return;
   }
   
@@ -60,10 +60,10 @@ function heal(amount, cost) {
   
   const newHealth = Math.min(playerData.maxHealth, playerData.health + healAmount);
   Player.updateData({ health: newHealth });
-  Player.removeGold(cost);
+  Player.removeCurrency(cost);
   
   showNotification(`Healed for ${Math.floor(healAmount)} health!`, 'success');
-  addGameLog(`You were healed at the hospital for ${cost} gold`);
+  addGameLog(`You were healed at the hospital for ${Player.formatCurrency(cost)}`);
 }
 
 // Education Actions
@@ -72,8 +72,8 @@ function trainStat(statName, cost) {
   
   const playerData = Player.getData();
   
-  if (playerData.gold < cost) {
-    showNotification('Not enough gold for training!', 'error');
+  if (Player.getTotalPennies() < cost) {
+    showNotification('Not enough currency for training!', 'error');
     return;
   }
   
@@ -87,7 +87,7 @@ function trainStat(statName, cost) {
   updates[statName] = (playerData[statName] || 10) + 1;
   
   Player.updateData(updates);
-  Player.removeGold(cost);
+  Player.removeCurrency(cost);
   Player.addXP(25);
   
   // Update UI
@@ -106,19 +106,19 @@ function buyProperty(type, price, income) {
   
   const playerData = Player.getData();
   
-  if (playerData.gold < price) {
-    showNotification('Not enough gold to buy this property!', 'error');
+  if (Player.getTotalPennies() < price) {
+    showNotification('Not enough currency to buy this property!', 'error');
     return;
   }
   
-  Player.removeGold(price);
+  Player.removeCurrency(price);
   
   // Save property to player data
   const properties = playerData.properties || [];
   properties.push({ type, price, income, purchaseDate: Date.now() });
   Player.updateData({ properties });
   
-  showNotification(`Purchased ${type} for ${price} gold!`, 'success');
+  showNotification(`Purchased ${type} for ${Player.formatCurrency(price)}!`, 'success');
   addGameLog(`You bought a ${type} property`);
   
   // Update property list
@@ -142,7 +142,7 @@ function updatePropertyList() {
   listEl.innerHTML = properties.map(prop => `
     <div class="property-item mb-2 p-2 border rounded">
       <strong>${prop.type}</strong>
-      <p class="text-muted small mb-0">Income: ${prop.income} Gold/day</p>
+      <p class="text-muted small mb-0">Income: ${Player.formatCurrency(prop.income)}/day</p>
     </div>
   `).join('');
 }
@@ -184,10 +184,10 @@ function commitCrime(crimeType) {
   
   if (success) {
     const reward = Math.floor(Math.random() * (crime.maxReward - crime.minReward) + crime.minReward);
-    Player.addGold(reward);
+    Player.addCurrency(reward);
     Player.addXP(20);
-    showNotification(`Crime successful! Earned ${reward} gold!`, 'success');
-    addGameLog(`You successfully committed ${crimeType} and earned ${reward} gold`);
+    showNotification(`Crime successful! Earned ${Player.formatCurrency(reward)}!`, 'success');
+    addGameLog(`You successfully committed ${crimeType} and earned ${Player.formatCurrency(reward)}`);
   } else {
     showNotification(`Caught! Sent to jail for ${crime.jailTime} minutes!`, 'error');
     addGameLog(`You were caught committing ${crimeType}!`);
@@ -283,37 +283,16 @@ function releaseFromJail() {
   updateJailUI();
 }
 
-function bustOut() {
-  if (typeof Player === 'undefined') return;
-  
-  const success = Math.random() < 0.25;
-  
-  if (success) {
-    releaseFromJail();
-    showNotification('Jailbreak successful!', 'success');
-    addGameLog('You successfully escaped from jail!');
-  } else {
-    showNotification('Jailbreak failed! Sentence extended!', 'error');
-    const playerData = Player.getData();
-    Player.updateData({ 
-      jailReleaseTime: playerData.jailReleaseTime + (10 * 60 * 1000)
-    });
-    addGameLog('Your jailbreak attempt failed');
-  }
-}
-
-function payBail() {
-  if (typeof Player === 'undefined') return;
-  
+  // Safely increment persisted questsCompleted
   const playerData = Player.getData();
-  const bailCost = 500;
+  const bailCost = 6000; // 500 gold equivalent = 6000 pennies
   
-  if (playerData.gold < bailCost) {
-    showNotification('Not enough gold to pay bail!', 'error');
+  if (Player.getTotalPennies() < bailCost) {
+    showNotification('Not enough currency to pay bail!', 'error');
     return;
   }
   
-  Player.removeGold(bailCost);
+  Player.removeCurrency(bailCost);
   releaseFromJail();
   showNotification('Bail paid. You are free!', 'success');
   addGameLog('You paid bail and were released from jail');
@@ -327,14 +306,14 @@ function playDice() {
   if (!betInput) return;
   
   const bet = parseInt(betInput.value);
-  if (!bet || bet < 10) {
-    showNotification('Minimum bet is 10 gold!', 'warning');
+  if (!bet || bet < 120) { // 10 gold = 120 pennies
+    showNotification('Minimum bet is 10 shillings (120 pennies)!', 'warning');
     return;
   }
   
   const playerData = Player.getData();
-  if (playerData.gold < bet) {
-    showNotification('Not enough gold!', 'error');
+  if (Player.getTotalPennies() < bet) {
+    showNotification('Not enough currency!', 'error');
     return;
   }
   
@@ -342,16 +321,16 @@ function playDice() {
   const dice2 = Math.floor(Math.random() * 6) + 1;
   const total = dice1 + dice2;
   
-  Player.removeGold(bet);
+  Player.removeCurrency(bet);
   
   if (total === 7 || total === 11) {
     const winnings = bet * 2;
-    Player.addGold(winnings);
-    showNotification(`🎲 Rolled ${dice1} and ${dice2} (${total})! Won ${winnings} gold!`, 'success');
-    addGameLog(`Won ${winnings} gold at dice game`);
+    Player.addCurrency(winnings);
+    showNotification(`🎲 Rolled ${dice1} and ${dice2} (${total})! Won ${Player.formatCurrency(winnings)}!`, 'success');
+    addGameLog(`Won ${Player.formatCurrency(winnings)} at dice game`);
   } else {
     showNotification(`🎲 Rolled ${dice1} and ${dice2} (${total}). Better luck next time!`, 'error');
-    addGameLog(`Lost ${bet} gold at dice game`);
+    addGameLog(`Lost ${Player.formatCurrency(bet)} at dice game`);
   }
   
   betInput.value = '';
@@ -364,28 +343,28 @@ function playCoin(choice) {
   if (!betInput) return;
   
   const bet = parseInt(betInput.value);
-  if (!bet || bet < 10) {
-    showNotification('Minimum bet is 10 gold!', 'warning');
+  if (!bet || bet < 120) { // 10 gold = 120 pennies
+    showNotification('Minimum bet is 10 shillings (120 pennies)!', 'warning');
     return;
   }
   
   const playerData = Player.getData();
-  if (playerData.gold < bet) {
-    showNotification('Not enough gold!', 'error');
+  if (Player.getTotalPennies() < bet) {
+    showNotification('Not enough currency!', 'error');
     return;
   }
   
   const result = Math.random() < 0.5 ? 'heads' : 'tails';
-  Player.removeGold(bet);
+  Player.removeCurrency(bet);
   
   if (result === choice) {
     const winnings = bet * 2;
-    Player.addGold(winnings);
-    showNotification(`🪙 ${result.toUpperCase()}! Won ${winnings} gold!`, 'success');
-    addGameLog(`Won ${winnings} gold at coin flip`);
+    Player.addCurrency(winnings);
+    showNotification(`🪙 ${result.toUpperCase()}! Won ${Player.formatCurrency(winnings)}!`, 'success');
+    addGameLog(`Won ${Player.formatCurrency(winnings)} at coin flip`);
   } else {
     showNotification(`🪙 ${result.toUpperCase()}! Better luck next time!`, 'error');
-    addGameLog(`Lost ${bet} gold at coin flip`);
+    addGameLog(`Lost ${Player.formatCurrency(bet)} at coin flip`);
   }
   
   betInput.value = '';
@@ -398,34 +377,34 @@ function playHighCard() {
   if (!betInput) return;
   
   const bet = parseInt(betInput.value);
-  if (!bet || bet < 10) {
-    showNotification('Minimum bet is 10 gold!', 'warning');
+  if (!bet || bet < 120) { // 10 gold = 120 pennies
+    showNotification('Minimum bet is 10 shillings (120 pennies)!', 'warning');
     return;
   }
   
   const playerData = Player.getData();
-  if (playerData.gold < bet) {
-    showNotification('Not enough gold!', 'error');
+  if (Player.getTotalPennies() < bet) {
+    showNotification('Not enough currency!', 'error');
     return;
   }
   
   const playerCard = Math.floor(Math.random() * 13) + 1;
   const dealerCard = Math.floor(Math.random() * 13) + 1;
   
-  Player.removeGold(bet);
+  Player.removeCurrency(bet);
   
   const cardNames = ['', 'Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'];
   
   if (playerCard > dealerCard) {
     const winnings = bet * 2;
-    Player.addGold(winnings);
-    showNotification(`🃏 You: ${cardNames[playerCard]} vs Dealer: ${cardNames[dealerCard]}. Won ${winnings} gold!`, 'success');
-    addGameLog(`Won ${winnings} gold at high card`);
+    Player.addCurrency(winnings);
+    showNotification(`🃏 You: ${cardNames[playerCard]} vs Dealer: ${cardNames[dealerCard]}. Won ${Player.formatCurrency(winnings)}!`, 'success');
+    addGameLog(`Won ${Player.formatCurrency(winnings)} at high card`);
   } else if (playerCard < dealerCard) {
     showNotification(`🃏 You: ${cardNames[playerCard]} vs Dealer: ${cardNames[dealerCard]}. Lost!`, 'error');
-    addGameLog(`Lost ${bet} gold at high card`);
+    addGameLog(`Lost ${Player.formatCurrency(bet)} at high card`);
   } else {
-    Player.addGold(bet);
+    Player.addCurrency(bet);
     showNotification(`🃏 You: ${cardNames[playerCard]} vs Dealer: ${cardNames[dealerCard]}. Push! Bet returned.`, 'info');
     addGameLog(`Tied at high card - bet returned`);
   }
@@ -433,151 +412,17 @@ function playHighCard() {
   betInput.value = '';
 }
 
-// Friends/Enemies Actions
-function addFriend() {
-  showNotification('Friend request sent!', 'success');
-  addGameLog('Sent a friend request');
-}
+  // Notify player
+  if (typeof showNotification === 'function') showNotification(`Quest "${questId}" completed!`, 'success');
+  if (typeof addGameLog === 'function') addGameLog(`You completed a quest: ${questId}`);
 
-function removeFriend(name) {
-  showNotification(`Removed ${name} from friends`, 'info');
-  addGameLog(`Removed ${name} from friends list`);
-}
-
-function attackEnemy(name) {
-  showNotification(`Attacked ${name}!`, 'warning');
-  addGameLog(`Engaged in combat with ${name}`);
-  
-  if (typeof Player !== 'undefined') {
-    Player.addXP(50);
-  }
-}
-
-// Utility Functions
-function showNotification(message, type = 'info') {
-  if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
-    UI.showNotification(message, type);
-  } else {
-    console.log(`[${type}] ${message}`);
-  }
-}
-
-function addGameLog(message) {
-  const logEntries = document.getElementById('log-entries');
-  if (!logEntries) return;
-  
-  const timestamp = new Date().toLocaleTimeString();
-  const entry = document.createElement('div');
-  entry.className = 'log-entry';
-  entry.textContent = `[${timestamp}] ${message}`;
-  
-  logEntries.appendChild(entry);
-  
-  // Scroll to bottom
-  const gameLog = document.getElementById('game-log');
-  if (gameLog) {
-    gameLog.scrollTop = gameLog.scrollHeight;
-  }
-}
-
-// Black Market Actions
-function purchaseBlackMarketItem(locationId, itemId) {
-  if (typeof BlackMarket === 'undefined') {
-    showNotification('Black Market system not available', 'error');
-    return;
-  }
-  
-  const success = BlackMarket.purchaseItem(locationId, itemId);
-  
-  if (success && typeof Locations !== 'undefined') {
-    // Refresh the vendor UI
-    Locations.updateBlackMarketUI(locationId);
-  }
-}
-
-function smuggleItem(itemId) {
-  if (typeof BlackMarket === 'undefined') {
-    showNotification('Black Market system not available', 'error');
-    return;
-  }
-  
-  BlackMarket.smuggleGoods(itemId);
-  
-  // Refresh smuggled goods UI
-  if (typeof Locations !== 'undefined') {
-    Locations.updateSmuggledGoodsUI();
-  }
-}
-
-function smuggleAllItems() {
-  if (typeof BlackMarket === 'undefined') {
-    showNotification('Black Market system not available', 'error');
-    return;
-  }
-  
-  BlackMarket.smuggleAllGoods();
-  
-  // Refresh smuggled goods UI
-  if (typeof Locations !== 'undefined') {
-    Locations.updateSmuggledGoodsUI();
-  }
-}
-
-function sellSmuggledItem(itemId) {
-  if (typeof BlackMarket === 'undefined') {
-    showNotification('Black Market system not available', 'error');
-    return;
-  }
-  
-  BlackMarket.sellSmuggledItem(itemId);
-  
-  // Refresh smuggled goods UI
-  if (typeof Locations !== 'undefined') {
-    Locations.updateSmuggledGoodsUI();
-  }
-}
-
-function rotateVendorInventories() {
-  if (typeof BlackMarket === 'undefined') {
-    showNotification('Black Market system not available', 'error');
-    return;
-  }
-  
-  BlackMarket.rotateAllInventories();
-  showNotification('Vendor inventories have been updated!', 'success');
-  
-  // Refresh current location if it's a black market
-  if (typeof Locations !== 'undefined' && typeof BlackMarket !== 'undefined') {
-    const currentLocation = Locations.getCurrentLocation();
-    if (BlackMarket.isBlackMarketLocation(currentLocation)) {
-      Locations.updateBlackMarketUI(currentLocation);
+  // Try to unlock any quest-based locations
+  if (typeof Locations !== 'undefined' && typeof Locations.tryUnlockLocation === 'function') {
+    // Example: enchanted forest unlocks at 5 quests
+    if (questsCompleted >= 5) {
+      if (Locations.tryUnlockLocation('enchanted-forest')) {
+        if (typeof showNotification === 'function') showNotification('New location unlocked: Enchanted Forest!', 'success');
+      }
     }
   }
-}
-
-// Export for Node.js/CommonJS
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = {
-    upgradeHome,
-    restAtHome,
-    heal,
-    trainStat,
-    buyProperty,
-    acceptQuest,
-    commitCrime,
-    sendToJail,
-    bustOut,
-    payBail,
-    playDice,
-    playCoin,
-    playHighCard,
-    addFriend,
-    removeFriend,
-    attackEnemy,
-    purchaseBlackMarketItem,
-    smuggleItem,
-    smuggleAllItems,
-    sellSmuggledItem,
-    rotateVendorInventories
-  };
 }

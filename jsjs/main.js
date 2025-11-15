@@ -1,6 +1,3 @@
-// Main Entry Point for High Wizardry
-
-// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Initializing High Wizardry...');
   
@@ -180,7 +177,7 @@ function showTutorial() {
           <li>Use the menu on the left to navigate</li>
           <li>Check your stats and inventory in the sidebar</li>
           <li>Chat with other players using the chat box</li>
-          <li>Complete quests to earn experience and gold</li>
+          <li>Complete quests to earn experience and currency</li>
           <li>Train your skills to become more powerful</li>
         </ol>
         <p>Good luck on your magical journey!</p>
@@ -256,14 +253,8 @@ if ('serviceWorker' in navigator) {
         console.log('ServiceWorker not available:', error.message);
       }
     });
-  });
-}
+  }
 
-// Export for Node.js/CommonJS
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = {
-    showWelcomeModal,
-    showTutorial,
-    setupErrorHandling
-  };
-}
+  window.DebugModules = { Player: typeof Player !== 'undefined' ? Player : null, Game: window.HighWizardry?.Game || null, Chat: typeof Chat !== 'undefined' ? Chat : null, UI: typeof UI !== 'undefined' ? UI : null, Resources: typeof Resources !== 'undefined' ? Resources : null, Workshop: typeof Workshop !== 'undefined' ? Workshop : null, Guilds: typeof Guilds !== 'undefined' ? Guilds : null, Locations: typeof Locations !== 'undefined' ? Locations : null, CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null };
+  console.log('Debug modules available at window.DebugModules');
+});

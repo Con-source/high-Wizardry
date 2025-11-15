@@ -16,6 +16,7 @@ const Player = (() => {
       
       if (saved && validatePlayerData(saved)) {
         playerData = saved;
+        migrateGoldToCurrency(); // Migrate old saves
         console.log('Player data loaded from storage');
       } else {
         // Create new player with defaults from CONFIG
@@ -39,8 +40,8 @@ const Player = (() => {
           username: 'Apprentice',
           level: 1,
           xp: 0,
-          gold: 1000,
-          silver: 0,
+          shillings: 83,  // 1000 pennies = 83 shillings + 4 pennies
+          pennies: 4,
           health: 100,
           maxHealth: 100,
           mana: 50,
@@ -53,6 +54,7 @@ const Player = (() => {
           endurance: 10,
           charisma: 10,
           dexterity: 10,
+          speed: 0,  // New stat for travel speed
           inventory: {
             potions: 3,
             herbs: 5,
@@ -187,42 +189,110 @@ const Player = (() => {
     return true;
   }
   
-  // Add gold
-  function addGold(amount) {
-    if (!playerData || typeof amount !== 'number' || amount < 0) return false;
+  // Currency conversion: 1 shilling = 12 pennies
+  const PENNIES_PER_SHILLING = 12;
+  
+  // Convert old gold to new currency (migration helper)
+  function migrateGoldToCurrency() {
+    if (playerData.gold !== undefined && playerData.shillings === undefined) {
+      const totalPennies = playerData.gold;
+      const shillings = Math.floor(totalPennies / PENNIES_PER_SHILLING);
+      const pennies = totalPennies % PENNIES_PER_SHILLING;
+      
+      delete playerData.gold;
+      playerData.shillings = shillings;
+      playerData.pennies = pennies;
+      
+      saveToStorage();
+      console.log(`Migrated ${totalPennies} old gold to ${shillings} shillings and ${pennies} pennies`);
+    }
+  }
+  
+  // Get total currency in pennies
+  function getTotalPennies() {
+    const shillings = playerData.shillings || 0;
+    const pennies = playerData.pennies || 0;
+    return (shillings * PENNIES_PER_SHILLING) + pennies;
+  }
+  
+  // Add currency (amount in pennies)
+  function addCurrency(amountInPennies) {
+    if (!playerData || typeof amountInPennies !== 'number' || amountInPennies < 0) return false;
+    
+    const currentTotal = getTotalPennies();
+    const newTotal = currentTotal + amountInPennies;
+    const newShillings = Math.floor(newTotal / PENNIES_PER_SHILLING);
+    const newPennies = newTotal % PENNIES_PER_SHILLING;
     
     return updateData({
-      gold: (playerData.gold || 0) + amount
+      shillings: newShillings,
+      pennies: newPennies
     });
   }
   
-  // Remove gold
-  function removeGold(amount) {
-    if (!playerData || typeof amount !== 'number' || amount < 0) return false;
+  // Remove currency (amount in pennies)
+  function removeCurrency(amountInPennies) {
+    if (!playerData || typeof amountInPennies !== 'number' || amountInPennies < 0) return false;
     
-    const currentGold = playerData.gold || 0;
-    if (currentGold < amount) {
-      console.warn('Not enough gold');
+    const currentTotal = getTotalPennies();
+    if (currentTotal < amountInPennies) {
+      console.warn('Not enough currency');
       return false;
     }
     
+    const newTotal = currentTotal - amountInPennies;
+    const newShillings = Math.floor(newTotal / PENNIES_PER_SHILLING);
+    const newPennies = newTotal % PENNIES_PER_SHILLING;
+    
     return updateData({
-      gold: currentGold - amount
+      shillings: newShillings,
+      pennies: newPennies
     });
+  }
+  
+  // Legacy functions for backward compatibility
+  function addGold(amount) {
+    console.warn('addGold is deprecated, use addCurrency instead');
+    return addCurrency(amount);
+  }
+  
+  function removeGold(amount) {
+    console.warn('removeGold is deprecated, use removeCurrency instead');
+    return removeCurrency(amount);
+  }
+  
+  // Format currency for display
+  function formatCurrency(totalPennies) {
+    if (totalPennies === undefined) {
+      totalPennies = getTotalPennies();
+    }
+    const shillings = Math.floor(totalPennies / PENNIES_PER_SHILLING);
+    const pennies = totalPennies % PENNIES_PER_SHILLING;
+    
+    if (shillings === 0) {
+      return `${pennies} ${pennies === 1 ? 'penny' : 'pennies'}`;
+    } else if (pennies === 0) {
+      return `${shillings} ${shillings === 1 ? 'shilling' : 'shillings'}`;
+    } else {
+      return `${shillings} ${shillings === 1 ? 'shilling' : 'shillings'}, ${pennies} ${pennies === 1 ? 'penny' : 'pennies'}`;
+    }
   }
   
   // Update player stats in UI
   function updateUI() {
     if (!playerData) return;
     
+    // Migrate old gold currency if needed
+    migrateGoldToCurrency();
+    
     // Update name and level
     const nameEl = document.getElementById('player-name');
     const levelEl = document.getElementById('player-level');
-    const goldEl = document.getElementById('gold-display');
+    const currencyEl = document.getElementById('currency-display');
     
     if (nameEl) nameEl.textContent = playerData.username || 'Apprentice';
     if (levelEl) levelEl.textContent = playerData.level || 1;
-    if (goldEl) goldEl.textContent = (playerData.gold || 0).toLocaleString();
+    if (currencyEl) currencyEl.textContent = formatCurrency();
     
     // Update health bar
     updateStatBar('health', playerData.health, playerData.maxHealth);
@@ -283,11 +353,18 @@ const Player = (() => {
     updateData,
     setUsername,
     addXP,
-    addGold,
-    removeGold,
+    addCurrency,
+    removeCurrency,
+    getTotalPennies,
+    formatCurrency,
+    addGold, // Legacy - deprecated
+    removeGold, // Legacy - deprecated
     levelUp,
     updateUI,
     reset,
+    
+    // Currency constants
+    PENNIES_PER_SHILLING,
     
     // For debugging
     _debug: {
