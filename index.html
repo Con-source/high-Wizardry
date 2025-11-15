@@ -522,6 +522,55 @@
       display: flex;
       gap: 0.5rem;
     }
+
+    /* Map Container Styles */
+    .map-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .map-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .map-location {
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(42, 42, 60, 0.7) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .map-location:hover {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      border-color: var(--primary-light);
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(108, 92, 231, 0.6);
+    }
+
+    .map-location i {
+      font-size: 2rem;
+      color: var(--primary-light);
+    }
+
+    .map-location span {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .map-location:hover i,
+    .map-location:hover span {
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -615,33 +664,63 @@
         <p id="location-description">The bustling heart of the magical city. Wizards and adventurers gather here.</p>
       </div>
 
-      <!-- Dashboard Stats (shown in Town Square) -->
-      <div id="dashboard-stats" class="dashboard-grid">
-        <div class="stat-card">
-          <div class="stat-card-icon"><i class="fas fa-star"></i></div>
-          <div class="stat-card-title">Experience</div>
-          <div class="stat-card-value"><span id="dashboard-xp">0</span> XP</div>
-          <div class="progress mt-2" style="height: 6px;">
-            <div id="dashboard-xp-bar" class="progress-bar bg-warning" style="width: 0%"></div>
+      <!-- Town Square Map -->
+      <div id="town-square-map" class="map-container">
+        <div class="card bg-dark mb-3">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fas fa-map-marked-alt me-2"></i>City Map</h5>
+            <p class="text-muted">Navigate the magical city and discover new locations.</p>
+            <div class="map-grid">
+              <div class="map-location" data-location="hospital">
+                <i class="fas fa-hospital"></i>
+                <span>Hospital</span>
+              </div>
+              <div class="map-location" data-location="education">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Education</span>
+              </div>
+              <div class="map-location" data-location="workshop">
+                <i class="fas fa-hammer"></i>
+                <span>Workshop</span>
+              </div>
+              <div class="map-location" data-location="guilds">
+                <i class="fas fa-users-cog"></i>
+                <span>Guilds</span>
+              </div>
+              <div class="map-location" data-location="property">
+                <i class="fas fa-building"></i>
+                <span>Property</span>
+              </div>
+              <div class="map-location" data-location="quests">
+                <i class="fas fa-scroll"></i>
+                <span>Quests</span>
+              </div>
+              <div class="map-location" data-location="crimes">
+                <i class="fas fa-mask"></i>
+                <span>Crimes</span>
+              </div>
+              <div class="map-location" data-location="casino">
+                <i class="fas fa-dice"></i>
+                <span>Casino</span>
+              </div>
+              <div class="map-location" data-location="magic-shop">
+                <i class="fas fa-hat-wizard"></i>
+                <span>Magic Shop</span>
+              </div>
+              <div class="map-location" data-location="tavern">
+                <i class="fas fa-beer"></i>
+                <span>Tavern</span>
+              </div>
+              <div class="map-location" data-location="fair-alley">
+                <i class="fas fa-store"></i>
+                <span>Fair Alley</span>
+              </div>
+              <div class="map-location" data-location="guild-district">
+                <i class="fas fa-shield-alt"></i>
+                <span>Guild District</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-card-icon"><i class="fas fa-scroll"></i></div>
-          <div class="stat-card-title">Quests Completed</div>
-          <div class="stat-card-value"><span id="dashboard-quests">0</span></div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-card-icon"><i class="fas fa-hammer"></i></div>
-          <div class="stat-card-title">Items Crafted</div>
-          <div class="stat-card-value"><span id="dashboard-crafted">0</span></div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-card-icon"><i class="fas fa-users-cog"></i></div>
-          <div class="stat-card-title">Guild Memberships</div>
-          <div class="stat-card-value"><span id="dashboard-guilds">0</span></div>
         </div>
       </div>
 
@@ -665,6 +744,37 @@
       <div id="location-content-home" class="location-content" style="display: none;">
         <h2><i class="fas fa-house-user me-2"></i>My Home</h2>
         <p>Your personal sanctuary. A place to rest and manage your belongings.</p>
+        
+        <!-- Player Stats Dashboard -->
+        <div id="home-dashboard-stats" class="dashboard-grid mb-4">
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-star"></i></div>
+            <div class="stat-card-title">Experience</div>
+            <div class="stat-card-value"><span id="home-dashboard-xp">0</span> XP</div>
+            <div class="progress mt-2" style="height: 6px;">
+              <div id="home-dashboard-xp-bar" class="progress-bar bg-warning" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-scroll"></i></div>
+            <div class="stat-card-title">Quests Completed</div>
+            <div class="stat-card-value"><span id="home-dashboard-quests">0</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-hammer"></i></div>
+            <div class="stat-card-title">Items Crafted</div>
+            <div class="stat-card-value"><span id="home-dashboard-crafted">0</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-users-cog"></i></div>
+            <div class="stat-card-title">Guild Memberships</div>
+            <div class="stat-card-value"><span id="home-dashboard-guilds">0</span></div>
+          </div>
+        </div>
+        
         <div class="row">
           <div class="col-md-6">
             <div class="card bg-dark mb-3">
@@ -1347,18 +1457,112 @@
 
       document.querySelectorAll('.location-btn').forEach(btn => {
         btn.addEventListener('click', e => {
+          const locationId = e.currentTarget.dataset.location;
+          
+          // Update active button
           document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('active'));
           e.currentTarget.classList.add('active');
-          document.getElementById('location-name').textContent = e.currentTarget.textContent.trim();
           
-          // Show/hide dashboard based on location
-          const dashboardStats = document.getElementById('dashboard-stats');
-          if (dashboardStats) {
-            if (e.currentTarget.dataset.location === 'town-square') {
-              dashboardStats.style.display = 'grid';
-            } else {
-              dashboardStats.style.display = 'none';
+          // Hide all location-specific content
+          document.querySelectorAll('.location-content').forEach(el => {
+            el.style.display = 'none';
+          });
+          
+          // Show specific location content based on locationId
+          const contentMap = {
+            'home': 'location-content-home',
+            'hospital': 'location-content-hospital',
+            'education': 'location-content-education',
+            'workshop': 'location-content-workshop',
+            'guilds': 'location-content-guilds',
+            'property': 'location-content-property',
+            'quests': 'location-content-quests',
+            'crimes': 'location-content-crimes',
+            'jail': 'location-content-jail',
+            'casino': 'location-content-casino',
+            'newspaper': 'location-content-newspaper',
+            'friends': 'location-content-friends',
+            'fair-alley': 'location-content-fair-alley',
+            'guild-district': 'location-content-guild-district',
+            'smuggling-routes': 'location-content-smuggling-routes'
+          };
+          
+          if (contentMap[locationId]) {
+            const contentEl = document.getElementById(contentMap[locationId]);
+            if (contentEl) {
+              contentEl.style.display = 'block';
             }
+          }
+          
+          // Show/hide map in town square
+          const townSquareMap = document.getElementById('town-square-map');
+          if (townSquareMap) {
+            if (locationId === 'town-square') {
+              townSquareMap.style.display = 'block';
+            } else {
+              townSquareMap.style.display = 'none';
+            }
+          }
+          
+          // Update location header if no specific content shown
+          if (!contentMap[locationId] || locationId === 'town-square') {
+            const locationNames = {
+              'town-square': 'Town Square',
+              'home': 'My Home',
+              'hospital': 'Hospital',
+              'education': 'Education',
+              'workshop': 'Workshop',
+              'guilds': 'Guilds',
+              'property': 'Property',
+              'quests': 'Quests',
+              'crimes': 'Crimes',
+              'jail': 'Jail',
+              'casino': 'Casino',
+              'newspaper': 'Newspaper',
+              'friends': 'Friends/Enemies',
+              'magic-shop': 'Magic Shop',
+              'tavern': 'The Drunken Wizard',
+              'fair-alley': 'Fair Alleyway',
+              'guild-district': 'Guild District',
+              'smuggling-routes': 'Smuggling Routes'
+            };
+            
+            const locationDescriptions = {
+              'town-square': 'The bustling heart of the magical city. Wizards and adventurers gather here.',
+              'home': 'Your personal sanctuary. A place to rest and manage your belongings.',
+              'hospital': 'Heal your wounds and restore your vitality.',
+              'education': 'Train your skills and improve your abilities.',
+              'workshop': 'Craft powerful items and equipment using gathered resources.',
+              'guilds': 'Join guilds to gain special perks and benefits.',
+              'property': 'View and manage your real estate investments.',
+              'quests': 'Accept quests to earn rewards and experience.',
+              'crimes': 'Engage in illegal activities to earn quick money. Beware of consequences!',
+              'jail': 'The city jail. Serve your time for your crimes.',
+              'casino': 'Try your luck at various games of chance!',
+              'newspaper': 'Stay informed about events in the magical world.',
+              'friends': 'Manage your social relationships.',
+              'magic-shop': 'A shop filled with magical artifacts and ingredients.',
+              'tavern': 'A cozy tavern where adventurers share stories and drinks.',
+              'fair-alley': 'A bustling marketplace with merchants selling exotic goods and rare items.',
+              'guild-district': 'Home to various guilds offering unique benefits and opportunities.',
+              'smuggling-routes': 'Shadowy paths used by smugglers for risky but lucrative trade.'
+            };
+            
+            const nameEl = document.getElementById('location-name');
+            const descEl = document.getElementById('location-description');
+            if (nameEl && locationNames[locationId]) nameEl.textContent = locationNames[locationId];
+            if (descEl && locationDescriptions[locationId]) descEl.textContent = locationDescriptions[locationId];
+          }
+        });
+      });
+
+      // Handle map location clicks
+      document.querySelectorAll('.map-location').forEach(loc => {
+        loc.addEventListener('click', e => {
+          const location = e.currentTarget.dataset.location;
+          const btn = document.querySelector(`.location-btn[data-location="${location}"]`);
+          if (btn) {
+            btn.click();
           }
         });
       });
@@ -1368,27 +1572,27 @@
         if (typeof Player !== 'undefined') {
           const playerData = Player.getData();
           
-          // Update XP
-          const xpEl = document.getElementById('dashboard-xp');
-          if (xpEl) xpEl.textContent = playerData.xp || 0;
+          // Update home dashboard XP
+          const homeXpEl = document.getElementById('home-dashboard-xp');
+          if (homeXpEl) homeXpEl.textContent = playerData.xp || 0;
           
-          // Update quests completed
-          const questsEl = document.getElementById('dashboard-quests');
-          if (questsEl) questsEl.textContent = playerData.questsCompleted || 0;
+          // Update home dashboard quests completed
+          const homeQuestsEl = document.getElementById('home-dashboard-quests');
+          if (homeQuestsEl) homeQuestsEl.textContent = playerData.questsCompleted || 0;
           
-          // Update items crafted
-          const craftedEl = document.getElementById('dashboard-crafted');
-          if (craftedEl) {
+          // Update home dashboard items crafted
+          const homeCraftedEl = document.getElementById('home-dashboard-crafted');
+          if (homeCraftedEl) {
             const craftedItems = playerData.craftedItems || {};
             const totalCrafted = Object.values(craftedItems).reduce((sum, count) => sum + count, 0);
-            craftedEl.textContent = totalCrafted;
+            homeCraftedEl.textContent = totalCrafted;
           }
           
-          // Update guild count
-          const guildsEl = document.getElementById('dashboard-guilds');
-          if (guildsEl) {
+          // Update home dashboard guild count
+          const homeGuildsEl = document.getElementById('home-dashboard-guilds');
+          if (homeGuildsEl) {
             const guilds = playerData.guilds || { memberships: [] };
-            guildsEl.textContent = guilds.memberships.length;
+            homeGuildsEl.textContent = guilds.memberships.length;
           }
         }
       }
