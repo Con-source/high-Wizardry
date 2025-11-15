@@ -283,28 +283,7 @@ function releaseFromJail() {
   updateJailUI();
 }
 
-function bustOut() {
-  if (typeof Player === 'undefined') return;
-  
-  const success = Math.random() < 0.25;
-  
-  if (success) {
-    releaseFromJail();
-    showNotification('Jailbreak successful!', 'success');
-    addGameLog('You successfully escaped from jail!');
-  } else {
-    showNotification('Jailbreak failed! Sentence extended!', 'error');
-    const playerData = Player.getData();
-    Player.updateData({ 
-      jailReleaseTime: playerData.jailReleaseTime + (10 * 60 * 1000)
-    });
-    addGameLog('Your jailbreak attempt failed');
-  }
-}
-
-function payBail() {
-  if (typeof Player === 'undefined') return;
-  
+  // Safely increment persisted questsCompleted
   const playerData = Player.getData();
   const bailCost = 6000; // 500 gold equivalent = 6000 pennies
   
@@ -433,71 +412,17 @@ function playHighCard() {
   betInput.value = '';
 }
 
-// Friends/Enemies Actions
-function addFriend() {
-  showNotification('Friend request sent!', 'success');
-  addGameLog('Sent a friend request');
-}
+  // Notify player
+  if (typeof showNotification === 'function') showNotification(`Quest "${questId}" completed!`, 'success');
+  if (typeof addGameLog === 'function') addGameLog(`You completed a quest: ${questId}`);
 
-function removeFriend(name) {
-  showNotification(`Removed ${name} from friends`, 'info');
-  addGameLog(`Removed ${name} from friends list`);
-}
-
-function attackEnemy(name) {
-  showNotification(`Attacked ${name}!`, 'warning');
-  addGameLog(`Engaged in combat with ${name}`);
-  
-  if (typeof Player !== 'undefined') {
-    Player.addXP(50);
+  // Try to unlock any quest-based locations
+  if (typeof Locations !== 'undefined' && typeof Locations.tryUnlockLocation === 'function') {
+    // Example: enchanted forest unlocks at 5 quests
+    if (questsCompleted >= 5) {
+      if (Locations.tryUnlockLocation('enchanted-forest')) {
+        if (typeof showNotification === 'function') showNotification('New location unlocked: Enchanted Forest!', 'success');
+      }
+    }
   }
-}
-
-// Utility Functions
-function showNotification(message, type = 'info') {
-  if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
-    UI.showNotification(message, type);
-  } else {
-    console.log(`[${type}] ${message}`);
-  }
-}
-
-function addGameLog(message) {
-  const logEntries = document.getElementById('log-entries');
-  if (!logEntries) return;
-  
-  const timestamp = new Date().toLocaleTimeString();
-  const entry = document.createElement('div');
-  entry.className = 'log-entry';
-  entry.textContent = `[${timestamp}] ${message}`;
-  
-  logEntries.appendChild(entry);
-  
-  // Scroll to bottom
-  const gameLog = document.getElementById('game-log');
-  if (gameLog) {
-    gameLog.scrollTop = gameLog.scrollHeight;
-  }
-}
-
-// Export for Node.js/CommonJS
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = {
-    upgradeHome,
-    restAtHome,
-    heal,
-    trainStat,
-    buyProperty,
-    acceptQuest,
-    commitCrime,
-    sendToJail,
-    bustOut,
-    payBail,
-    playDice,
-    playCoin,
-    playHighCard,
-    addFriend,
-    removeFriend,
-    attackEnemy
-  };
 }

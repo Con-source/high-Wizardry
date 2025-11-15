@@ -1,13 +1,5 @@
-/**
- * Locations Module
- * Handles all location-specific functionality and navigation
- */
-
+/* Locations module - updated unlock checks and UI refresh */
 const Locations = (() => {
-  // Location state
-  let currentLocation = 'town-square';
-  
-  // Location data
   const locationData = {
     'town-square': {
       name: 'Town Square',
@@ -90,29 +82,38 @@ const Locations = (() => {
       contentId: 'location-content-smuggling-routes'
     }
   };
-  
-  // Initialize locations module
+
+  let currentLocation = 'town-square';
+
   function init() {
-    setupLocationButtons();
-    console.log('✅ Locations module initialized');
+    // no-op for now
+    return true;
   }
-  
-  // Setup location button event listeners
-  function setupLocationButtons() {
-    const locationButtons = document.querySelectorAll('.location-btn');
-    locationButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const location = e.currentTarget.getAttribute('data-location');
-        navigateToLocation(location);
-      });
-    });
+
+  function isLocationUnlocked(locationId) {
+    const location = locationData[locationId];
+    if (!location) return false;
+    if (location.unlocked === true) return true;
+    if (!location.unlockRequirement) return Boolean(location.unlocked);
+    if (typeof Player === 'undefined' || typeof Player.getData !== 'function') return false;
+    const playerData = Player.getData();
+    const req = location.unlockRequirement;
+    switch (req.type) {
+      case 'quests': return (playerData.questsCompleted || 0) >= req.value;
+      case 'level': return (playerData.level || 0) >= req.value;
+      case 'item': return ((playerData.craftedItems || {})[req.value] || 0) > 0;
+      default: return false;
+    }
   }
-  
-  // Navigate to a location
-  function navigateToLocation(locationId) {
-    if (!locationData[locationId]) {
-      console.error(`Unknown location: ${locationId}`);
-      return;
+
+  function tryUnlockLocation(locationId) {
+    const loc = locationData[locationId];
+    if (!loc) return false;
+    if (loc.unlocked === true) return false;
+    if (isLocationUnlocked(locationId)) {
+      loc.unlocked = true;
+      if (typeof UI !== 'undefined' && UI.showNotification) UI.showNotification(`${loc.name} unlocked!`, 'success');
+      return true;
     }
     
     // Check if Travel module exists and if we should use it
@@ -130,6 +131,8 @@ const Locations = (() => {
     }
     
     const location = locationData[locationId];
+    if (!location) { console.warn('Unknown location', locationId); return; }
+    if (!isLocationUnlocked(locationId)) { if (typeof UI !== 'undefined' && UI.showNotification && location.unlockRequirement) UI.showNotification(`Location locked: ${location.unlockRequirement.message}`, 'warning'); return; }
     currentLocation = locationId;
     
     // Update Travel module's current location if available
@@ -164,53 +167,17 @@ const Locations = (() => {
         contentEl.style.display = 'block';
       }
     }
-    
-    // Update UI with current player stats
-    if (typeof Player !== 'undefined' && typeof Player.updateUI === 'function') {
-      Player.updateUI();
-      updateLocationStats(locationId);
-    }
-    
+
+    // Update UIs
+    if (locationId === 'workshop' && typeof Workshop !== 'undefined' && Workshop.updateWorkshopUI) Workshop.updateWorkshopUI();
+    if (locationId === 'guilds' && typeof Guilds !== 'undefined' && Guilds.updateGuildUI) Guilds.updateGuildUI();
+    if (typeof Resources !== 'undefined' && Resources.updateResourceUI) Resources.updateResourceUI();
+
+    updateLocationStats(locationId);
     console.log(`Navigated to: ${location.name}`);
   }
-  
-  // Update location-specific stats display
-  function updateLocationStats(locationId) {
-    if (locationId === 'education' && typeof Player !== 'undefined') {
-      const playerData = Player.getData();
-      if (playerData) {
-        const statFields = ['intelligence', 'endurance', 'charisma', 'dexterity'];
-        statFields.forEach(stat => {
-          const el = document.getElementById(`${stat}-level`);
-          if (el && playerData[stat]) {
-            el.textContent = playerData[stat];
-          }
-        });
-      }
-    }
-  }
-  
-  // Get current location
-  function getCurrentLocation() {
-    return currentLocation;
-  }
-  
-  // Public API
-  return {
-    init,
-    navigateToLocation,
-    getCurrentLocation
-  };
+
+  function getCurrentLocation() { return currentLocation; }
+
+  return { init, navigateToLocation, getCurrentLocation, isLocationUnlocked, tryUnlockLocation, getLocationData: (id) => locationData[id] };
 })();
-
-// Initialize when DOM is ready
-if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    Locations.init();
-  });
-}
-
-// Export for Node.js/CommonJS
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = Locations;
-}
