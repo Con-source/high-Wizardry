@@ -13,6 +13,13 @@ const Community = (() => {
     mockPlayers: [] // Simulated player database
   };
   
+  // Helper function to escape HTML to prevent XSS
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
   // Initialize the module
   function init() {
     console.log('✅ Community module initialized');
@@ -216,7 +223,7 @@ const Community = (() => {
     if (results.length === 0) {
       resultsContainer.innerHTML = `
         <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i> No players found matching "${query}"
+          <i class="fas fa-info-circle"></i> No players found matching "${escapeHtml(query)}"
         </div>
       `;
       return;
