@@ -256,11 +256,28 @@ const onlineGame = {
     
     updatePlayerList: function() {
         // Update the UI to show other players in the same location
-        // This would be implemented with the UI module
-        if (typeof UI !== 'undefined' && UI.updatePlayerList) {
-            UI.updatePlayerList(Object.values(this.players));
+        const playerListEl = document.getElementById('online-players-list');
+        if (!playerListEl) return;
+        
+        const playersInLocation = Object.values(this.players);
+        
+        if (playersInLocation.length === 0) {
+            playerListEl.innerHTML = '<p class="text-muted small">No other players nearby</p>';
+        } else {
+            playerListEl.innerHTML = playersInLocation.map(player => `
+                <div class="online-player-item mb-2 p-2 border rounded" style="background: var(--bg-tertiary);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${player.username}</strong>
+                            <span class="badge bg-success ms-2">Online</span>
+                            <p class="text-muted small mb-0">Level ${player.level || 1}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
     },
+
 
     // Player actions
     moveToLocation: function(locationId) {
@@ -463,7 +480,8 @@ const onlineGame = {
     }
 };
 
-// Initialize the game when the page loads
-window.onload = function() {
-    onlineGame.init();
-};
+// Note: onlineGame is now initialized from main.js
+// Do not auto-initialize here to avoid conflicts
+// window.onload = function() {
+//     onlineGame.init();
+// };
