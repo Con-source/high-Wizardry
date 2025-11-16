@@ -11,6 +11,7 @@ const AuthManager = require('./auth/AuthManager');
 const GameManager = require('./game/GameManager');
 const PlayerManager = require('./game/PlayerManager');
 const LocationManager = require('./game/LocationManager');
+const RateLimiter = require('./utils/RateLimiter');
 
 class HighWizardryServer {
   constructor(port = 8080) {
@@ -24,6 +25,18 @@ class HighWizardryServer {
     this.playerManager = new PlayerManager();
     this.locationManager = new LocationManager();
     this.gameManager = new GameManager(this.playerManager, this.locationManager);
+    
+    // Initialize rate limiters
+    this.authLimiter = new RateLimiter(5, 60000); // 5 auth attempts per minute
+    this.actionLimiter = new RateLimiter(20, 10000); // 20 actions per 10 seconds
+    this.chatLimiter = new RateLimiter(10, 10000); // 10 messages per 10 seconds
+    
+    // Clean up rate limiters every 5 minutes
+    setInterval(() => {
+      this.authLimiter.cleanup();
+      this.actionLimiter.cleanup();
+      this.chatLimiter.cleanup();
+    }, 5 * 60 * 1000);
     
     this.setupExpress();
     this.setupWebSocket();
@@ -162,6 +175,16 @@ class HighWizardryServer {
   
   handleAuth(client, data) {
     const { type, username, password, token } = data;
+    
+    // Rate limit authentication attempts
+    const clientKey = client.playerId || 'anon_' + Date.now();
+    if (!this.authLimiter.isAllowed(clientKey)) {
+      this.send(client.ws, {
+        type: 'error',
+        message: 'Too many authentication attempts. Please try again later.'
+      });
+      return;
+    }
     
     if (type === 'register') {
       // Register new user
@@ -322,17 +345,32 @@ class HighWizardryServer {
   }
   
   handleChat(client, data) {
+    // Rate limit chat messages
+    if (!this.chatLimiter.isAllowed(client.playerId)) {
+      this.send(client.ws, {
+        type: 'error',
+        message: 'You are sending messages too quickly. Please slow down.'
+      });
+      return;
+    }
+    
     const { channel, message } = data;
     const player = this.playerManager.getPlayer(client.playerId);
     
     if (!player) return;
+    
+    // Sanitize message (basic XSS prevention)
+    const sanitizedMessage = message
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .substring(0, 500); // Max 500 characters
     
     const chatMessage = {
       type: 'chat_message',
       channel,
       from: player.username,
       playerId: client.playerId,
-      message,
+      message: sanitizedMessage,
       timestamp: Date.now()
     };
     
@@ -344,6 +382,15 @@ class HighWizardryServer {
   }
   
   handleAction(client, data) {
+    // Rate limit actions
+    if (!this.actionLimiter.isAllowed(client.playerId)) {
+      this.send(client.ws, {
+        type: 'error',
+        message: 'You are performing actions too quickly. Please slow down.'
+      });
+      return;
+    }
+    
     const { actionType, actionData } = data;
     
     // Process action on server and validate
