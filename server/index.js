@@ -47,6 +47,18 @@ class HighWizardryServer {
     this.app.use(express.static(path.join(__dirname, '..')));
     this.app.use(express.json());
     
+    // Rate limiter for HTTP endpoints
+    this.httpLimiter = new RateLimiter(100, 60000); // 100 requests per minute per IP
+    
+    // Apply rate limiting middleware
+    this.app.use((req, res, next) => {
+      const clientIp = req.ip || req.connection.remoteAddress;
+      if (!this.httpLimiter.isAllowed(clientIp)) {
+        return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+      }
+      next();
+    });
+    
     // API endpoints
     this.app.get('/api/health', (req, res) => {
       res.json({ 
