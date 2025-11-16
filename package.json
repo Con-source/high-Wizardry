@@ -1,0 +1,23 @@
+{
+  "name": "high-wizardry",
+  "version": "1.0.0",
+  "description": "A web-based wizard RPG game with online multiplayer",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": ["game", "rpg", "wizard", "multiplayer"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.14.2",
+    "bcrypt": "^5.1.1",
+    "uuid": "^9.0.1",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
