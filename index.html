@@ -768,16 +768,80 @@
   </style>
 </head>
 <body>
+  <!-- Login/Register Modal -->
+  <div id="login-screen" class="modal" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Welcome to High Wizardry</h3>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-panel" type="button">
+              Login
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-panel" type="button">
+              Register
+            </button>
+          </li>
+        </ul>
+        
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="login-panel">
+            <form id="login-form">
+              <div class="mb-3">
+                <label for="login-username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="login-username" required>
+              </div>
+              <div class="mb-3">
+                <label for="login-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="login-password" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+          </div>
+          
+          <div class="tab-pane fade" id="register-panel">
+            <form id="register-form">
+              <div class="mb-3">
+                <label for="register-username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="register-username" required minlength="3" maxlength="20">
+                <small class="text-muted">3-20 characters</small>
+              </div>
+              <div class="mb-3">
+                <label for="register-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="register-password" required minlength="6">
+                <small class="text-muted">At least 6 characters</small>
+              </div>
+              <div class="mb-3">
+                <label for="register-password-confirm" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="register-password-confirm" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Register</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Game Header -->
   <header class="game-header">
     <h1 class="game-title">High Wizardry</h1>
-    <a href="index.html" class="btn btn-outline-light btn-sm">
-      <i class="fas fa-arrow-left me-1"></i> Back to City
-    </a>
+    <div>
+      <span id="connection-status" class="badge bg-secondary me-2">
+        <i class="fas fa-circle"></i> Connecting...
+      </span>
+      <a href="index.html" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to City
+      </a>
+    </div>
   </header>
 
   <!-- Main Game Container -->
-  <div class="game-container" id="game-container">
+  <div class="game-container" id="game-container" style="display: none;">
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="player-card">
@@ -809,6 +873,14 @@
         </div>
         <div class="player-currency mt-2">
           <i class="fas fa-coins"></i> <span id="currency-display">83 shillings, 4 pennies</span>
+        </div>
+      </div>
+
+      <!-- Online Players List -->
+      <div class="card player-card">
+        <h5 class="mb-2"><i class="fas fa-users"></i> Online Players</h5>
+        <div id="online-players-list" style="max-height: 200px; overflow-y: auto;">
+          <p class="text-muted small">No other players nearby</p>
         </div>
       </div>
 
@@ -1833,6 +1905,7 @@
   <script src="jsjs/locations.js"></script>
   <script src="jsjs/actions.js"></script>
   <script src="jsjs/black-market.js"></script>
+  <script src="jsjs/online.game.js"></script>
   <script src="jsjs/main.js"></script>
 
   <script>
