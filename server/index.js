@@ -68,6 +68,15 @@ class HighWizardryServer {
       standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
       legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     });
+
+    // Route-specific rate limiter for verify-email endpoint
+    const verifyEmailLimiter = rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 5, // Limit each IP to 5 requests per minute to avoid brute force
+      message: 'Too many verification attempts. Please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
     
     // API endpoints
     this.app.get('/api/health', (req, res) => {
@@ -93,7 +102,7 @@ class HighWizardryServer {
     });
     
     // Email verification endpoint
-    this.app.post('/api/auth/verify-email', async (req, res) => {
+    this.app.post('/api/auth/verify-email', verifyEmailLimiter, async (req, res) => {
       const { username, code } = req.body;
       const result = await this.authManager.verifyEmail(username, code);
       res.json(result);
