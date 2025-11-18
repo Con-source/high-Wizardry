@@ -26,6 +26,7 @@ const onlineGame = {
 
     // Initialize the online game
     init: function() {
+        this.updateConnectionStatus('connecting', 'connecting');
         this.setupSocket();
         this.setupEventListeners();
         this.startGameLoop();
@@ -35,7 +36,8 @@ const onlineGame = {
     // Setup WebSocket connection
     setupSocket: function() {
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        this.socket = new WebSocket(protocol + window.location.host + '/ws');
+        const host = window.location.host || 'localhost:8080';
+        this.socket = new WebSocket(protocol + host);
         
         this.socket.onopen = () => this.onSocketOpen();
         this.socket.onmessage = (e) => this.onSocketMessage(e);
@@ -47,6 +49,7 @@ const onlineGame = {
     onSocketOpen: function() {
         this.reconnectAttempts = 0;
         this.showMessage("Connected to High Wizardry Online!");
+        this.updateConnectionStatus('connected', 'connected');
         
         // Start ping interval (every 30 seconds)
         this.pingInterval = setInterval(() => this.sendPing(), 30000);
@@ -71,6 +74,7 @@ const onlineGame = {
 
     onSocketClose: function() {
         this.showMessage("Disconnected from server. Attempting to reconnect...");
+        this.updateConnectionStatus('disconnected', 'disconnected');
         this.attemptReconnect();
     },
 
@@ -114,6 +118,16 @@ const onlineGame = {
     // Handle incoming server messages
     handleServerMessage: function(message) {
         switch (message.type) {
+            case 'connected':
+                console.log('Connected to server');
+                this.handleConnected(message);
+                break;
+            
+            case 'ping':
+                // Respond to server ping
+                this.sendToServer({ type: 'pong', clientTime: Date.now() });
+                break;
+            
             case 'pong':
                 this.serverTimeOffset = Date.now() - message.serverTime - ((Date.now() - this.lastPing) / 2);
                 break;
@@ -121,21 +135,41 @@ const onlineGame = {
             case 'auth_success':
                 this.handleAuthSuccess(message);
                 break;
-                
-            case 'player_update':
-                this.handlePlayerUpdate(message);
+            
+            case 'auth_failed':
+                this.handleAuthFailed(message);
                 break;
                 
-            case 'location_update':
+            case 'player_updated':
+                this.handlePlayerUpdate(message);
+                break;
+            
+            case 'player_connected':
+                this.handlePlayerConnected(message);
+                break;
+            
+            case 'player_disconnected':
+                this.handlePlayerDisconnected(message);
+                break;
+                
+            case 'location_changed':
                 this.handleLocationUpdate(message);
+                break;
+            
+            case 'player_joined':
+                this.handlePlayerJoined(message);
+                break;
+            
+            case 'player_left':
+                this.handlePlayerLeft(message);
                 break;
                 
             case 'chat_message':
                 this.handleChatMessage(message);
                 break;
-                
-            case 'market_update':
-                this.handleMarketUpdate(message);
+            
+            case 'action_result':
+                this.handleActionResult(message);
                 break;
                 
             case 'error':
@@ -158,12 +192,92 @@ const onlineGame = {
         this.playerData = message.playerData;
         
         // Save session token to localStorage
-        localStorage.setItem('wizardToken', this.sessionToken);
+        if (message.token) {
+            this.sessionToken = message.token;
+            localStorage.setItem('wizardToken', this.sessionToken);
+        }
         
         // Update UI
         this.updatePlayerInfo();
         this.showGameScreen();
+        this.showMessage('Successfully logged in!', 'success');
     },
+    
+    handleAuthFailed: function(message) {
+        this.showMessage(message.message || 'Authentication failed', 'error');
+        this.showLoginScreen();
+    },
+    
+    handleConnected: function(message) {
+        // Try to authenticate with saved token
+        const savedToken = localStorage.getItem('wizardToken');
+        if (savedToken) {
+            this.authenticate(savedToken);
+        } else {
+            this.showLoginScreen();
+        }
+    },
+    
+    handlePlayerConnected: function(message) {
+        this.showMessage(`${message.username} joined the game`, 'info');
+    },
+    
+    handlePlayerDisconnected: function(message) {
+        // Remove player from local players list
+        if (this.players[message.playerId]) {
+            delete this.players[message.playerId];
+        }
+    },
+    
+    handlePlayerJoined: function(message) {
+        this.players[message.playerId] = message.playerData;
+        this.showMessage(`${message.playerData.username} entered the area`, 'info');
+        this.updatePlayerList();
+    },
+    
+    handlePlayerLeft: function(message) {
+        if (this.players[message.playerId]) {
+            this.showMessage(`${this.players[message.playerId].username} left the area`, 'info');
+            delete this.players[message.playerId];
+            this.updatePlayerList();
+        }
+    },
+    
+    handleActionResult: function(message) {
+        if (message.success) {
+            this.showMessage('Action completed successfully', 'success');
+            if (message.result) {
+                console.log('Action result:', message.result);
+            }
+        } else {
+            this.showMessage(message.message || 'Action failed', 'error');
+        }
+    },
+    
+    updatePlayerList: function() {
+        // Update the UI to show other players in the same location
+        const playerListEl = document.getElementById('online-players-list');
+        if (!playerListEl) return;
+        
+        const playersInLocation = Object.values(this.players);
+        
+        if (playersInLocation.length === 0) {
+            playerListEl.innerHTML = '<p class="text-muted small">No other players nearby</p>';
+        } else {
+            playerListEl.innerHTML = playersInLocation.map(player => `
+                <div class="online-player-item mb-2 p-2 border rounded" style="background: var(--bg-tertiary);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${player.username}</strong>
+                            <span class="badge bg-success ms-2">Online</span>
+                            <p class="text-muted small mb-0">Level ${player.level || 1}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    },
+
 
     // Player actions
     moveToLocation: function(locationId) {
@@ -272,46 +386,102 @@ const onlineGame = {
     // UI screens
     showLoginScreen: function() {
         // Show login/register form
-        document.getElementById('login-screen').style.display = 'block';
-        document.getElementById('game-screen').style.display = 'none';
+        const loginScreen = document.getElementById('login-screen');
+        const gameContainer = document.getElementById('game-container');
+        
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (gameContainer) gameContainer.style.display = 'none';
     },
 
     showGameScreen: function() {
         // Show main game screen
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'block';
+        const loginScreen = document.getElementById('login-screen');
+        const gameContainer = document.getElementById('game-container');
+        
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (gameContainer) gameContainer.style.display = 'flex';
     },
 
     // Event handlers
     setupEventListeners: function() {
         // Login form
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const isLogin = document.getElementById('login-tab').classList.contains('active');
-            
-            this.sendToServer({
-                type: isLogin ? 'login' : 'register',
-                username: username,
-                password: password
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                this.sendToServer({
+                    type: 'login',
+                    username: username,
+                    password: password
+                });
             });
-        });
+        }
+        
+        // Register form
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const passwordConfirm = document.getElementById('register-password-confirm').value;
+                
+                if (password !== passwordConfirm) {
+                    this.showMessage('Passwords do not match', 'error');
+                    return;
+                }
+                
+                this.sendToServer({
+                    type: 'register',
+                    username: username,
+                    password: password
+                });
+            });
+        }
         
         // Chat input
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const message = e.target.value.trim();
-                if (message) {
-                    this.sendChatMessage('global', message);
-                    e.target.value = '';
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const message = e.target.value.trim();
+                    if (message) {
+                        this.sendChatMessage('global', message);
+                        e.target.value = '';
+                    }
                 }
-            }
-        });
+            });
+        }
+    },
+    
+    updateConnectionStatus: function(status, color) {
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+            const colors = {
+                'connected': 'bg-success',
+                'connecting': 'bg-warning',
+                'disconnected': 'bg-danger'
+            };
+            
+            // Remove all color classes
+            statusEl.className = 'badge me-2 ' + (colors[color] || 'bg-secondary');
+            
+            const messages = {
+                'connected': 'Connected',
+                'connecting': 'Connecting...',
+                'disconnected': 'Disconnected'
+            };
+            
+            statusEl.innerHTML = `<i class="fas fa-circle"></i> ${messages[status] || status}`;
+        }
     }
 };
 
-// Initialize the game when the page loads
-window.onload = function() {
-    onlineGame.init();
-};
+// Note: onlineGame is now initialized from main.js
+// Do not auto-initialize here to avoid conflicts
+// window.onload = function() {
+//     onlineGame.init();
+// };

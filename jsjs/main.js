@@ -60,6 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ GameCore not found');
     }
     
+    // 7. Initialize Online Game (multiplayer)
+    if (typeof onlineGame !== 'undefined' && typeof onlineGame.init === 'function') {
+      onlineGame.init();
+      console.log('✅ Online Game initialized');
+    } else {
+      console.warn('⚠️ Online Game module not found - running in offline mode');
+    }
+    
     // Show welcome message
     if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
       UI.showNotification('Welcome to High Wizardry!', 'success');
