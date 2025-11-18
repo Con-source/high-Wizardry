@@ -13,6 +13,8 @@ const GameManager = require('./game/GameManager');
 const PlayerManager = require('./game/PlayerManager');
 const LocationManager = require('./game/LocationManager');
 const EventDispatcher = require('./game/EventDispatcher');
+const TradeManager = require('./game/TradeManager');
+const AuctionManager = require('./game/AuctionManager');
 const RateLimiter = require('./utils/RateLimiter');
 
 class HighWizardryServer {
@@ -27,6 +29,8 @@ class HighWizardryServer {
     this.playerManager = new PlayerManager();
     this.locationManager = new LocationManager();
     this.eventDispatcher = new EventDispatcher(this.playerManager, this.locationManager);
+    this.tradeManager = new TradeManager(this.playerManager);
+    this.auctionManager = new AuctionManager(this.playerManager);
     this.gameManager = new GameManager(this.playerManager, this.locationManager, this.eventDispatcher);
     
     // Initialize rate limiters
@@ -40,6 +44,40 @@ class HighWizardryServer {
       this.actionLimiter.cleanup();
       this.chatLimiter.cleanup();
     }, 5 * 60 * 1000);
+    
+    // Clean up stale trades every 5 minutes
+    setInterval(() => {
+      this.tradeManager.cleanupStaleTrades();
+    }, 5 * 60 * 1000);
+    
+    // Set up auction notification callback
+    this.auctionManager.setNotificationCallback((notifications) => {
+      notifications.forEach(notification => {
+        if (notification.type === 'auction_closed' && notification.auction) {
+          const auction = notification.auction;
+          // Notify seller
+          const sellerClient = this.getClientByPlayerId(auction.sellerId);
+          if (sellerClient) {
+            this.send(sellerClient.ws, {
+              type: 'auction_closed',
+              auction,
+              role: 'seller'
+            });
+          }
+          // Notify winner
+          if (auction.winnerId) {
+            const winnerClient = this.getClientByPlayerId(auction.winnerId);
+            if (winnerClient) {
+              this.send(winnerClient.ws, {
+                type: 'auction_closed',
+                auction,
+                role: 'winner'
+              });
+            }
+          }
+        }
+      });
+    });
     
     // Set up event dispatcher handlers
     this.eventDispatcher.setHandlers(
@@ -154,6 +192,58 @@ class HighWizardryServer {
       }
       const result = this.eventDispatcher.injectEvent(event);
       res.json(result);
+    });
+    
+    // Trade endpoints
+    this.app.get('/api/trades/history', (req, res) => {
+      // TODO: Add authentication middleware
+      const playerId = req.query.playerId;
+      const limit = parseInt(req.query.limit) || 20;
+      
+      if (!playerId) {
+        return res.status(400).json({ success: false, message: 'Player ID required' });
+      }
+      
+      const history = this.tradeManager.getPlayerTradeHistory(playerId, limit);
+      res.json({ success: true, history });
+    });
+    
+    // Auction endpoints
+    this.app.get('/api/auctions/active', (req, res) => {
+      const filters = {
+        scope: req.query.scope,
+        locationId: req.query.locationId,
+        guildId: req.query.guildId,
+        itemType: req.query.itemType
+      };
+      
+      const auctions = this.auctionManager.getActiveAuctions(filters);
+      res.json({ success: true, auctions });
+    });
+    
+    this.app.get('/api/auctions/player', (req, res) => {
+      const playerId = req.query.playerId;
+      
+      if (!playerId) {
+        return res.status(400).json({ success: false, message: 'Player ID required' });
+      }
+      
+      const auctions = this.auctionManager.getPlayerAuctions(playerId);
+      const bids = this.auctionManager.getPlayerBids(playerId);
+      
+      res.json({ success: true, auctions, bids });
+    });
+    
+    this.app.get('/api/auctions/history', (req, res) => {
+      const playerId = req.query.playerId;
+      const limit = parseInt(req.query.limit) || 20;
+      
+      if (!playerId) {
+        return res.status(400).json({ success: false, message: 'Player ID required' });
+      }
+      
+      const history = this.auctionManager.getPlayerAuctionHistory(playerId, limit);
+      res.json({ success: true, history });
     });
     
     // Default route - serve index.html with explicit rate limiting
@@ -298,6 +388,35 @@ class HighWizardryServer {
         break;
       case 'unsubscribe_events':
         this.handleEventUnsubscription(client, data);
+        break;
+      // Trade messages
+      case 'trade_propose':
+        this.handleTradePropose(client, data);
+        break;
+      case 'trade_update_offer':
+        this.handleTradeUpdateOffer(client, data);
+        break;
+      case 'trade_confirm':
+        this.handleTradeConfirm(client, data);
+        break;
+      case 'trade_cancel':
+        this.handleTradeCancel(client, data);
+        break;
+      case 'trade_get':
+        this.handleTradeGet(client, data);
+        break;
+      // Auction messages
+      case 'auction_create':
+        this.handleAuctionCreate(client, data);
+        break;
+      case 'auction_bid':
+        this.handleAuctionBid(client, data);
+        break;
+      case 'auction_cancel':
+        this.handleAuctionCancel(client, data);
+        break;
+      case 'auction_get':
+        this.handleAuctionGet(client, data);
         break;
       default:
         console.log('Unknown message type:', type);
@@ -814,6 +933,308 @@ class HighWizardryServer {
       channel: channel || 'all',
       message: 'Unsubscribed from event notifications'
     });
+  }
+  
+  /**
+   * Trade Handlers
+   */
+  handleTradePropose(client, data) {
+    const { toPlayerId, offer } = data;
+    
+    const result = this.tradeManager.proposeTrade(client.playerId, toPlayerId, offer);
+    
+    this.send(client.ws, {
+      type: 'trade_propose_result',
+      success: result.success,
+      trade: result.trade,
+      message: result.message
+    });
+    
+    // If successful, notify the other player
+    if (result.success) {
+      const otherClient = this.getClientByPlayerId(toPlayerId);
+      if (otherClient) {
+        this.send(otherClient.ws, {
+          type: 'trade_invitation',
+          trade: result.trade
+        });
+      }
+    }
+  }
+  
+  handleTradeUpdateOffer(client, data) {
+    const { tradeId, offer } = data;
+    
+    const result = this.tradeManager.updateOffer(client.playerId, tradeId, offer);
+    
+    this.send(client.ws, {
+      type: 'trade_update_result',
+      success: result.success,
+      trade: result.trade,
+      message: result.message
+    });
+    
+    // If successful, notify the other player
+    if (result.success && result.trade) {
+      const otherPlayerId = result.trade.fromPlayerId === client.playerId ? 
+        result.trade.toPlayerId : result.trade.fromPlayerId;
+      
+      const otherClient = this.getClientByPlayerId(otherPlayerId);
+      if (otherClient) {
+        this.send(otherClient.ws, {
+          type: 'trade_updated',
+          trade: result.trade
+        });
+      }
+    }
+  }
+  
+  handleTradeConfirm(client, data) {
+    const { tradeId } = data;
+    
+    const result = this.tradeManager.confirmTrade(client.playerId, tradeId);
+    
+    this.send(client.ws, {
+      type: 'trade_confirm_result',
+      success: result.success,
+      trade: result.trade,
+      message: result.message
+    });
+    
+    // If successful, notify the other player
+    if (result.success && result.trade) {
+      const otherPlayerId = result.trade.fromPlayerId === client.playerId ? 
+        result.trade.toPlayerId : result.trade.fromPlayerId;
+      
+      const otherClient = this.getClientByPlayerId(otherPlayerId);
+      if (otherClient) {
+        this.send(otherClient.ws, {
+          type: 'trade_confirmed',
+          trade: result.trade
+        });
+        
+        // If trade is completed, update player data for both
+        if (result.trade.status === 'completed') {
+          // Update both players
+          const fromPlayer = this.playerManager.getPlayer(result.trade.fromPlayerId);
+          const toPlayer = this.playerManager.getPlayer(result.trade.toPlayerId);
+          
+          if (fromPlayer) {
+            const fromClient = this.getClientByPlayerId(result.trade.fromPlayerId);
+            if (fromClient) {
+              this.send(fromClient.ws, {
+                type: 'player_updated',
+                playerId: result.trade.fromPlayerId,
+                updates: fromPlayer
+              });
+            }
+          }
+          
+          if (toPlayer) {
+            const toClient = this.getClientByPlayerId(result.trade.toPlayerId);
+            if (toClient) {
+              this.send(toClient.ws, {
+                type: 'player_updated',
+                playerId: result.trade.toPlayerId,
+                updates: toPlayer
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  handleTradeCancel(client, data) {
+    const { tradeId } = data;
+    
+    const trade = this.tradeManager.getTrade(tradeId);
+    const result = this.tradeManager.cancelTrade(client.playerId, tradeId);
+    
+    this.send(client.ws, {
+      type: 'trade_cancel_result',
+      success: result.success,
+      message: result.message
+    });
+    
+    // If successful, notify the other player
+    if (result.success && trade) {
+      const otherPlayerId = trade.fromPlayerId === client.playerId ? 
+        trade.toPlayerId : trade.fromPlayerId;
+      
+      const otherClient = this.getClientByPlayerId(otherPlayerId);
+      if (otherClient) {
+        this.send(otherClient.ws, {
+          type: 'trade_cancelled',
+          tradeId: tradeId
+        });
+      }
+    }
+  }
+  
+  handleTradeGet(client, data) {
+    const { tradeId } = data;
+    
+    if (tradeId) {
+      const trade = this.tradeManager.getTrade(tradeId);
+      this.send(client.ws, {
+        type: 'trade_data',
+        success: !!trade,
+        trade: trade
+      });
+    } else {
+      // Get active trade for player
+      const trade = this.tradeManager.getPlayerActiveTrade(client.playerId);
+      this.send(client.ws, {
+        type: 'trade_data',
+        success: !!trade,
+        trade: trade
+      });
+    }
+  }
+  
+  /**
+   * Auction Handlers
+   */
+  handleAuctionCreate(client, data) {
+    const { item, startingBid, duration, options } = data;
+    
+    const result = this.auctionManager.createAuction(
+      client.playerId, 
+      item, 
+      startingBid, 
+      duration, 
+      options
+    );
+    
+    this.send(client.ws, {
+      type: 'auction_create_result',
+      success: result.success,
+      auction: result.auction,
+      message: result.message
+    });
+    
+    // If successful, broadcast new auction to all players
+    if (result.success && result.auction) {
+      this.broadcast({
+        type: 'auction_new',
+        auction: result.auction
+      }, client.playerId);
+      
+      // Update player data
+      const player = this.playerManager.getPlayer(client.playerId);
+      if (player) {
+        this.send(client.ws, {
+          type: 'player_updated',
+          playerId: client.playerId,
+          updates: player
+        });
+      }
+    }
+  }
+  
+  handleAuctionBid(client, data) {
+    const { auctionId, bidAmount } = data;
+    
+    const result = this.auctionManager.placeBid(client.playerId, auctionId, bidAmount);
+    
+    this.send(client.ws, {
+      type: 'auction_bid_result',
+      success: result.success,
+      auction: result.auction,
+      message: result.message
+    });
+    
+    // If successful, broadcast bid update
+    if (result.success && result.auction) {
+      this.broadcast({
+        type: 'auction_bid_placed',
+        auction: result.auction
+      });
+      
+      // Update bidder's player data
+      const player = this.playerManager.getPlayer(client.playerId);
+      if (player) {
+        this.send(client.ws, {
+          type: 'player_updated',
+          playerId: client.playerId,
+          updates: player
+        });
+      }
+      
+      // Notify previous bidder if any
+      if (result.auction.bids.length > 1) {
+        const previousBid = result.auction.bids[result.auction.bids.length - 2];
+        const previousBidderClient = this.getClientByPlayerId(previousBid.bidderId);
+        if (previousBidderClient) {
+          this.send(previousBidderClient.ws, {
+            type: 'auction_outbid',
+            auction: result.auction
+          });
+          
+          // Update previous bidder's player data
+          const previousBidder = this.playerManager.getPlayer(previousBid.bidderId);
+          if (previousBidder) {
+            this.send(previousBidderClient.ws, {
+              type: 'player_updated',
+              playerId: previousBid.bidderId,
+              updates: previousBidder
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  handleAuctionCancel(client, data) {
+    const { auctionId } = data;
+    
+    const result = this.auctionManager.cancelAuction(client.playerId, auctionId);
+    
+    this.send(client.ws, {
+      type: 'auction_cancel_result',
+      success: result.success,
+      message: result.message
+    });
+    
+    // If successful, broadcast cancellation
+    if (result.success) {
+      this.broadcast({
+        type: 'auction_cancelled',
+        auctionId: auctionId
+      });
+      
+      // Update player data
+      const player = this.playerManager.getPlayer(client.playerId);
+      if (player) {
+        this.send(client.ws, {
+          type: 'player_updated',
+          playerId: client.playerId,
+          updates: player
+        });
+      }
+    }
+  }
+  
+  handleAuctionGet(client, data) {
+    const { auctionId } = data;
+    
+    if (auctionId) {
+      const auction = this.auctionManager.getAuction(auctionId);
+      this.send(client.ws, {
+        type: 'auction_data',
+        success: !!auction,
+        auction: auction
+      });
+    } else {
+      // Get all active auctions
+      const auctions = this.auctionManager.getActiveAuctions();
+      this.send(client.ws, {
+        type: 'auction_list',
+        success: true,
+        auctions: auctions
+      });
+    }
   }
   
   /**
