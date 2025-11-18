@@ -243,6 +243,158 @@ class HighWizardryServer {
       res.json(result);
     });
     
+    // Admin endpoints for ban/mute management
+    // TODO: Add admin authentication middleware for production
+    
+    // Ban user by username
+    this.app.post('/api/admin/ban-user', (req, res) => {
+      const { username, duration, reason, bannedBy, permanent } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ success: false, message: 'Username required' });
+      }
+      
+      const result = this.authManager.setBanStatus(username, true, {
+        duration: duration ? parseInt(duration) : null,
+        reason,
+        bannedBy,
+        permanent
+      });
+      
+      // If ban successful, disconnect the user if online
+      if (result.success) {
+        this.disconnectPlayer(username, 'Account has been banned');
+      }
+      
+      res.json(result);
+    });
+    
+    // Unban user
+    this.app.post('/api/admin/unban-user', (req, res) => {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ success: false, message: 'Username required' });
+      }
+      
+      const result = this.authManager.setBanStatus(username, false);
+      res.json(result);
+    });
+    
+    // Mute user
+    this.app.post('/api/admin/mute-user', (req, res) => {
+      const { username, duration, reason, permanent } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ success: false, message: 'Username required' });
+      }
+      
+      const result = this.authManager.setMuteStatus(username, true, {
+        duration: duration ? parseInt(duration) : null,
+        reason,
+        permanent
+      });
+      
+      res.json(result);
+    });
+    
+    // Unmute user
+    this.app.post('/api/admin/unmute-user', (req, res) => {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ success: false, message: 'Username required' });
+      }
+      
+      const result = this.authManager.setMuteStatus(username, false);
+      res.json(result);
+    });
+    
+    // Ban IP address
+    this.app.post('/api/admin/ban-ip', (req, res) => {
+      const { ip, duration, reason, permanent } = req.body;
+      
+      if (!ip) {
+        return res.status(400).json({ success: false, message: 'IP address required' });
+      }
+      
+      const result = this.authManager.banIp(ip, {
+        duration: duration ? parseInt(duration) : null,
+        reason,
+        permanent
+      });
+      
+      // Disconnect all connections from this IP
+      this.disconnectByIp(ip, 'IP address has been banned');
+      
+      res.json(result);
+    });
+    
+    // Unban IP address
+    this.app.post('/api/admin/unban-ip', (req, res) => {
+      const { ip } = req.body;
+      
+      if (!ip) {
+        return res.status(400).json({ success: false, message: 'IP address required' });
+      }
+      
+      const result = this.authManager.unbanIp(ip);
+      res.json(result);
+    });
+    
+    // Ban device
+    this.app.post('/api/admin/ban-device', (req, res) => {
+      const { deviceId, duration, reason, permanent } = req.body;
+      
+      if (!deviceId) {
+        return res.status(400).json({ success: false, message: 'Device ID required' });
+      }
+      
+      const result = this.authManager.banDevice(deviceId, {
+        duration: duration ? parseInt(duration) : null,
+        reason,
+        permanent
+      });
+      
+      res.json(result);
+    });
+    
+    // Unban device
+    this.app.post('/api/admin/unban-device', (req, res) => {
+      const { deviceId } = req.body;
+      
+      if (!deviceId) {
+        return res.status(400).json({ success: false, message: 'Device ID required' });
+      }
+      
+      const result = this.authManager.unbanDevice(deviceId);
+      res.json(result);
+    });
+    
+    // Get user ban/mute info
+    this.app.get('/api/admin/user-info', (req, res) => {
+      const { username } = req.query;
+      
+      if (!username) {
+        return res.status(400).json({ success: false, message: 'Username required' });
+      }
+      
+      const result = this.authManager.getUserBanMuteInfo(username);
+      res.json(result);
+    });
+    
+    // List banned users
+    this.app.get('/api/admin/banned-users', (req, res) => {
+      const bannedUsers = this.authManager.getBannedUsers();
+      res.json({ success: true, bannedUsers });
+    });
+    
+    // List muted users
+    this.app.get('/api/admin/muted-users', (req, res) => {
+      const mutedUsers = this.authManager.getMutedUsers();
+      res.json({ success: true, mutedUsers });
+    });
+    
     // Trade endpoints
     this.app.get('/api/trades/history', (req, res) => {
       // TODO: Add authentication middleware
@@ -306,6 +458,13 @@ class HighWizardryServer {
       // Get client IP for connection flood protection
       const clientIp = req.socket.remoteAddress || req.headers['x-forwarded-for'];
       
+      // Check if IP is banned
+      if (this.authManager.isIpBanned(clientIp)) {
+        console.log(`Connection rejected from banned IP: ${clientIp}`);
+        ws.close(1008, 'Your IP address has been banned. Contact support for assistance.');
+        return;
+      }
+      
       // Check connection flood protection
       if (!this.checkConnectionFlood(clientIp)) {
         console.log(`Connection rejected from ${clientIp}: Too many connections`);
@@ -320,6 +479,8 @@ class HighWizardryServer {
         ws,
         id: null,
         playerId: null,
+        username: null,
+        deviceId: null,
         authenticated: false,
         lastPing: Date.now(),
         ip: clientIp,
@@ -504,7 +665,29 @@ class HighWizardryServer {
   
   // BUGFIX: Made async to properly await authentication calls and prevent race conditions
   async handleAuth(client, data) {
-    const { type, username, password, token, email } = data;
+    const { type, username, password, token, email, deviceId } = data;
+    
+    // Check if device is banned
+    if (deviceId && this.authManager.isDeviceBanned(deviceId)) {
+      this.send(client.ws, {
+        type: 'auth_failed',
+        playerId: null,
+        username: null,
+        playerData: null,
+        token: null,
+        needsEmailVerification: false,
+        needsEmailSetup: false,
+        muted: false,
+        banned: true,
+        message: 'This device has been banned. Contact support for assistance.'
+      });
+      return;
+    }
+    
+    // Store device ID if provided
+    if (deviceId) {
+      client.deviceId = deviceId;
+    }
     
     // Rate limit authentication attempts
     const clientKey = client.playerId || 'anon_' + Date.now();
@@ -524,6 +707,7 @@ class HighWizardryServer {
         if (result.success) {
           client.authenticated = true;
           client.playerId = result.playerId;
+          client.username = username;
           
           // Create player state
           const playerData = this.playerManager.createPlayer(result.playerId, username);
@@ -573,6 +757,7 @@ class HighWizardryServer {
         if (result.success) {
           client.authenticated = true;
           client.playerId = result.playerId;
+          client.username = result.username;
           
           // Load or create player state
           let playerData = this.playerManager.getPlayer(result.playerId);
@@ -591,6 +776,7 @@ class HighWizardryServer {
             needsEmailVerification: false, // Already checked in login()
             needsEmailSetup: result.needsEmailSetup || false,
             muted: result.muted || false,
+            mutedUntil: result.mutedUntil || null,
             banned: false // If banned, login would have failed
           });
           
@@ -976,7 +1162,7 @@ class HighWizardryServer {
     const { usernameOrEmail } = data;
     
     try {
-      const result = await this.authManager.requestPasswordReset(usernameOrEmail);
+      const result = await this.authManager.requestPasswordReset(usernameOrEmail, client.ip);
       this.send(client.ws, {
         type: 'password_reset_request_result',
         success: result.success,
@@ -1433,6 +1619,39 @@ class HighWizardryServer {
       }
     });
   }
+  
+  // Helper method to disconnect a player by username
+  disconnectPlayer(username, reason = 'Disconnected') {
+    this.wss.clients.forEach((client) => {
+      if (client.username && client.username.toLowerCase() === username.toLowerCase()) {
+        this.send(client.ws, {
+          type: 'force_disconnect',
+          reason: reason
+        });
+        
+        setTimeout(() => {
+          client.ws.close(1008, reason);
+        }, 500);
+      }
+    });
+  }
+  
+  // Helper method to disconnect all connections from an IP
+  disconnectByIp(ip, reason = 'Disconnected') {
+    this.wss.clients.forEach((client) => {
+      if (client.ip === ip) {
+        this.send(client.ws, {
+          type: 'force_disconnect',
+          reason: reason
+        });
+        
+        setTimeout(() => {
+          client.ws.close(1008, reason);
+        }, 500);
+      }
+    });
+  }
+  
   
   start() {
     this.server.listen(this.port, () => {
