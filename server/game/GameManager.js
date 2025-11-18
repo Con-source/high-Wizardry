@@ -52,7 +52,6 @@ class GameManager {
   }
   
   handleGatherResources(player, actionData) {
-    const { location } = actionData;
     
     // Check energy
     const energyCost = 10;
