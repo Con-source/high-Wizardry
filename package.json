@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node server/index.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "backup": "node server/scripts/backup.js",
+    "restore": "node server/scripts/restore.js"
   },
   "keywords": [
     "game",
