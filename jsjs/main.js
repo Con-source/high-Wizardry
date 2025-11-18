@@ -46,7 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ Black Market module not found');
     }
     
-    // 6. Initialize Game Core (if using separate game.js)
+    // 6. Initialize Achievements system (NEW)
+    if (typeof Achievements !== 'undefined' && typeof Achievements.init === 'function') {
+      Achievements.init();
+      console.log('✅ Achievements initialized');
+    } else {
+      console.warn('⚠️ Achievements module not found');
+    }
+    
+    // 7. Initialize Consumables system (NEW)
+    if (typeof Consumables !== 'undefined' && typeof Consumables.init === 'function') {
+      Consumables.init();
+      console.log('✅ Consumables initialized');
+    } else {
+      console.warn('⚠️ Consumables module not found');
+    }
+    
+    // 8. Initialize Game Core (if using separate game.js)
     // Note: game-core.js initializes automatically via singleton pattern
     if (window.HighWizardry && window.HighWizardry.Game) {
       console.log('✅ GameCore initialized');
@@ -60,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('⚠️ GameCore not found');
     }
     
-    // 7. Initialize Online Game (multiplayer)
+    // 9. Initialize Online Game (multiplayer)
     if (typeof onlineGame !== 'undefined' && typeof onlineGame.init === 'function') {
       onlineGame.init();
       console.log('✅ Online Game initialized');
@@ -99,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         Guilds: typeof Guilds !== 'undefined' ? Guilds : null,
         Locations: typeof Locations !== 'undefined' ? Locations : null,
         BlackMarket: typeof BlackMarket !== 'undefined' ? BlackMarket : null,
+        Achievements: typeof Achievements !== 'undefined' ? Achievements : null, // NEW
+        Consumables: typeof Consumables !== 'undefined' ? Consumables : null, // NEW
         CONFIG: typeof CONFIG !== 'undefined' ? CONFIG : null
       };
       console.log('Debug modules available at window.DebugModules');

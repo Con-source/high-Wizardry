@@ -1,6 +1,25 @@
-// UI Module
+/**
+ * UI Module
+ * Handles all user interface interactions, notifications, modals, and theme management
+ * @module UI
+ */
 const UI = (() => {
-  // UI State
+  /**
+   * @typedef {Object} UIState
+   * @property {Array} notifications - Active notifications
+   * @property {Array} activeModals - Currently open modals
+   * @property {Object} tooltips - Tooltip instances
+   * @property {string} currentSection - Current UI section
+   * @property {string} theme - Current theme ('light' or 'dark')
+   * @property {boolean} isMobile - Mobile view flag
+   * @property {boolean} isSidebarCollapsed - Sidebar collapse state
+   * @property {boolean} isSettingsOpen - Settings panel state
+   */
+
+  /**
+   * UI State
+   * @type {UIState}
+   */
   const state = {
     notifications: [],
     activeModals: [],
@@ -12,7 +31,11 @@ const UI = (() => {
     isSettingsOpen: false
   };
   
-  // Initialize UI
+  /**
+   * Initialize UI module
+   * Sets up event listeners, tooltips, theme, and responsive behavior
+   * @returns {boolean} True if initialization successful
+   */
   function init() {
     // Set up event listeners
     setupEventListeners();
@@ -33,7 +56,10 @@ const UI = (() => {
     return true;
   }
   
-  // Set up event listeners
+  /**
+   * Set up event listeners for UI interactions
+   * Handles theme toggle, mobile menu, modals, and notifications
+   */
   function setupEventListeners() {
     // Window resize
     window.addEventListener('resize', handleResize);
@@ -68,7 +94,10 @@ const UI = (() => {
     });
   }
   
-  // Handle window resize
+  /**
+   * Handle window resize events
+   * Updates mobile state and adjusts UI accordingly
+   */
   function handleResize() {
     state.isMobile = window.innerWidth < 768;
     
