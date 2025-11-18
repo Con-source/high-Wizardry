@@ -765,6 +765,163 @@
     .notification-error {
       border-left-color: var(--danger);
     }
+    
+    /* NEW: Achievements Styles */
+    .achievements-container {
+      padding: 1rem;
+    }
+    
+    .achievements-header {
+      margin-bottom: 1rem;
+    }
+    
+    .achievement-category {
+      margin-bottom: 2rem;
+    }
+    
+    .achievements-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    
+    .achievement-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .achievement-card.earned {
+      border-color: var(--success);
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(0, 184, 148, 0.1) 100%);
+    }
+    
+    .achievement-card.locked {
+      opacity: 0.6;
+    }
+    
+    .achievement-card.tier-bronze { border-left: 4px solid #cd7f32; }
+    .achievement-card.tier-silver { border-left: 4px solid #c0c0c0; }
+    .achievement-card.tier-gold { border-left: 4px solid #ffd700; }
+    
+    .achievement-icon {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: var(--primary-light);
+    }
+    
+    .achievement-name {
+      font-weight: bold;
+      color: var(--primary-light);
+      margin-bottom: 0.25rem;
+    }
+    
+    .achievement-description {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .achievement-earned {
+      color: var(--success);
+      font-size: 0.875rem;
+    }
+    
+    /* NEW: Consumables Styles */
+    .consumables-container {
+      padding: 1rem;
+    }
+    
+    .consumable-type {
+      margin-bottom: 2rem;
+    }
+    
+    .consumable-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    
+    .consumable-item {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      gap: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .consumable-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .consumable-item.out-of-stock {
+      opacity: 0.5;
+    }
+    
+    .consumable-item.rarity-common { border-left: 4px solid #95a5a6; }
+    .consumable-item.rarity-uncommon { border-left: 4px solid #2ecc71; }
+    .consumable-item.rarity-rare { border-left: 4px solid #3498db; }
+    .consumable-item.rarity-epic { border-left: 4px solid #9b59b6; }
+    .consumable-item.rarity-legendary { border-left: 4px solid #f39c12; }
+    
+    .consumable-icon {
+      position: relative;
+      font-size: 2rem;
+      color: var(--primary-light);
+      width: 50px;
+      text-align: center;
+    }
+    
+    .item-count {
+      position: absolute;
+      bottom: -5px;
+      right: -5px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    
+    .consumable-info {
+      flex: 1;
+    }
+    
+    .consumable-name {
+      font-weight: bold;
+      color: var(--primary-light);
+      margin-bottom: 0.25rem;
+    }
+    
+    .consumable-description {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .consumable-cost {
+      font-size: 0.875rem;
+      color: var(--warning);
+    }
+    
+    .cooldown-timer {
+      font-size: 0.75rem;
+      color: var(--danger);
+      margin-top: 0.25rem;
+    }
+    
+    .consumable-actions {
+      display: flex;
+      align-items: center;
+    }
+    
     .hidden {
       display: none !important;
     }

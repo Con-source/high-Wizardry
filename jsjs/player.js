@@ -1,14 +1,58 @@
 /**
  * Player Module
- * Handles all player-related data and operations
+ * Handles all player-related data and operations including stats, currency, inventory, and progression
+ * @module Player
  */
 
 const Player = (() => {
-  // Player data structure
+  /**
+   * @typedef {Object} PlayerData
+   * @property {string} username - Player's display name
+   * @property {number} level - Current level
+   * @property {number} xp - Current experience points
+   * @property {number} shillings - Currency (shillings)
+   * @property {number} pennies - Currency (pennies, 12 pennies = 1 shilling)
+   * @property {number} health - Current health points
+   * @property {number} maxHealth - Maximum health points
+   * @property {number} mana - Current mana points
+   * @property {number} maxMana - Maximum mana points
+   * @property {number} energy - Current energy points
+   * @property {number} maxEnergy - Maximum energy points
+   * @property {number} happiness - Happiness level (0-100)
+   * @property {number} crime - Crime level
+   * @property {number} intelligence - Intelligence stat
+   * @property {number} endurance - Endurance stat
+   * @property {number} charisma - Charisma stat
+   * @property {number} dexterity - Dexterity stat
+   * @property {number} speed - Speed stat (affects travel time)
+   * @property {Object} inventory - Item inventory
+   * @property {Object} consumables - Consumable items inventory (NEW)
+   * @property {Object} guilds - Guild memberships and reputation (NEW)
+   * @property {Object} craftingStats - Crafting statistics (NEW)
+   * @property {string[]} visitedLocations - List of visited locations (NEW)
+   * @property {number} travelDistance - Total distance traveled (NEW)
+   * @property {number} lastLogin - Timestamp of last login
+   * @property {number} playTime - Total play time in milliseconds
+   * @property {Object} settings - Game settings
+   */
+
+  /**
+   * Player data structure
+   * @type {PlayerData|null}
+   */
   let playerData = null;
+  
+  /**
+   * LocalStorage key for player data
+   * @const {string}
+   */
   const STORAGE_KEY = 'highWizardryPlayer';
   
-  // Initialize player module
+  /**
+   * Initialize player module
+   * Loads saved data or creates new player
+   * @returns {boolean} True if initialization successful
+   */
   function init() {
     try {
       // Try to load saved player data
@@ -32,7 +76,10 @@ const Player = (() => {
     }
   }
   
-  // Create a new player with default values
+  /**
+   * Create a new player with default values
+   * @returns {PlayerData} New player data object
+   */
   function createNewPlayer() {
     const defaults = typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_PLAYER 
       ? CONFIG.DEFAULT_PLAYER 
@@ -85,7 +132,12 @@ const Player = (() => {
     return { ...defaults };
   }
   
-  // Validate player data structure
+  /**
+   * Validate player data structure
+   * Checks for required fields
+   * @param {Object} data - Player data to validate
+   * @returns {boolean} True if valid
+   */
   function validatePlayerData(data) {
     if (!data || typeof data !== 'object') return false;
     
@@ -101,7 +153,10 @@ const Player = (() => {
     return true;
   }
   
-  // Get player data
+  /**
+   * Get player data (returns copy to prevent external mutations)
+   * @returns {PlayerData} Copy of player data
+   */
   function getData() {
     if (!playerData) {
       console.warn('Player data not initialized, creating new player');
@@ -110,7 +165,12 @@ const Player = (() => {
     return { ...playerData };
   }
   
-  // Update player data
+  /**
+   * Update player data with new values
+   * Automatically saves to storage after update
+   * @param {Partial<PlayerData>} updates - Object with fields to update
+   * @returns {PlayerData} Updated player data
+   */
   function updateData(updates) {
     if (!playerData) {
       playerData = createNewPlayer();
@@ -133,7 +193,11 @@ const Player = (() => {
     return playerData;
   }
   
-  // Set player username
+  /**
+   * Set player username
+   * @param {string} name - New username
+   * @returns {PlayerData|false} Updated player data or false if invalid
+   */
   function setUsername(name) {
     if (!name || typeof name !== 'string') {
       console.error('Invalid username');
@@ -149,7 +213,12 @@ const Player = (() => {
     return updateData({ username: trimmed });
   }
   
-  // Add experience points
+  /**
+   * Add experience points to player
+   * Automatically handles level ups
+   * @param {number} amount - Amount of XP to add
+   * @returns {boolean} True if successful
+   */
   function addXP(amount) {
     if (!playerData) return false;
     
@@ -166,14 +235,23 @@ const Player = (() => {
     return true;
   }
   
-  // Calculate XP required for next level
+  /**
+   * Calculate XP required for next level
+   * Uses exponential formula: BASE * MULTIPLIER^level
+   * @param {number} currentLevel - Current player level
+   * @returns {number} XP required for next level
+   */
   function calculateNextLevelXP(currentLevel) {
     const base = (typeof CONFIG !== 'undefined' && CONFIG.XP_TABLE?.BASE) || 100;
     const multiplier = (typeof CONFIG !== 'undefined' && CONFIG.XP_TABLE?.MULTIPLIER) || 1.5;
     return Math.floor(base * Math.pow(multiplier, currentLevel));
   }
   
-  // Level up the player
+  /**
+   * Level up the player
+   * Increases stats and fully restores resources
+   * @returns {boolean} True if successful
+   */
   function levelUp() {
     if (!playerData) return false;
     
@@ -200,10 +278,16 @@ const Player = (() => {
     return true;
   }
   
-  // Currency conversion: 1 shilling = 12 pennies
+  /**
+   * Currency conversion constant
+   * @const {number}
+   */
   const PENNIES_PER_SHILLING = 12;
   
-  // Convert old gold to new currency (migration helper)
+  /**
+   * Convert old gold to new currency system (migration helper)
+   * Automatically called during initialization for old saves
+   */
   function migrateGoldToCurrency() {
     if (playerData.gold !== undefined && playerData.shillings === undefined) {
       const totalPennies = playerData.gold;
@@ -219,14 +303,21 @@ const Player = (() => {
     }
   }
   
-  // Get total currency in pennies
+  /**
+   * Get total currency in pennies
+   * @returns {number} Total pennies (shillings * 12 + pennies)
+   */
   function getTotalPennies() {
     const shillings = playerData.shillings || 0;
     const pennies = playerData.pennies || 0;
     return (shillings * PENNIES_PER_SHILLING) + pennies;
   }
   
-  // Add currency (amount in pennies)
+  /**
+   * Add currency to player
+   * @param {number} amountInPennies - Amount to add in pennies
+   * @returns {PlayerData|false} Updated player data or false if invalid
+   */
   function addCurrency(amountInPennies) {
     if (!playerData || typeof amountInPennies !== 'number' || amountInPennies < 0) return false;
     
@@ -241,7 +332,11 @@ const Player = (() => {
     });
   }
   
-  // Remove currency (amount in pennies)
+  /**
+   * Remove currency from player
+   * @param {number} amountInPennies - Amount to remove in pennies
+   * @returns {PlayerData|false} Updated player data or false if insufficient funds
+   */
   function removeCurrency(amountInPennies) {
     if (!playerData || typeof amountInPennies !== 'number' || amountInPennies < 0) return false;
     
