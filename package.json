@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node server/index.js",
-    "test": "echo \"No tests yet\" && exit 0",
+    "test": "node tests/security-tests.js",
+    "test:security": "node tests/security-tests.js",
     "backup": "node server/scripts/backup.js",
     "restore": "node server/scripts/restore.js"
   },
