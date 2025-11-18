@@ -12,6 +12,7 @@ A web-based wizard/RPG game with online multiplayer support, achievements system
 - **Guild System**: Join guilds for unique benefits
 - **Location-based Gameplay**: Travel between various magical locations
 - **Chat System**: Communicate with other players globally or locally
+- **Event System**: Experience real-time game world events that affect players
 
 ### 🎮 NEW Features (v2.0)
 - **🏆 Achievements System**: Track your progress with 20+ achievements across 7 categories
@@ -338,6 +339,12 @@ Player.addXP(100);
 - 📊 Enhanced player tracking (crafting, exploration, etc.)
 - 📝 Comprehensive JSDoc documentation across all modules
 - 🎨 Improved save data structure with migration support
+- ⚡ **Real-time Event System**: Periodic and one-off events that affect gameplay
+  - Location-based events (e.g., Magic Storm in Town Square)
+  - Global events affecting all players
+  - Player-specific events (buffs, debuffs, quests)
+  - Admin tools for manual event injection
+  - Demo event: Magic Storm every 15 minutes
 
 **Improvements:**
 - Better module organization
@@ -357,6 +364,39 @@ Player.addXP(100);
 - Crafting, guilds, chat, locations
 - Black market trading
 
+## Event System
+
+High Wizardry features a robust event system for dynamic gameplay:
+
+- **Periodic Events**: Recurring events on timers (e.g., Magic Storm every 15 minutes)
+- **Location-Based**: Events that affect players in specific areas
+- **Global Events**: World-wide events affecting all players
+- **Player-Specific**: Personal events, buffs, debuffs, and quest triggers
+- **Admin Control**: CLI tool for manual event injection and testing
+
+See [docs/EVENTS.md](docs/EVENTS.md) for complete documentation.
+
+### Demo Event: Magic Storm
+
+Experience the Magic Storm event in Town Square:
+- Occurs every 15 minutes
+- Drains 20 mana from all wizards in Town Square
+- Real-time notifications to affected players
+- Automatic player state updates
+
+### Admin Event Tools
+
+```bash
+# List available events
+node admin-inject-event.js --list
+
+# Inject a test event
+node admin-inject-event.js --event magic-storm
+
+# Create custom event
+node admin-inject-event.js --custom --name "Test" --scope global --description "Test event"
+```
+
 ## Roadmap
 
 ### Planned Features
@@ -369,7 +409,8 @@ Player.addXP(100);
 - [ ] More locations and areas to explore
 - [ ] Mobile-responsive UI improvements
 - [ ] Sound effects and background music
-- [ ] Seasonal events and limited-time content
+- [x] Real-time event system (v2.0)
+- [ ] More event types and seasonal content
 
 ## Contributing
 

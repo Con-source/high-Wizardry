@@ -4,9 +4,10 @@
  */
 
 class GameManager {
-  constructor(playerManager, locationManager) {
+  constructor(playerManager, locationManager, eventDispatcher = null) {
     this.playerManager = playerManager;
     this.locationManager = locationManager;
+    this.eventDispatcher = eventDispatcher;
   }
   
   validatePlayerUpdate(playerId, updates) {
