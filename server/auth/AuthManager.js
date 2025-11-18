@@ -105,6 +105,60 @@ class AuthManager {
     }
   }
   
+  /**
+   * Validate email format with robust security checks
+   * 
+   * Security features:
+   * 1. Type check: Ensures email is a string (prevents type confusion attacks)
+   * 2. Length check: Validates 5-256 chars before regex (prevents DoS via long strings)
+   * 3. Safe regex: Uses linear-time regex without nested quantifiers (prevents ReDoS)
+   * 
+   * The regex pattern /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/ is safe because:
+   * - Uses only simple character classes and single quantifiers (no nested quantifiers)
+   * - Has linear time complexity O(n) instead of exponential
+   * - Prevents Regular Expression Denial of Service (ReDoS) attacks
+   * - Strictly validates common email format without being overly permissive
+   * - Domain must end with a dot followed by 2+ letter TLD (e.g., .com, .org, .co)
+   * 
+   * Note: This validation is intentionally strict but safe. It may not accept all
+   * technically valid RFC 5322 emails, but prevents security issues like ReDoS.
+   * 
+   * @param {any} email - Email to validate (can be any type)
+   * @returns {Object} - { valid: boolean, message: string }
+   */
+  validateEmail(email) {
+    // Check 1: Ensure email is a string (prevents type confusion)
+    if (typeof email !== 'string') {
+      return { valid: false, message: 'Email must be a string' };
+    }
+    
+    // Check 2: Validate length before running regex (prevents DoS with extremely long strings)
+    // Minimum 5 chars for shortest valid email (a@b.co), maximum 256 chars per RFC standards
+    if (email.length < 5 || email.length > 256) {
+      return { valid: false, message: 'Email must be between 5 and 256 characters' };
+    }
+    
+    // Check 3: Apply safe, strict regex pattern
+    // This pattern is immune to ReDoS because it uses only simple quantifiers
+    // Pattern breakdown:
+    // - ^[a-zA-Z0-9._%+-]+ : Local part (before @) with common characters
+    // - @ : Required @ symbol
+    // - [a-zA-Z0-9.-]+ : Domain name with alphanumeric, dots, hyphens
+    // - \. : Required dot before TLD
+    // - [a-zA-Z]{2,}$ : TLD with at least 2 letters (com, org, co, etc.)
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return { valid: false, message: 'Invalid email format' };
+    }
+    
+    // Check 4: Additional validation - prevent consecutive dots and other edge cases
+    if (email.includes('..') || email.startsWith('.') || email.includes('@.') || email.includes('.@')) {
+      return { valid: false, message: 'Invalid email format' };
+    }
+    
+    return { valid: true };
+  }
+  
   async register(username, password, email = null) {
     // Validate input
     if (!username || !password) {
@@ -121,9 +175,10 @@ class AuthManager {
     
     // Validate email if provided
     if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return { success: false, message: 'Invalid email format' };
+      // Use secure email validation with type and length checks
+      const emailValidation = this.validateEmail(email);
+      if (!emailValidation.valid) {
+        return { success: false, message: emailValidation.message };
       }
       
       // Check if email already exists
@@ -520,9 +575,10 @@ class AuthManager {
     }
     
     // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return { success: false, message: 'Invalid email format' };
+    // Use secure email validation with type and length checks
+    const emailValidation = this.validateEmail(email);
+    if (!emailValidation.valid) {
+      return { success: false, message: emailValidation.message };
     }
     
     // Check if email already exists
