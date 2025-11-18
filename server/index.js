@@ -7,6 +7,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const AuthManager = require('./auth/AuthManager');
 const GameManager = require('./game/GameManager');
 const PlayerManager = require('./game/PlayerManager');
@@ -59,6 +60,15 @@ class HighWizardryServer {
       next();
     });
     
+    // Route-specific rate limiter for static file serving (addresses CodeQL alert)
+    const staticFileLimiter = rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 100, // Limit each IP to 100 requests per windowMs
+      message: 'Too many requests for static files. Please try again later.',
+      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    });
+    
     // API endpoints
     this.app.get('/api/health', (req, res) => {
       res.json({ 
@@ -70,6 +80,8 @@ class HighWizardryServer {
     
     // Default route - serve index.html
     this.app.get('/', (req, res) => {
+    // Default route - serve index.html with explicit rate limiting
+    this.app.get('/', staticFileLimiter, (req, res) => {
       res.sendFile(path.join(__dirname, '..', 'index.html'));
     });
   }
