@@ -37,10 +37,14 @@ Response (success):
 {
   "type": "auth_success",
   "playerId": "uuid",
+  "username": "string",
   "token": "session_token",
   "playerData": { /* player object */ },
-  "emailVerified": false,
-  "needsEmailVerification": true
+  "emailVerified": true | false,
+  "needsEmailVerification": true | false,
+  "needsEmailSetup": true | false,
+  "muted": true | false,
+  "banned": false
 }
 ```
 
@@ -48,6 +52,14 @@ Response (failure):
 ```json
 {
   "type": "auth_failed",
+  "playerId": null,
+  "username": null,
+  "playerData": null,
+  "token": null,
+  "needsEmailVerification": true | false,
+  "needsEmailSetup": false,
+  "muted": false,
+  "banned": true | false,
   "message": "error description"
 }
 ```
@@ -63,7 +75,11 @@ Response (failure):
 
 Response: Same as register
 
-**Note:** Login will fail if the user account is banned or if email verification is required but not completed. In case of unverified email, the response will include `needsEmailVerification: true`.
+**Note:** 
+- Login will fail if the user account is banned (with `banned: true` in response)
+- Login will fail if email verification is required but not completed (with `needsEmailVerification: true`)
+- Successful login will include `muted: true` if user is muted
+- Successful login will include `needsEmailSetup: true` for legacy accounts without email
 
 #### Authenticate with Token
 ```json
@@ -489,6 +505,20 @@ Exceeding these limits will result in error messages and temporary blocks.
 9. Player updates from clients are validated and filtered
 10. **Email handling**: Emails can be sent via SMTP (production) or CLI fallback (development)
 11. **Rate limiting**: Protection against brute force attacks on authentication endpoints
+
+### Authentication Flow and Race Condition Prevention
+
+**Important:** The server implements careful sequencing to prevent race conditions:
+
+1. **Registration**: `player_connected` broadcast is **delayed** until after email verification is complete (if required). This prevents other players from seeing unverified accounts.
+
+2. **Login**: `player_connected` broadcast only happens after successful login and when email verification is not required.
+
+3. **Token Authentication**: Ban/mute status is checked from user data before broadcasting `player_connected`.
+
+4. **Email Verification**: After successful email verification, if the user is already authenticated in the session, `player_connected` is broadcast at that time.
+
+This ensures that players are only visible in the game world after completing all required authentication steps.
 
 ### Email Configuration
 

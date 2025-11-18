@@ -207,6 +207,7 @@ const onlineGame = {
         });
     },
 
+    // BUGFIX: Enhanced authentication success handling with consistent response fields
     handleAuthSuccess: function(message) {
         this.playerId = message.playerId;
         this.playerData = message.playerData;
@@ -217,22 +218,33 @@ const onlineGame = {
             localStorage.setItem('wizardToken', this.sessionToken);
         }
         
-        // Check if email verification is needed
-        if (message.needsEmailVerification) {
-            this.showMessage('Please verify your email. Check your inbox for the verification code.', 'info');
-            this.showEmailVerificationModal(message.playerData.username);
+        // BUGFIX: Check if user is banned (should not happen, but handle defensively)
+        if (message.banned) {
+            this.showMessage('Your account has been banned. Please contact support.', 'error');
+            this.showLoginScreen();
+            // Clear any stored token
+            localStorage.removeItem('wizardToken');
+            this.sessionToken = null;
             return;
         }
         
-        // Check if user needs to add email (legacy account)
-        if (message.needsEmailSetup) {
-            this.showMessage('Welcome back! Please add an email for account security.', 'info');
-            this.showAddEmailModal(message.playerData.username);
+        // BUGFIX: Check if email verification is needed (prevents login until verified)
+        if (message.needsEmailVerification) {
+            this.showMessage('Please verify your email before continuing. Check your inbox for the verification code.', 'warning');
+            this.showEmailVerificationModal(message.username || this.playerData?.username);
+            return;
         }
         
-        // Check if user is muted
+        // BUGFIX: Check if user needs to add email (legacy account without email)
+        if (message.needsEmailSetup) {
+            this.showMessage('Welcome back! Please add an email address for account security and recovery.', 'info');
+            this.showAddEmailModal(message.username || this.playerData?.username);
+            // Continue to game - don't block login
+        }
+        
+        // BUGFIX: Check if user is muted and show appropriate warning
         if (message.muted) {
-            this.showMessage('Note: You are currently muted and cannot send chat messages.', 'warning');
+            this.showMessage('Note: You are currently muted and cannot send chat messages. Contact support if you believe this is an error.', 'warning');
         }
         
         // Update UI
@@ -241,19 +253,34 @@ const onlineGame = {
         this.showMessage('Successfully logged in!', 'success');
     },
     
+    // BUGFIX: Enhanced authentication failure handling with consistent response fields
     handleAuthFailed: function(message) {
-        this.showMessage(message.message || 'Authentication failed', 'error');
+        // BUGFIX: Handle banned users with specific message
+        if (message.banned) {
+            this.showMessage('Your account has been banned. Please contact support for more information.', 'error');
+            this.showLoginScreen();
+            // Clear any stored token
+            localStorage.removeItem('wizardToken');
+            this.sessionToken = null;
+            return;
+        }
         
-        // If needs email verification, show verification modal
+        // BUGFIX: Handle email verification required case
         if (message.needsEmailVerification) {
+            this.showMessage('Email verification required. Please check your inbox for the verification code.', 'warning');
             // Extract username from the context or ask user
-            const username = document.getElementById('login-username')?.value;
+            const username = document.getElementById('login-username')?.value || document.getElementById('register-username')?.value;
             if (username) {
                 this.showEmailVerificationModal(username);
+            } else {
+                this.showLoginScreen();
             }
-        } else {
-            this.showLoginScreen();
+            return;
         }
+        
+        // BUGFIX: Generic error case with specific message
+        this.showMessage(message.message || 'Authentication failed. Please check your credentials and try again.', 'error');
+        this.showLoginScreen();
     },
     
     handleConnected: function(message) {
@@ -280,10 +307,14 @@ const onlineGame = {
     handleEmailVerificationResult: function(message) {
         if (message.success) {
             this.showMessage(message.message || 'Email verified successfully!', 'success');
-            document.getElementById('email-verification-modal').classList.add('hidden');
+            const modal = document.getElementById('email-verification-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            // BUGFIX: Show game screen after successful verification (user was already authenticated)
             this.showGameScreen();
         } else {
-            this.showMessage(message.message || 'Verification failed', 'error');
+            this.showMessage(message.message || 'Verification failed. Please check the code and try again.', 'error');
         }
     },
     

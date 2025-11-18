@@ -587,6 +587,16 @@ class AuthManager {
     return false;
   }
   
+  // BUGFIX: Get user data by playerId (needed for token auth ban/mute checks)
+  getUserByPlayerId(playerId) {
+    for (const [username, user] of this.users.entries()) {
+      if (user.id === playerId) {
+        return user;
+      }
+    }
+    return null;
+  }
+  
   // Clean up expired tokens
   cleanupExpiredTokens() {
     const now = Date.now();
