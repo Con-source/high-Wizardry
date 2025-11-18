@@ -960,6 +960,9 @@
                 <input type="password" class="form-control" id="login-password" required>
               </div>
               <button type="submit" class="btn btn-primary w-100">Login</button>
+              <div class="text-center mt-3">
+                <a href="#" id="forgot-password-link" class="text-muted small">Forgot password?</a>
+              </div>
             </form>
           </div>
           
@@ -969,6 +972,11 @@
                 <label for="register-username" class="form-label">Username</label>
                 <input type="text" class="form-control" id="register-username" required minlength="3" maxlength="20">
                 <small class="text-muted">3-20 characters</small>
+              </div>
+              <div class="mb-3">
+                <label for="register-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="register-email" required>
+                <small class="text-muted">Required for account recovery</small>
               </div>
               <div class="mb-3">
                 <label for="register-password" class="form-label">Password</label>
@@ -983,6 +991,96 @@
             </form>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Verification Modal -->
+  <div id="email-verification-modal" class="modal hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Verify Your Email</h3>
+        <button class="modal-close" onclick="document.getElementById('email-verification-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Please enter the verification code sent to your email:</p>
+        <form id="email-verification-form">
+          <div class="mb-3">
+            <label for="verification-code" class="form-label">Verification Code</label>
+            <input type="text" class="form-control" id="verification-code" required maxlength="6" pattern="[0-9]{6}">
+            <small class="text-muted">6-digit code</small>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Verify</button>
+          <button type="button" id="resend-verification-btn" class="btn btn-outline-secondary w-100 mt-2">Resend Code</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgot-password-modal" class="modal hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Reset Password</h3>
+        <button class="modal-close" onclick="document.getElementById('forgot-password-modal').classList.add('hidden'); document.getElementById('login-screen').classList.remove('hidden');">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Enter your username or email address to receive a password reset link:</p>
+        <form id="forgot-password-form">
+          <div class="mb-3">
+            <label for="reset-username-email" class="form-label">Username or Email</label>
+            <input type="text" class="form-control" id="reset-username-email" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
+          <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="document.getElementById('forgot-password-modal').classList.add('hidden'); document.getElementById('login-screen').classList.remove('hidden');">Back to Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div id="password-reset-modal" class="modal hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Set New Password</h3>
+        <button class="modal-close" onclick="document.getElementById('password-reset-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Enter your new password:</p>
+        <form id="password-reset-form">
+          <input type="hidden" id="reset-token" value="">
+          <div class="mb-3">
+            <label for="new-password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new-password" required minlength="6">
+            <small class="text-muted">At least 6 characters</small>
+          </div>
+          <div class="mb-3">
+            <label for="new-password-confirm" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="new-password-confirm" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Reset Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Email Modal (for legacy accounts) -->
+  <div id="add-email-modal" class="modal hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Email Address</h3>
+        <button class="modal-close" onclick="document.getElementById('add-email-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Please add an email address to your account for security and recovery purposes:</p>
+        <form id="add-email-form">
+          <div class="mb-3">
+            <label for="add-email-input" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="add-email-input" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add Email</button>
+          <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="document.getElementById('add-email-modal').classList.add('hidden');">Maybe Later</button>
+        </form>
       </div>
     </div>
   </div>

@@ -78,6 +78,34 @@ class HighWizardryServer {
       });
     });
     
+    // Password reset request endpoint
+    this.app.post('/api/auth/request-reset', async (req, res) => {
+      const { usernameOrEmail } = req.body;
+      const result = await this.authManager.requestPasswordReset(usernameOrEmail);
+      res.json(result);
+    });
+    
+    // Password reset completion endpoint
+    this.app.post('/api/auth/reset-password', async (req, res) => {
+      const { token, newPassword } = req.body;
+      const result = await this.authManager.resetPassword(token, newPassword);
+      res.json(result);
+    });
+    
+    // Email verification endpoint
+    this.app.post('/api/auth/verify-email', async (req, res) => {
+      const { username, code } = req.body;
+      const result = await this.authManager.verifyEmail(username, code);
+      res.json(result);
+    });
+    
+    // Resend verification endpoint
+    this.app.post('/api/auth/resend-verification', async (req, res) => {
+      const { username } = req.body;
+      const result = await this.authManager.resendVerificationEmail(username);
+      res.json(result);
+    });
+    
     // Default route - serve index.html with explicit rate limiting
     this.app.get('/', staticFileLimiter, (req, res) => {
       res.sendFile(path.join(__dirname, '..', 'index.html'));
@@ -166,6 +194,16 @@ class HighWizardryServer {
       return;
     }
     
+    // Allow password reset requests without authentication
+    if (type === 'request_password_reset' || type === 'reset_password') {
+      if (type === 'request_password_reset') {
+        this.handlePasswordResetRequest(client, data);
+      } else {
+        this.handlePasswordReset(client, data);
+      }
+      return;
+    }
+    
     // Require authentication for all other messages
     if (!client.authenticated) {
       this.send(client.ws, {
@@ -190,13 +228,28 @@ class HighWizardryServer {
       case 'action':
         this.handleAction(client, data);
         break;
+      case 'verify_email':
+        this.handleEmailVerification(client, data);
+        break;
+      case 'resend_verification':
+        this.handleResendVerification(client, data);
+        break;
+      case 'add_email':
+        this.handleAddEmail(client, data);
+        break;
+      case 'request_password_reset':
+        this.handlePasswordResetRequest(client, data);
+        break;
+      case 'reset_password':
+        this.handlePasswordReset(client, data);
+        break;
       default:
         console.log('Unknown message type:', type);
     }
   }
   
   handleAuth(client, data) {
-    const { type, username, password, token } = data;
+    const { type, username, password, token, email } = data;
     
     // Rate limit authentication attempts
     const clientKey = client.playerId || 'anon_' + Date.now();
@@ -210,65 +263,73 @@ class HighWizardryServer {
     
     if (type === 'register') {
       // Register new user
-      const result = this.authManager.register(username, password);
-      if (result.success) {
-        client.authenticated = true;
-        client.playerId = result.playerId;
-        
-        // Create player state
-        const playerData = this.playerManager.createPlayer(result.playerId, username);
-        
-        this.send(client.ws, {
-          type: 'auth_success',
-          playerId: result.playerId,
-          token: result.token,
-          playerData
-        });
-        
-        // Notify other players
-        this.broadcast({
-          type: 'player_connected',
-          playerId: result.playerId,
-          username
-        }, client.playerId);
-      } else {
-        this.send(client.ws, {
-          type: 'auth_failed',
-          message: result.message
-        });
-      }
+      this.authManager.register(username, password, email).then(result => {
+        if (result.success) {
+          client.authenticated = true;
+          client.playerId = result.playerId;
+          
+          // Create player state
+          const playerData = this.playerManager.createPlayer(result.playerId, username);
+          
+          this.send(client.ws, {
+            type: 'auth_success',
+            playerId: result.playerId,
+            token: result.token,
+            playerData,
+            emailVerified: result.emailVerified,
+            needsEmailVerification: result.needsEmailVerification
+          });
+          
+          // Notify other players
+          this.broadcast({
+            type: 'player_connected',
+            playerId: result.playerId,
+            username
+          }, client.playerId);
+        } else {
+          this.send(client.ws, {
+            type: 'auth_failed',
+            message: result.message
+          });
+        }
+      });
     } else if (type === 'login') {
       // Login existing user
-      const result = this.authManager.login(username, password);
-      if (result.success) {
-        client.authenticated = true;
-        client.playerId = result.playerId;
-        
-        // Load or create player state
-        let playerData = this.playerManager.getPlayer(result.playerId);
-        if (!playerData) {
-          playerData = this.playerManager.createPlayer(result.playerId, username);
+      this.authManager.login(username, password).then(result => {
+        if (result.success) {
+          client.authenticated = true;
+          client.playerId = result.playerId;
+          
+          // Load or create player state
+          let playerData = this.playerManager.getPlayer(result.playerId);
+          if (!playerData) {
+            playerData = this.playerManager.createPlayer(result.playerId, username);
+          }
+          
+          this.send(client.ws, {
+            type: 'auth_success',
+            playerId: result.playerId,
+            token: result.token,
+            playerData,
+            emailVerified: result.emailVerified,
+            needsEmailSetup: result.needsEmailSetup,
+            muted: result.muted
+          });
+          
+          // Notify other players
+          this.broadcast({
+            type: 'player_connected',
+            playerId: result.playerId,
+            username
+          }, client.playerId);
+        } else {
+          this.send(client.ws, {
+            type: 'auth_failed',
+            message: result.message,
+            needsEmailVerification: result.needsEmailVerification
+          });
         }
-        
-        this.send(client.ws, {
-          type: 'auth_success',
-          playerId: result.playerId,
-          token: result.token,
-          playerData
-        });
-        
-        // Notify other players
-        this.broadcast({
-          type: 'player_connected',
-          playerId: result.playerId,
-          username
-        }, client.playerId);
-      } else {
-        this.send(client.ws, {
-          type: 'auth_failed',
-          message: result.message
-        });
-      }
+      });
     } else if (type === 'authenticate' && token) {
       // Authenticate with token
       const result = this.authManager.validateToken(token);
@@ -376,6 +437,15 @@ class HighWizardryServer {
       return;
     }
     
+    // Check if user is muted
+    if (this.authManager.isMuted(client.playerId)) {
+      this.send(client.ws, {
+        type: 'error',
+        message: 'You are muted and cannot send messages.'
+      });
+      return;
+    }
+    
     const { channel, message } = data;
     const player = this.playerManager.getPlayer(client.playerId);
     
@@ -443,6 +513,66 @@ class HighWizardryServer {
         message: result.message
       });
     }
+  }
+  
+  handleEmailVerification(client, data) {
+    const { username, code } = data;
+    
+    this.authManager.verifyEmail(username, code).then(result => {
+      this.send(client.ws, {
+        type: 'email_verification_result',
+        success: result.success,
+        message: result.message
+      });
+    });
+  }
+  
+  handleResendVerification(client, data) {
+    const { username } = data;
+    
+    this.authManager.resendVerificationEmail(username).then(result => {
+      this.send(client.ws, {
+        type: 'resend_verification_result',
+        success: result.success,
+        message: result.message
+      });
+    });
+  }
+  
+  handleAddEmail(client, data) {
+    const { username, email } = data;
+    
+    this.authManager.addEmail(username, email).then(result => {
+      this.send(client.ws, {
+        type: 'add_email_result',
+        success: result.success,
+        message: result.message
+      });
+    });
+  }
+  
+  handlePasswordResetRequest(client, data) {
+    const { usernameOrEmail } = data;
+    
+    this.authManager.requestPasswordReset(usernameOrEmail).then(result => {
+      this.send(client.ws, {
+        type: 'password_reset_request_result',
+        success: result.success,
+        message: result.message
+      });
+    });
+  }
+  
+  handlePasswordReset(client, data) {
+    const { token, newPassword } = data;
+    
+    this.authManager.resetPassword(token, newPassword).then(result => {
+      this.send(client.ws, {
+        type: 'password_reset_result',
+        success: result.success,
+        message: result.message
+      });
+    });
   }
   
   send(ws, data) {
