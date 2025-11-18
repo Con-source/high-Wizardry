@@ -62,6 +62,17 @@ const Player = (() => {
             armor: [],
             items: []
           },
+          consumables: {}, // NEW: Consumable items inventory
+          guilds: { // NEW: Guild tracking for achievements
+            memberships: [],
+            reputation: {}
+          },
+          craftingStats: { // NEW: Crafting stats for achievements
+            totalCrafted: 0,
+            recipes: []
+          },
+          visitedLocations: [], // NEW: Visited locations for achievements
+          travelDistance: 0, // NEW: Total travel distance for achievements
           lastLogin: Date.now(),
           playTime: 0,
           settings: {
