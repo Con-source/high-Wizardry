@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const InputValidator = require('../utils/InputValidator');
 
 class AuthManager {
   constructor() {
@@ -160,17 +161,16 @@ class AuthManager {
   }
   
   async register(username, password, email = null) {
-    // Validate input
-    if (!username || !password) {
-      return { success: false, message: 'Username and password are required' };
+    // Validate username
+    const usernameValidation = InputValidator.validateUsername(username);
+    if (!usernameValidation.valid) {
+      return { success: false, message: usernameValidation.message };
     }
     
-    if (username.length < 3 || username.length > 20) {
-      return { success: false, message: 'Username must be 3-20 characters' };
-    }
-    
-    if (password.length < 6) {
-      return { success: false, message: 'Password must be at least 6 characters' };
+    // Validate password
+    const passwordValidation = InputValidator.validatePassword(password);
+    if (!passwordValidation.valid) {
+      return { success: false, message: passwordValidation.message };
     }
     
     // Validate email if provided
@@ -187,8 +187,8 @@ class AuthManager {
       }
     }
     
-    // Check if username already exists
-    if (this.users.has(username.toLowerCase())) {
+    // Check if username already exists (use sanitized username)
+    if (this.users.has(usernameValidation.sanitized.toLowerCase())) {
       return { success: false, message: 'Username already exists' };
     }
     
@@ -204,7 +204,7 @@ class AuthManager {
       const playerId = uuidv4();
       const user = {
         id: playerId,
-        username: username,
+        username: usernameValidation.sanitized,
         passwordHash,
         email: email ? email.toLowerCase() : null,
         emailVerified: email ? false : true, // If no email provided, consider "verified" for backward compatibility
@@ -216,11 +216,11 @@ class AuthManager {
         createdAt: Date.now()
       };
       
-      this.users.set(username.toLowerCase(), user);
+      this.users.set(usernameValidation.sanitized.toLowerCase(), user);
       
       // Add to email map if email provided
       if (email) {
-        this.emailToUsername.set(email.toLowerCase(), username.toLowerCase());
+        this.emailToUsername.set(email.toLowerCase(), usernameValidation.sanitized.toLowerCase());
       }
       
       // Save to disk
@@ -228,11 +228,11 @@ class AuthManager {
       
       // Send verification email
       if (email) {
-        await this.sendVerificationEmail(email, username, verificationCode);
+        await this.sendVerificationEmail(email, usernameValidation.sanitized, verificationCode);
       }
       
       // Generate token
-      const token = this.generateToken(playerId, username);
+      const token = this.generateToken(playerId, usernameValidation.sanitized);
       
       return {
         success: true,
@@ -248,13 +248,20 @@ class AuthManager {
   }
   
   async login(username, password) {
-    // Validate input
-    if (!username || !password) {
-      return { success: false, message: 'Username and password are required' };
+    // Validate username format
+    const usernameValidation = InputValidator.validateUsername(username);
+    if (!usernameValidation.valid) {
+      return { success: false, message: 'Invalid username or password' };
+    }
+    
+    // Validate password format
+    const passwordValidation = InputValidator.validatePassword(password);
+    if (!passwordValidation.valid) {
+      return { success: false, message: 'Invalid username or password' };
     }
     
     // Get user
-    const user = this.users.get(username.toLowerCase());
+    const user = this.users.get(usernameValidation.sanitized.toLowerCase());
     if (!user) {
       return { success: false, message: 'Invalid username or password' };
     }

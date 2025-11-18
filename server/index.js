@@ -16,6 +16,8 @@ const EventDispatcher = require('./game/EventDispatcher');
 const TradeManager = require('./game/TradeManager');
 const AuctionManager = require('./game/AuctionManager');
 const RateLimiter = require('./utils/RateLimiter');
+const InputValidator = require('./utils/InputValidator');
+const CsrfProtection = require('./utils/CsrfProtection');
 
 class HighWizardryServer {
   constructor(port = 8080) {
@@ -37,6 +39,14 @@ class HighWizardryServer {
     this.authLimiter = new RateLimiter(5, 60000); // 5 auth attempts per minute
     this.actionLimiter = new RateLimiter(20, 10000); // 20 actions per 10 seconds
     this.chatLimiter = new RateLimiter(10, 10000); // 10 messages per 10 seconds
+    
+    // Initialize security utilities
+    this.csrfProtection = new CsrfProtection();
+    
+    // WebSocket connection tracking for DDoS protection
+    this.connectionAttempts = new Map(); // IP -> [timestamps]
+    this.maxConnectionsPerIP = 5;
+    this.connectionWindow = 60000; // 1 minute
     
     // Clean up rate limiters every 5 minutes
     setInterval(() => {
@@ -102,9 +112,48 @@ class HighWizardryServer {
   }
   
   setupExpress() {
+    // Security headers middleware
+    this.app.use((req, res, next) => {
+      // Content Security Policy (CSP) - Prevents XSS attacks
+      res.setHeader(
+        'Content-Security-Policy',
+        [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+          "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+          "img-src 'self' data: https: http:",
+          "connect-src 'self' ws: wss:",
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self'"
+        ].join('; ')
+      );
+      
+      // Prevent clickjacking
+      res.setHeader('X-Frame-Options', 'DENY');
+      
+      // Prevent MIME type sniffing
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      
+      // Enable XSS filter in browsers
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      
+      // Referrer policy
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      
+      // Permissions policy
+      res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+      
+      next();
+    });
+    
     // Serve static files from the root directory
     this.app.use(express.static(path.join(__dirname, '..')));
-    this.app.use(express.json());
+    
+    // Body parser with size limits to prevent payload attacks
+    this.app.use(express.json({ limit: '10kb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '10kb' }));
     
     // Rate limiter for HTTP endpoints
     this.httpLimiter = new RateLimiter(100, 60000); // 100 requests per minute per IP
@@ -254,7 +303,17 @@ class HighWizardryServer {
   
   setupWebSocket() {
     this.wss.on('connection', (ws, req) => {
-      console.log('New client connected');
+      // Get client IP for connection flood protection
+      const clientIp = req.socket.remoteAddress || req.headers['x-forwarded-for'];
+      
+      // Check connection flood protection
+      if (!this.checkConnectionFlood(clientIp)) {
+        console.log(`Connection rejected from ${clientIp}: Too many connections`);
+        ws.close(1008, 'Too many connections from your IP. Please try again later.');
+        return;
+      }
+      
+      console.log('New client connected from', clientIp);
       
       // Set up client
       const client = {
@@ -262,7 +321,10 @@ class HighWizardryServer {
         id: null,
         playerId: null,
         authenticated: false,
-        lastPing: Date.now()
+        lastPing: Date.now(),
+        ip: clientIp,
+        messageCount: 0,
+        lastMessageTime: Date.now()
       };
       
       // Send welcome message
@@ -274,6 +336,23 @@ class HighWizardryServer {
       // Handle messages
       ws.on('message', (message) => {
         try {
+          // WebSocket message flood protection
+          if (!this.checkMessageFlood(client)) {
+            this.send(ws, {
+              type: 'error',
+              message: 'Too many messages. Please slow down.'
+            });
+            return;
+          }
+          
+          // Validate message size
+          if (message.length > 10240) { // 10KB limit
+            this.send(ws, {
+              type: 'error',
+              message: 'Message too large'
+            });
+            return;
+          }
           const data = JSON.parse(message);
           this.handleMessage(client, data);
         } catch (error) {
@@ -663,8 +742,18 @@ class HighWizardryServer {
   handleLocationChange(client, data) {
     const { locationId } = data;
     
-    // Validate location change
-    if (!this.locationManager.isValidLocation(locationId)) {
+    // Validate location ID format
+    const locationValidation = InputValidator.validateLocationId(locationId);
+    if (!locationValidation.valid) {
+      this.send(client.ws, {
+        type: 'error',
+        message: locationValidation.message
+      });
+      return;
+    }
+    
+    // Validate location exists
+    if (!this.locationManager.isValidLocation(locationValidation.sanitized)) {
       this.send(client.ws, {
         type: 'error',
         message: 'Invalid location'
@@ -678,14 +767,14 @@ class HighWizardryServer {
     const oldLocation = player.location;
     
     // Update player location
-    this.playerManager.updatePlayer(client.playerId, { location: locationId });
-    this.locationManager.movePlayer(client.playerId, oldLocation, locationId);
+    this.playerManager.updatePlayer(client.playerId, { location: locationValidation.sanitized });
+    this.locationManager.movePlayer(client.playerId, oldLocation, locationValidation.sanitized);
     
     // Notify player of successful move
-    const playersInLocation = this.locationManager.getPlayersInLocation(locationId);
+    const playersInLocation = this.locationManager.getPlayersInLocation(locationValidation.sanitized);
     this.send(client.ws, {
       type: 'location_changed',
-      locationId,
+      locationId: locationValidation.sanitized,
       players: playersInLocation.map(pid => this.playerManager.getPlayer(pid))
     });
     
@@ -696,7 +785,7 @@ class HighWizardryServer {
     }, client.playerId);
     
     // Notify new location
-    this.broadcastToLocation(locationId, {
+    this.broadcastToLocation(locationValidation.sanitized, {
       type: 'player_joined',
       playerId: client.playerId,
       playerData: this.playerManager.getPlayer(client.playerId)
@@ -727,24 +816,38 @@ class HighWizardryServer {
     
     if (!player) return;
     
-    // Sanitize message (basic XSS prevention)
-    const sanitizedMessage = message
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .substring(0, 500); // Max 500 characters
+    // Validate channel
+    const channelValidation = InputValidator.validateChannel(channel);
+    if (!channelValidation.valid) {
+      this.send(client.ws, {
+        type: 'error',
+        message: channelValidation.message
+      });
+      return;
+    }
+    
+    // Validate and sanitize message
+    const messageValidation = InputValidator.sanitizeChatMessage(message);
+    if (!messageValidation.valid) {
+      this.send(client.ws, {
+        type: 'error',
+        message: messageValidation.message
+      });
+      return;
+    }
     
     const chatMessage = {
       type: 'chat_message',
-      channel,
+      channel: channelValidation.sanitized,
       from: player.username,
       playerId: client.playerId,
-      message: sanitizedMessage,
+      message: messageValidation.sanitized,
       timestamp: Date.now()
     };
     
-    if (channel === 'global') {
+    if (channelValidation.sanitized === 'global') {
       this.broadcast(chatMessage);
-    } else if (channel === 'local') {
+    } else if (channelValidation.sanitized === 'local') {
       this.broadcastToLocation(player.location, chatMessage);
     }
   }
@@ -1247,6 +1350,56 @@ class HighWizardryServer {
       }
     }
     return null;
+  }
+  
+  /**
+   * Check for connection flood from an IP
+   * @param {string} ip - Client IP address
+   * @returns {boolean} - True if connection is allowed
+   */
+  checkConnectionFlood(ip) {
+    const now = Date.now();
+    
+    if (!this.connectionAttempts.has(ip)) {
+      this.connectionAttempts.set(ip, []);
+    }
+    
+    const attempts = this.connectionAttempts.get(ip);
+    
+    // Remove old attempts outside the window
+    const validAttempts = attempts.filter(ts => now - ts < this.connectionWindow);
+    
+    // Check if limit exceeded
+    if (validAttempts.length >= this.maxConnectionsPerIP) {
+      return false;
+    }
+    
+    // Record this connection
+    validAttempts.push(now);
+    this.connectionAttempts.set(ip, validAttempts);
+    
+    return true;
+  }
+  
+  /**
+   * Check for WebSocket message flood from a client
+   * @param {Object} client - Client object
+   * @returns {boolean} - True if message is allowed
+   */
+  checkMessageFlood(client) {
+    const now = Date.now();
+    const timeSinceLastMessage = now - client.lastMessageTime;
+    
+    // Reset counter if enough time has passed (1 second)
+    if (timeSinceLastMessage > 1000) {
+      client.messageCount = 0;
+    }
+    
+    client.lastMessageTime = now;
+    client.messageCount++;
+    
+    // Allow up to 30 messages per second (generous limit)
+    return client.messageCount <= 30;
   }
   
   send(ws, data) {
