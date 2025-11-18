@@ -1,10 +1,47 @@
-// Game Configuration
+/**
+ * Game Configuration
+ * Central configuration for all game constants and defaults
+ * @module CONFIG
+ */
 const CONFIG = {
-  // Game Settings
-  VERSION: '1.0.0',
+  /**
+   * Game version
+   * @type {string}
+   */
+  VERSION: '2.0.0', // Updated version
+  
+  /**
+   * Debug mode flag
+   * @type {boolean}
+   */
   DEBUG: true,
   
-  // Player Defaults
+  /**
+   * Default player data structure
+   * @typedef {Object} DefaultPlayer
+   * @property {string} username - Default username
+   * @property {number} level - Starting level
+   * @property {number} xp - Starting experience points
+   * @property {number} shillings - Starting shillings
+   * @property {number} pennies - Starting pennies
+   * @property {number} health - Starting health
+   * @property {number} maxHealth - Starting max health
+   * @property {number} mana - Starting mana
+   * @property {number} maxMana - Starting max mana
+   * @property {number} energy - Starting energy
+   * @property {number} maxEnergy - Starting max energy
+   * @property {number} happiness - Starting happiness
+   * @property {number} crime - Starting crime level
+   * @property {number} intelligence - Starting intelligence stat
+   * @property {number} endurance - Starting endurance stat
+   * @property {number} charisma - Starting charisma stat
+   * @property {number} dexterity - Starting dexterity stat
+   * @property {number} speed - Starting speed stat
+   * @property {Object} inventory - Starting inventory
+   * @property {number} lastLogin - Last login timestamp
+   * @property {number} playTime - Total play time in milliseconds
+   * @property {Object} settings - Game settings
+   */
   DEFAULT_PLAYER: {
     username: 'Player',
     level: 1,

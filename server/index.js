@@ -78,8 +78,6 @@ class HighWizardryServer {
       });
     });
     
-    // Default route - serve index.html
-    this.app.get('/', (req, res) => {
     // Default route - serve index.html with explicit rate limiting
     this.app.get('/', staticFileLimiter, (req, res) => {
       res.sendFile(path.join(__dirname, '..', 'index.html'));
