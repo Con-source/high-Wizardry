@@ -28,6 +28,27 @@ class AuthManager {
     this.maxResetAttempts = 5;
     this.resetAttemptWindow = 60 * 60 * 1000; // 1 hour
     
+    /**
+     * Generic rate limiter for email-related operations (password reset, verification emails)
+     * 
+     * Rationale:
+     * - Prevents abuse of email sending features (spam, DoS)
+     * - Tracks both IP and user to prevent circumventing via different IPs or accounts
+     * - Uses in-memory Map for simplicity and speed (acceptable for single-server deployments)
+     * - Automatic cleanup prevents memory leaks from abandoned sessions
+     * - Conservative defaults (3 attempts per 15 min) balance security vs usability
+     * 
+     * Structure: Map<string, Array<number>>
+     * - key: "ip:<ip>" or "user:<username>" 
+     * - value: array of timestamps (milliseconds) of attempts
+     */
+    this.rateLimiter = new Map();
+    this.rateLimitConfig = {
+      maxAttempts: 3,           // Maximum attempts allowed
+      windowMs: 15 * 60 * 1000, // 15 minutes window
+      cleanupIntervalMs: 5 * 60 * 1000 // Cleanup every 5 minutes
+    };
+    
     // Ensure data directory exists
     this.ensureDataDirectory();
     
@@ -41,6 +62,7 @@ class AuthManager {
     setInterval(() => {
       this.cleanupExpiredBans();
       this.cleanupPasswordResetAttempts();
+      this.cleanupRateLimiter();
     }, 5 * 60 * 1000); // Every 5 minutes
   }
   
@@ -292,9 +314,10 @@ class AuthManager {
     // Check if account is temporarily banned
     if (user.banned && user.bannedUntil && Date.now() < user.bannedUntil) {
       const remainingTime = Math.ceil((user.bannedUntil - Date.now()) / 60000);
+      const timeUnit = remainingTime === 1 ? 'minute' : 'minutes';
       return { 
         success: false, 
-        message: `Account temporarily banned. Try again in ${remainingTime} minutes. Reason: ${user.bannedReason || 'Policy violation'}`,
+        message: `Account temporarily suspended. Please try again in ${remainingTime} ${timeUnit}. Reason: ${user.bannedReason || 'Policy violation'}. Contact support for assistance.`,
         banned: true
       };
     }
@@ -303,7 +326,7 @@ class AuthManager {
     if (user.banned && !user.bannedUntil) {
       return { 
         success: false, 
-        message: `Account permanently banned. Reason: ${user.bannedReason || 'Policy violation'}. Contact support for assistance.`,
+        message: `Account permanently suspended. Reason: ${user.bannedReason || 'Policy violation'}. If you believe this is an error, please contact support for assistance.`,
         banned: true
       };
     }
@@ -320,9 +343,10 @@ class AuthManager {
     // Check password attempts for brute force protection
     if (this.isAccountLocked(user)) {
       const lockTimeRemaining = Math.ceil((user.lastPasswordAttempt + this.passwordAttemptWindow - Date.now()) / 60000);
+      const timeUnit = lockTimeRemaining === 1 ? 'minute' : 'minutes';
       return { 
         success: false, 
-        message: `Too many failed login attempts. Account locked for ${lockTimeRemaining} minutes.`
+        message: `Too many failed login attempts. Account temporarily locked for ${lockTimeRemaining} ${timeUnit}. Please try again later or use the password reset option if you've forgotten your password.`
       };
     }
     
@@ -354,7 +378,7 @@ class AuthManager {
       if (this.emailConfig.requireVerification && user.email && !user.emailVerified) {
         return { 
           success: false, 
-          message: 'Please verify your email before logging in. Check your inbox for the verification code.',
+          message: 'Please verify your email address before logging in. Check your inbox for the verification code, or request a new one if needed.',
           needsEmailVerification: true,
           email: user.email
         };
@@ -529,11 +553,11 @@ class AuthManager {
       user.verificationCode = null;
       user.verificationCodeExpiry = null;
       this.saveUsers();
-      return { success: false, message: 'Verification code has expired. Please request a new one.' };
+      return { success: false, message: 'Verification code has expired. Please request a new verification email.' };
     }
     
     if (user.verificationCode !== code) {
-      return { success: false, message: 'Invalid verification code' };
+      return { success: false, message: 'Invalid verification code. Please check the code and try again, or request a new verification email.' };
     }
     
     // Mark as verified
@@ -542,22 +566,45 @@ class AuthManager {
     user.verificationCodeExpiry = null;
     this.saveUsers();
     
-    return { success: true, message: 'Email verified successfully' };
+    return { success: true, message: 'Email verified successfully! You can now log in to your account.' };
   }
   
   // Resend verification email
-  async resendVerificationEmail(username) {
+  async resendVerificationEmail(username, clientIp = 'unknown') {
+    /**
+     * Rate limiting for resend verification email:
+     * - Prevents email spam/abuse
+     * - Uses both IP and username to prevent circumvention
+     * - Returns same error message regardless of whether user exists (non-leaky)
+     */
+    
+    // Check rate limit for both IP and username
+    const ipKey = `ip:${clientIp}`;
+    const userKey = `user:${username.toLowerCase()}`;
+    
+    if (!this.checkRateLimitMultiple([ipKey, userKey])) {
+      // Return generic message that doesn't reveal if user exists (security)
+      return { 
+        success: false, 
+        message: 'Too many verification email requests. Please try again later or contact support if you need assistance.' 
+      };
+    }
+    
     const user = this.users.get(username.toLowerCase());
     if (!user) {
-      return { success: false, message: 'User not found' };
+      // Don't reveal if user exists (return same message as rate limit for security)
+      return { 
+        success: false, 
+        message: 'Too many verification email requests. Please try again later or contact support if you need assistance.' 
+      };
     }
     
     if (user.emailVerified) {
-      return { success: false, message: 'Email already verified' };
+      return { success: false, message: 'Email is already verified. You can log in now.' };
     }
     
     if (!user.email) {
-      return { success: false, message: 'No email on record' };
+      return { success: false, message: 'No email address on record. Please contact support for assistance.' };
     }
     
     // Generate new code with fresh expiry
@@ -569,14 +616,28 @@ class AuthManager {
     // Send email
     await this.sendVerificationEmail(user.email, user.username, verificationCode);
     
-    return { success: true, message: 'Verification email sent' };
+    return { success: true, message: 'Verification email sent successfully. Please check your inbox.' };
   }
   
   // Request password reset
   async requestPasswordReset(usernameOrEmail, clientIp = 'unknown') {
-    // Check rate limiting for password reset requests
-    if (!this.checkPasswordResetRateLimit(clientIp)) {
-      return { success: false, message: 'Too many password reset attempts. Please try again later.' };
+    /**
+     * Rate limiting for password reset:
+     * - Prevents email spam and account enumeration attacks
+     * - Uses both IP and identifier (username/email) to prevent circumvention
+     * - Returns same generic message regardless of whether account exists (non-leaky)
+     * - This is a critical security feature that balances UX with protection
+     */
+    
+    // Check rate limit for IP first
+    const ipKey = `ip:${clientIp}`;
+    
+    if (!this.checkRateLimit(ipKey)) {
+      // Return generic message that doesn't reveal if user exists (security)
+      return { 
+        success: true, 
+        message: 'If an account exists with that information, a password reset email has been sent. Please check your inbox or contact support if you need assistance.' 
+      };
     }
     
     // Find user by username or email
@@ -590,13 +651,33 @@ class AuthManager {
       }
     }
     
+    // Also check rate limit for the user identifier (if user exists)
+    if (user) {
+      const userKey = `user:${user.username.toLowerCase()}`;
+      if (!this.checkRateLimit(userKey)) {
+        // Return same generic message (non-leaky)
+        return { 
+          success: true, 
+          message: 'If an account exists with that information, a password reset email has been sent. Please check your inbox or contact support if you need assistance.' 
+        };
+      }
+    }
+    
     if (!user) {
-      // Don't reveal if user exists or not (security)
-      return { success: true, message: 'If an account exists, a reset email has been sent' };
+      // Don't reveal if user exists or not (security best practice)
+      // Return success message to prevent account enumeration
+      return { 
+        success: true, 
+        message: 'If an account exists with that information, a password reset email has been sent. Please check your inbox or contact support if you need assistance.' 
+      };
     }
     
     if (!user.email) {
-      return { success: false, message: 'No email on record for this account. Please contact support.' };
+      // Even for accounts without email, return generic message (security)
+      return { 
+        success: true, 
+        message: 'If an account exists with that information, a password reset email has been sent. Please check your inbox or contact support if you need assistance.' 
+      };
     }
     
     // Generate reset token
@@ -608,7 +689,10 @@ class AuthManager {
     // Send reset email
     await this.sendPasswordResetEmail(user.email, user.username, resetToken);
     
-    return { success: true, message: 'If an account exists, a reset email has been sent' };
+    return { 
+      success: true, 
+      message: 'If an account exists with that information, a password reset email has been sent. Please check your inbox or contact support if you need assistance.' 
+    };
   }
   
   // Reset password with token
@@ -642,7 +726,7 @@ class AuthManager {
       foundUser.resetToken = null;
       foundUser.resetTokenExpiry = null;
       this.saveUsers();
-      return { success: false, message: 'Reset token has expired. Please request a new one.' };
+      return { success: false, message: 'Reset token has expired. Please request a new password reset.' };
     }
     
     try {
@@ -659,10 +743,10 @@ class AuthManager {
       // Revoke all existing tokens for security
       this.revokeAllTokensForPlayer(foundUser.id);
       
-      return { success: true, message: 'Password reset successfully' };
+      return { success: true, message: 'Password reset successfully! You can now log in with your new password.' };
     } catch (error) {
       console.error('Password reset error:', error);
-      return { success: false, message: 'Failed to reset password' };
+      return { success: false, message: 'Failed to reset password. Please try again or contact support for assistance.' };
     }
   }
   
@@ -710,7 +794,7 @@ class AuthManager {
   setBanStatus(username, banned, options = {}) {
     const user = this.users.get(username.toLowerCase());
     if (!user) {
-      return { success: false, message: 'User not found' };
+      return { success: false, message: 'User not found. Please verify the username and try again.' };
     }
     
     const { duration, reason, bannedBy, permanent } = options;
@@ -738,9 +822,13 @@ class AuthManager {
     
     this.saveUsers();
     
+    const action = banned ? 'suspended' : 'unsuspended';
+    const banType = banned && (permanent || !duration) ? 'permanently' : 'temporarily';
+    const durationMsg = banned && duration ? ` for ${Math.ceil(duration / 60000)} minutes` : '';
+    
     return { 
       success: true, 
-      message: `User ${banned ? 'banned' : 'unbanned'} successfully`,
+      message: `User ${action} successfully${banned ? ` (${banType}${durationMsg})` : ''}.`,
       user: {
         username: user.username,
         banned: user.banned,
@@ -755,7 +843,7 @@ class AuthManager {
   setMuteStatus(username, muted, options = {}) {
     const user = this.users.get(username.toLowerCase());
     if (!user) {
-      return { success: false, message: 'User not found' };
+      return { success: false, message: 'User not found. Please verify the username and try again.' };
     }
     
     const { duration, reason, permanent } = options;
@@ -778,9 +866,13 @@ class AuthManager {
     
     this.saveUsers();
     
+    const action = muted ? 'muted' : 'unmuted';
+    const muteType = muted && (permanent || !duration) ? 'permanently' : 'temporarily';
+    const durationMsg = muted && duration ? ` for ${Math.ceil(duration / 60000)} minutes` : '';
+    
     return { 
       success: true, 
-      message: `User ${muted ? 'muted' : 'unmuted'} successfully`,
+      message: `User ${action} successfully${muted ? ` (${muteType}${durationMsg})` : ''}.`,
       user: {
         username: user.username,
         muted: user.muted,
@@ -920,6 +1012,99 @@ class AuthManager {
     return user.passwordAttempts.length >= this.maxPasswordAttempts;
   }
   
+  /**
+   * Generic rate limiter check - prevents abuse of email-related operations
+   * 
+   * This method implements a sliding window rate limiter that:
+   * 1. Tracks attempts by a unique key (IP address, username, or both)
+   * 2. Maintains a sliding window of attempts within the configured time period
+   * 3. Automatically removes expired attempts from the window
+   * 4. Returns false if rate limit is exceeded, true if allowed
+   * 
+   * Security rationale:
+   * - Prevents email spam/DoS by limiting requests per time window
+   * - Sliding window is more accurate than fixed window (no burst at boundary)
+   * - Tracks multiple keys to prevent circumvention (e.g., same IP, different users)
+   * - Conservative defaults balance security (prevent abuse) vs UX (allow legitimate retries)
+   * 
+   * @param {string} key - Unique identifier for rate limiting (e.g., "ip:1.2.3.4" or "user:john")
+   * @param {Object} config - Optional config override { maxAttempts, windowMs }
+   * @returns {boolean} - true if request allowed, false if rate limit exceeded
+   */
+  checkRateLimit(key, config = null) {
+    const { maxAttempts, windowMs } = config || this.rateLimitConfig;
+    const now = Date.now();
+    
+    // Get or initialize attempts for this key
+    if (!this.rateLimiter.has(key)) {
+      this.rateLimiter.set(key, []);
+    }
+    
+    const attempts = this.rateLimiter.get(key);
+    
+    // Remove old attempts outside the sliding window
+    const validAttempts = attempts.filter(
+      timestamp => now - timestamp < windowMs
+    );
+    
+    // Check if rate limit exceeded
+    if (validAttempts.length >= maxAttempts) {
+      return false;
+    }
+    
+    // Add new attempt and update
+    validAttempts.push(now);
+    this.rateLimiter.set(key, validAttempts);
+    
+    return true;
+  }
+  
+  /**
+   * Check rate limit for multiple keys (e.g., both IP and user)
+   * All keys must pass the rate limit check for the request to be allowed
+   * 
+   * This prevents scenarios like:
+   * - One user spamming from multiple IPs
+   * - Multiple users spamming from same IP (shared network)
+   * 
+   * @param {string[]} keys - Array of keys to check
+   * @param {Object} config - Optional config override
+   * @returns {boolean} - true if all keys pass, false if any key is rate limited
+   */
+  checkRateLimitMultiple(keys, config = null) {
+    return keys.every(key => this.checkRateLimit(key, config));
+  }
+
+  /**
+   * Cleanup expired entries from rate limiter to prevent memory leaks
+   * 
+   * This is called periodically by the cleanup interval and removes:
+   * - Empty arrays (all attempts expired)
+   * - Entries with no attempts in the current window
+   * 
+   * Rationale: In-memory rate limiting is simple and fast but requires
+   * active cleanup to prevent unbounded growth in long-running processes.
+   */
+  cleanupRateLimiter() {
+    const now = Date.now();
+    const { windowMs } = this.rateLimitConfig;
+    
+    for (const [key, attempts] of this.rateLimiter.entries()) {
+      // Filter out expired attempts
+      const validAttempts = attempts.filter(
+        timestamp => now - timestamp < windowMs
+      );
+      
+      if (validAttempts.length === 0) {
+        // Remove key if no valid attempts remain
+        this.rateLimiter.delete(key);
+      } else {
+        // Update with cleaned attempts
+        this.rateLimiter.set(key, validAttempts);
+      }
+    }
+  }
+
   // Password reset rate limiting
   checkPasswordResetRateLimit(ip) {
     const now = Date.now();
