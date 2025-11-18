@@ -13,11 +13,20 @@ const InputValidator = require('../utils/InputValidator');
 
 class AuthManager {
   constructor() {
-    this.users = new Map(); // username -> { id, passwordHash, email, emailVerified, verificationCode, resetToken, resetTokenExpiry, banned, muted, createdAt }
+    this.users = new Map(); // username -> { id, passwordHash, email, emailVerified, verificationCode, verificationCodeExpiry, resetToken, resetTokenExpiry, banned, bannedReason, bannedUntil, bannedBy, muted, mutedUntil, mutedReason, createdAt, passwordAttempts, lastPasswordAttempt }
     this.tokens = new Map(); // token -> { playerId, username, expiresAt }
     this.emailToUsername = new Map(); // email -> username (for lookup)
+    this.ipBans = new Map(); // ip -> { bannedUntil, reason }
+    this.deviceBans = new Map(); // deviceId -> { bannedUntil, reason }
+    this.passwordResetAttempts = new Map(); // ip -> [timestamps]
     this.dataFile = path.join(__dirname, '..', 'data', 'users.json');
     this.emailConfig = this.loadEmailConfig();
+    
+    // Rate limiting configuration
+    this.maxPasswordAttempts = 5;
+    this.passwordAttemptWindow = 15 * 60 * 1000; // 15 minutes
+    this.maxResetAttempts = 5;
+    this.resetAttemptWindow = 60 * 60 * 1000; // 1 hour
     
     // Ensure data directory exists
     this.ensureDataDirectory();
@@ -27,6 +36,12 @@ class AuthManager {
     
     // Setup email transporter
     this.setupEmailTransporter();
+    
+    // Clean up expired bans and rate limits periodically
+    setInterval(() => {
+      this.cleanupExpiredBans();
+      this.cleanupPasswordResetAttempts();
+    }, 5 * 60 * 1000); // Every 5 minutes
   }
   
   loadEmailConfig() {
@@ -209,10 +224,18 @@ class AuthManager {
         email: email ? email.toLowerCase() : null,
         emailVerified: email ? false : true, // If no email provided, consider "verified" for backward compatibility
         verificationCode: email ? verificationCode : null,
+        verificationCodeExpiry: email ? (Date.now() + 24 * 60 * 60 * 1000) : null, // 24 hours
         resetToken: null,
         resetTokenExpiry: null,
         banned: false,
+        bannedReason: null,
+        bannedUntil: null,
+        bannedBy: null,
         muted: false,
+        mutedUntil: null,
+        mutedReason: null,
+        passwordAttempts: [],
+        lastPasswordAttempt: null,
         createdAt: Date.now()
       };
       
@@ -266,17 +289,66 @@ class AuthManager {
       return { success: false, message: 'Invalid username or password' };
     }
     
-    // Check if user is banned
-    if (user.banned) {
-      return { success: false, message: 'Account has been banned. Please contact support.' };
+    // Check if account is temporarily banned
+    if (user.banned && user.bannedUntil && Date.now() < user.bannedUntil) {
+      const remainingTime = Math.ceil((user.bannedUntil - Date.now()) / 60000);
+      return { 
+        success: false, 
+        message: `Account temporarily banned. Try again in ${remainingTime} minutes. Reason: ${user.bannedReason || 'Policy violation'}`,
+        banned: true
+      };
+    }
+    
+    // Check if account is permanently banned
+    if (user.banned && !user.bannedUntil) {
+      return { 
+        success: false, 
+        message: `Account permanently banned. Reason: ${user.bannedReason || 'Policy violation'}. Contact support for assistance.`,
+        banned: true
+      };
+    }
+    
+    // Clear ban if expired
+    if (user.banned && user.bannedUntil && Date.now() >= user.bannedUntil) {
+      user.banned = false;
+      user.bannedUntil = null;
+      user.bannedReason = null;
+      user.bannedBy = null;
+      this.saveUsers();
+    }
+    
+    // Check password attempts for brute force protection
+    if (this.isAccountLocked(user)) {
+      const lockTimeRemaining = Math.ceil((user.lastPasswordAttempt + this.passwordAttemptWindow - Date.now()) / 60000);
+      return { 
+        success: false, 
+        message: `Too many failed login attempts. Account locked for ${lockTimeRemaining} minutes.`
+      };
     }
     
     try {
       // Verify password
       const match = await bcrypt.compare(password, user.passwordHash);
       if (!match) {
+        // Record failed attempt
+        this.recordPasswordAttempt(user);
+        this.saveUsers();
+        
+        const attemptsLeft = this.maxPasswordAttempts - user.passwordAttempts.length;
+        if (attemptsLeft > 0 && attemptsLeft <= 2) {
+          return { 
+            success: false, 
+            message: `Invalid username or password. ${attemptsLeft} attempt(s) remaining before account lock.`
+          };
+        }
+        
         return { success: false, message: 'Invalid username or password' };
       }
+      
+      // Clear password attempts on successful login
+      user.passwordAttempts = [];
+      user.lastPasswordAttempt = null;
+      this.saveUsers();
       
       // Check if email verification is required
       if (this.emailConfig.requireVerification && user.email && !user.emailVerified) {
@@ -286,6 +358,14 @@ class AuthManager {
           needsEmailVerification: true,
           email: user.email
         };
+      }
+      
+      // Check if mute is expired
+      if (user.muted && user.mutedUntil && Date.now() >= user.mutedUntil) {
+        user.muted = false;
+        user.mutedUntil = null;
+        user.mutedReason = null;
+        this.saveUsers();
       }
       
       // Generate token
@@ -298,7 +378,8 @@ class AuthManager {
         token,
         emailVerified: user.emailVerified,
         needsEmailSetup: !user.email, // Flag for legacy accounts without email
-        muted: user.muted || false
+        muted: user.muted || false,
+        mutedUntil: user.mutedUntil || null
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -443,6 +524,14 @@ class AuthManager {
       return { success: false, message: 'No verification code found' };
     }
     
+    // Check if verification code has expired
+    if (user.verificationCodeExpiry && Date.now() > user.verificationCodeExpiry) {
+      user.verificationCode = null;
+      user.verificationCodeExpiry = null;
+      this.saveUsers();
+      return { success: false, message: 'Verification code has expired. Please request a new one.' };
+    }
+    
     if (user.verificationCode !== code) {
       return { success: false, message: 'Invalid verification code' };
     }
@@ -450,6 +539,7 @@ class AuthManager {
     // Mark as verified
     user.emailVerified = true;
     user.verificationCode = null;
+    user.verificationCodeExpiry = null;
     this.saveUsers();
     
     return { success: true, message: 'Email verified successfully' };
@@ -470,9 +560,10 @@ class AuthManager {
       return { success: false, message: 'No email on record' };
     }
     
-    // Generate new code
+    // Generate new code with fresh expiry
     const verificationCode = this.generateVerificationCode();
     user.verificationCode = verificationCode;
+    user.verificationCodeExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     this.saveUsers();
     
     // Send email
@@ -482,7 +573,12 @@ class AuthManager {
   }
   
   // Request password reset
-  async requestPasswordReset(usernameOrEmail) {
+  async requestPasswordReset(usernameOrEmail, clientIp = 'unknown') {
+    // Check rate limiting for password reset requests
+    if (!this.checkPasswordResetRateLimit(clientIp)) {
+      return { success: false, message: 'Too many password reset attempts. Please try again later.' };
+    }
+    
     // Find user by username or email
     let user = this.users.get(usernameOrEmail.toLowerCase());
     
@@ -593,13 +689,14 @@ class AuthManager {
       return { success: false, message: 'Email already registered' };
     }
     
-    // Generate verification code
+    // Generate verification code with expiry
     const verificationCode = this.generateVerificationCode();
     
     // Update user
     user.email = email.toLowerCase();
     user.emailVerified = false;
     user.verificationCode = verificationCode;
+    user.verificationCodeExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     this.emailToUsername.set(email.toLowerCase(), username.toLowerCase());
     this.saveUsers();
     
@@ -609,45 +706,105 @@ class AuthManager {
     return { success: true, message: 'Email added. Please check your inbox for verification code.' };
   }
   
-  // Ban/unban user
-  setBanStatus(username, banned) {
+  // Ban/unban user with enhanced options
+  setBanStatus(username, banned, options = {}) {
     const user = this.users.get(username.toLowerCase());
     if (!user) {
       return { success: false, message: 'User not found' };
     }
+    
+    const { duration, reason, bannedBy, permanent } = options;
     
     user.banned = banned;
-    this.saveUsers();
     
-    // Revoke all tokens if banning
     if (banned) {
+      user.bannedReason = reason || 'Policy violation';
+      user.bannedBy = bannedBy || 'system';
+      
+      if (permanent || !duration) {
+        user.bannedUntil = null; // Permanent ban
+      } else {
+        user.bannedUntil = Date.now() + duration;
+      }
+      
+      // Revoke all tokens if banning
       this.revokeAllTokensForPlayer(user.id);
+    } else {
+      // Clear ban data on unban
+      user.bannedReason = null;
+      user.bannedUntil = null;
+      user.bannedBy = null;
     }
     
-    return { success: true, message: `User ${banned ? 'banned' : 'unbanned'} successfully` };
+    this.saveUsers();
+    
+    return { 
+      success: true, 
+      message: `User ${banned ? 'banned' : 'unbanned'} successfully`,
+      user: {
+        username: user.username,
+        banned: user.banned,
+        bannedReason: user.bannedReason,
+        bannedUntil: user.bannedUntil,
+        bannedBy: user.bannedBy
+      }
+    };
   }
   
-  // Mute/unmute user
-  setMuteStatus(username, muted) {
+  // Mute/unmute user with enhanced options
+  setMuteStatus(username, muted, options = {}) {
     const user = this.users.get(username.toLowerCase());
     if (!user) {
       return { success: false, message: 'User not found' };
     }
     
+    const { duration, reason, permanent } = options;
+    
     user.muted = muted;
+    
+    if (muted) {
+      user.mutedReason = reason || 'Chat policy violation';
+      
+      if (permanent || !duration) {
+        user.mutedUntil = null; // Permanent mute
+      } else {
+        user.mutedUntil = Date.now() + duration;
+      }
+    } else {
+      // Clear mute data on unmute
+      user.mutedReason = null;
+      user.mutedUntil = null;
+    }
+    
     this.saveUsers();
     
-    return { success: true, message: `User ${muted ? 'muted' : 'unmuted'} successfully` };
+    return { 
+      success: true, 
+      message: `User ${muted ? 'muted' : 'unmuted'} successfully`,
+      user: {
+        username: user.username,
+        muted: user.muted,
+        mutedReason: user.mutedReason,
+        mutedUntil: user.mutedUntil
+      }
+    };
   }
   
   // Check if user is muted (for chat middleware)
   isMuted(playerId) {
-    for (const [username, user] of this.users.entries()) {
-      if (user.id === playerId) {
-        return user.muted || false;
-      }
+    const user = this.getUserByPlayerId(playerId);
+    if (!user) return false;
+    
+    // Check if mute has expired
+    if (user.muted && user.mutedUntil && Date.now() >= user.mutedUntil) {
+      user.muted = false;
+      user.mutedUntil = null;
+      user.mutedReason = null;
+      this.saveUsers();
+      return false;
     }
-    return false;
+    
+    return user.muted || false;
   }
   
   // BUGFIX: Get user data by playerId (needed for token auth ban/mute checks)
@@ -660,6 +817,172 @@ class AuthManager {
     return null;
   }
   
+  // IP-based ban management
+  banIp(ip, options = {}) {
+    const { duration, reason, permanent } = options;
+    
+    this.ipBans.set(ip, {
+      bannedUntil: permanent || !duration ? null : Date.now() + duration,
+      reason: reason || 'Policy violation'
+    });
+    
+    return { success: true, message: `IP ${ip} banned successfully` };
+  }
+  
+  unbanIp(ip) {
+    if (!this.ipBans.has(ip)) {
+      return { success: false, message: 'IP not found in ban list' };
+    }
+    
+    this.ipBans.delete(ip);
+    return { success: true, message: `IP ${ip} unbanned successfully` };
+  }
+  
+  isIpBanned(ip) {
+    const ban = this.ipBans.get(ip);
+    if (!ban) return false;
+    
+    // Check if ban has expired
+    if (ban.bannedUntil && Date.now() >= ban.bannedUntil) {
+      this.ipBans.delete(ip);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // DeviceID-based ban management
+  banDevice(deviceId, options = {}) {
+    const { duration, reason, permanent } = options;
+    
+    this.deviceBans.set(deviceId, {
+      bannedUntil: permanent || !duration ? null : Date.now() + duration,
+      reason: reason || 'Policy violation'
+    });
+    
+    return { success: true, message: `Device ${deviceId} banned successfully` };
+  }
+  
+  unbanDevice(deviceId) {
+    if (!this.deviceBans.has(deviceId)) {
+      return { success: false, message: 'Device not found in ban list' };
+    }
+    
+    this.deviceBans.delete(deviceId);
+    return { success: true, message: `Device ${deviceId} unbanned successfully` };
+  }
+  
+  isDeviceBanned(deviceId) {
+    const ban = this.deviceBans.get(deviceId);
+    if (!ban) return false;
+    
+    // Check if ban has expired
+    if (ban.bannedUntil && Date.now() >= ban.bannedUntil) {
+      this.deviceBans.delete(deviceId);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Password attempt tracking for brute force protection
+  recordPasswordAttempt(user) {
+    const now = Date.now();
+    
+    // Initialize if needed
+    if (!user.passwordAttempts) {
+      user.passwordAttempts = [];
+    }
+    
+    // Remove old attempts outside the window
+    user.passwordAttempts = user.passwordAttempts.filter(
+      timestamp => now - timestamp < this.passwordAttemptWindow
+    );
+    
+    // Add new attempt
+    user.passwordAttempts.push(now);
+    user.lastPasswordAttempt = now;
+  }
+  
+  isAccountLocked(user) {
+    if (!user.passwordAttempts || user.passwordAttempts.length === 0) {
+      return false;
+    }
+    
+    const now = Date.now();
+    
+    // Remove old attempts outside the window
+    user.passwordAttempts = user.passwordAttempts.filter(
+      timestamp => now - timestamp < this.passwordAttemptWindow
+    );
+    
+    // Check if account is locked (too many attempts)
+    return user.passwordAttempts.length >= this.maxPasswordAttempts;
+  }
+  
+  // Password reset rate limiting
+  checkPasswordResetRateLimit(ip) {
+    const now = Date.now();
+    
+    // Get or initialize attempts for this IP
+    if (!this.passwordResetAttempts.has(ip)) {
+      this.passwordResetAttempts.set(ip, []);
+    }
+    
+    const attempts = this.passwordResetAttempts.get(ip);
+    
+    // Remove old attempts outside the window
+    const validAttempts = attempts.filter(
+      timestamp => now - timestamp < this.resetAttemptWindow
+    );
+    
+    // Check if rate limit exceeded
+    if (validAttempts.length >= this.maxResetAttempts) {
+      return false;
+    }
+    
+    // Add new attempt
+    validAttempts.push(now);
+    this.passwordResetAttempts.set(ip, validAttempts);
+    
+    return true;
+  }
+  
+  // Cleanup methods
+  cleanupExpiredBans() {
+    const now = Date.now();
+    
+    // Clean up IP bans
+    for (const [ip, ban] of this.ipBans.entries()) {
+      if (ban.bannedUntil && now >= ban.bannedUntil) {
+        this.ipBans.delete(ip);
+      }
+    }
+    
+    // Clean up device bans
+    for (const [deviceId, ban] of this.deviceBans.entries()) {
+      if (ban.bannedUntil && now >= ban.bannedUntil) {
+        this.deviceBans.delete(deviceId);
+      }
+    }
+  }
+  
+  cleanupPasswordResetAttempts() {
+    const now = Date.now();
+    
+    for (const [ip, attempts] of this.passwordResetAttempts.entries()) {
+      const validAttempts = attempts.filter(
+        timestamp => now - timestamp < this.resetAttemptWindow
+      );
+      
+      if (validAttempts.length === 0) {
+        this.passwordResetAttempts.delete(ip);
+      } else {
+        this.passwordResetAttempts.set(ip, validAttempts);
+      }
+    }
+  }
+  
   // Clean up expired tokens
   cleanupExpiredTokens() {
     const now = Date.now();
@@ -668,6 +991,61 @@ class AuthManager {
         this.tokens.delete(token);
       }
     }
+  }
+  
+  // Get ban/mute information for a user
+  getUserBanMuteInfo(username) {
+    const user = this.users.get(username.toLowerCase());
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+    
+    return {
+      success: true,
+      username: user.username,
+      banned: user.banned,
+      bannedReason: user.bannedReason,
+      bannedUntil: user.bannedUntil,
+      bannedBy: user.bannedBy,
+      muted: user.muted,
+      mutedReason: user.mutedReason,
+      mutedUntil: user.mutedUntil
+    };
+  }
+  
+  // List all banned users (for admin)
+  getBannedUsers() {
+    const bannedUsers = [];
+    
+    for (const [username, user] of this.users.entries()) {
+      if (user.banned) {
+        bannedUsers.push({
+          username: user.username,
+          bannedReason: user.bannedReason,
+          bannedUntil: user.bannedUntil,
+          bannedBy: user.bannedBy
+        });
+      }
+    }
+    
+    return bannedUsers;
+  }
+  
+  // List all muted users (for admin)
+  getMutedUsers() {
+    const mutedUsers = [];
+    
+    for (const [username, user] of this.users.entries()) {
+      if (user.muted) {
+        mutedUsers.push({
+          username: user.username,
+          mutedReason: user.mutedReason,
+          mutedUntil: user.mutedUntil
+        });
+      }
+    }
+    
+    return mutedUsers;
   }
 }
 
