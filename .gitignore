@@ -9,6 +9,9 @@ server/data/
 *.db
 *.sqlite
 
+# Backups
+backups/
+
 # Build artifacts
 dist/
 build/
