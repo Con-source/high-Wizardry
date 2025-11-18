@@ -191,6 +191,14 @@ const onlineGame = {
             case 'action_result':
                 this.handleActionResult(message);
                 break;
+            
+            case 'game_event':
+                this.handleGameEvent(message);
+                break;
+            
+            case 'event_subscription_result':
+                console.log('Event subscription:', message.message);
+                break;
                 
             case 'error':
                 this.showMessage(`Error: ${message.message}`, 'error');
@@ -382,6 +390,71 @@ const onlineGame = {
         } else {
             this.showMessage(message.message || 'Action failed', 'error');
         }
+    },
+    
+    handleGameEvent: function(message) {
+        // Handle game world events
+        console.log('⚡ Game event received:', message.eventName);
+        
+        // Show event notification with special styling
+        const eventMessage = `⚡ ${message.eventName}: ${message.description}`;
+        this.showMessage(eventMessage, 'event');
+        
+        // Show a prominent notification for major events
+        this.showEventNotification(message);
+        
+        // Update player data if we received an update
+        if (message.data && message.data.playerUpdate) {
+            this.playerData = { ...this.playerData, ...message.data.playerUpdate };
+            this.updatePlayerInfo();
+        }
+    },
+    
+    showEventNotification: function(event) {
+        // Create a visual notification for important events
+        const notification = document.createElement('div');
+        notification.className = 'event-notification';
+        notification.innerHTML = `
+            <div class="event-notification-content">
+                <h5>⚡ ${event.eventName}</h5>
+                <p>${event.description}</p>
+            </div>
+        `;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 9999;
+            max-width: 300px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+    },
+    
+    subscribeToEvents: function(channel = 'all') {
+        this.sendToServer({
+            type: 'subscribe_events',
+            channel: channel
+        });
+    },
+    
+    unsubscribeFromEvents: function(channel = 'all') {
+        this.sendToServer({
+            type: 'unsubscribe_events',
+            channel: channel
+        });
     },
     
     updatePlayerList: function() {

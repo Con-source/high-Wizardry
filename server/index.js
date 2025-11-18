@@ -12,6 +12,7 @@ const AuthManager = require('./auth/AuthManager');
 const GameManager = require('./game/GameManager');
 const PlayerManager = require('./game/PlayerManager');
 const LocationManager = require('./game/LocationManager');
+const EventDispatcher = require('./game/EventDispatcher');
 const RateLimiter = require('./utils/RateLimiter');
 
 class HighWizardryServer {
@@ -25,7 +26,8 @@ class HighWizardryServer {
     this.authManager = new AuthManager();
     this.playerManager = new PlayerManager();
     this.locationManager = new LocationManager();
-    this.gameManager = new GameManager(this.playerManager, this.locationManager);
+    this.eventDispatcher = new EventDispatcher(this.playerManager, this.locationManager);
+    this.gameManager = new GameManager(this.playerManager, this.locationManager, this.eventDispatcher);
     
     // Initialize rate limiters
     this.authLimiter = new RateLimiter(5, 60000); // 5 auth attempts per minute
@@ -38,6 +40,24 @@ class HighWizardryServer {
       this.actionLimiter.cleanup();
       this.chatLimiter.cleanup();
     }, 5 * 60 * 1000);
+    
+    // Set up event dispatcher handlers
+    this.eventDispatcher.setHandlers(
+      // Broadcast to all
+      (data) => this.broadcast(data),
+      // Broadcast to location
+      (locationId, data) => this.broadcastToLocation(locationId, data),
+      // Send to specific player
+      (playerId, data) => {
+        const client = this.getClientByPlayerId(playerId);
+        if (client) {
+          this.send(client.ws, data);
+        }
+      }
+    );
+    
+    // Initialize demo events
+    this.eventDispatcher.initializeDemoEvents();
     
     this.setupExpress();
     this.setupWebSocket();
@@ -112,6 +132,27 @@ class HighWizardryServer {
     this.app.post('/api/auth/resend-verification', async (req, res) => {
       const { username } = req.body;
       const result = await this.authManager.resendVerificationEmail(username);
+      res.json(result);
+    });
+    
+    // Event management endpoints (admin)
+    this.app.get('/api/events/periodic', (req, res) => {
+      const events = this.eventDispatcher.getPeriodicEvents();
+      res.json({ success: true, events });
+    });
+    
+    this.app.get('/api/events/history', (req, res) => {
+      const limit = parseInt(req.query.limit) || 20;
+      const history = this.eventDispatcher.getEventHistory(limit);
+      res.json({ success: true, history });
+    });
+    
+    this.app.post('/api/events/inject', (req, res) => {
+      const { event } = req.body;
+      if (!event || !event.name || !event.scope) {
+        return res.status(400).json({ success: false, message: 'Invalid event data' });
+      }
+      const result = this.eventDispatcher.injectEvent(event);
       res.json(result);
     });
     
@@ -251,6 +292,12 @@ class HighWizardryServer {
         break;
       case 'reset_password':
         this.handlePasswordReset(client, data);
+        break;
+      case 'subscribe_events':
+        this.handleEventSubscription(client, data);
+        break;
+      case 'unsubscribe_events':
+        this.handleEventUnsubscription(client, data);
         break;
       default:
         console.log('Unknown message type:', type);
@@ -742,6 +789,43 @@ class HighWizardryServer {
         message: 'Failed to reset password'
       });
     }
+  }
+  
+  handleEventSubscription(client, data) {
+    const { channel } = data;
+    
+    // For now, all authenticated clients automatically receive events
+    // This handler is for future expansion (e.g., selective event channels)
+    
+    this.send(client.ws, {
+      type: 'event_subscription_result',
+      success: true,
+      channel: channel || 'all',
+      message: 'Subscribed to event notifications'
+    });
+  }
+  
+  handleEventUnsubscription(client, data) {
+    const { channel } = data;
+    
+    this.send(client.ws, {
+      type: 'event_unsubscription_result',
+      success: true,
+      channel: channel || 'all',
+      message: 'Unsubscribed from event notifications'
+    });
+  }
+  
+  /**
+   * Helper method to find a client by player ID
+   */
+  getClientByPlayerId(playerId) {
+    for (const client of this.wss.clients) {
+      if (client.playerId === playerId) {
+        return client;
+      }
+    }
+    return null;
   }
   
   send(ws, data) {

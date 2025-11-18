@@ -244,6 +244,26 @@ Response:
 }
 ```
 
+### Event Management
+
+#### Subscribe to Events
+```json
+{
+  "type": "subscribe_events",
+  "channel": "all"
+}
+```
+
+**Note:** Players are automatically subscribed to relevant events upon authentication. This message is for future event filtering features.
+
+#### Unsubscribe from Events
+```json
+{
+  "type": "unsubscribe_events",
+  "channel": "all"
+}
+```
+
 ### Heartbeat
 
 #### Pong (response to ping)
@@ -255,6 +275,39 @@ Response:
 ```
 
 ## Server → Client Messages
+
+### Event System Messages
+
+#### Game Event Notification
+```json
+{
+  "type": "game_event",
+  "eventId": "magic-storm",
+  "eventName": "Magic Storm",
+  "eventType": "weather",
+  "description": "A powerful magical storm erupts in the Town Square!",
+  "timestamp": 1234567890,
+  "data": {
+    "manaDrain": 20,
+    "severity": "moderate"
+  }
+}
+```
+
+**Event Scopes:**
+- `global` - Affects all players
+- `location` - Affects players in specific location
+- `player` - Affects specific player only
+
+#### Event Subscription Result
+```json
+{
+  "type": "event_subscription_result",
+  "success": true,
+  "channel": "all",
+  "message": "Subscribed to event notifications"
+}
+```
 
 ### Connection Events
 
@@ -630,6 +683,78 @@ Response:
   "message": "status message"
 }
 ```
+
+### GET /api/events/periodic
+
+Get all registered periodic events.
+
+Response:
+```json
+{
+  "success": true,
+  "events": [
+    {
+      "eventId": "magic-storm",
+      "name": "Magic Storm",
+      "interval": 900000,
+      "enabled": true,
+      "lastRun": 1234567890,
+      "nextRun": 1234568790
+    }
+  ]
+}
+```
+
+### GET /api/events/history
+
+Get event execution history.
+
+Query parameters:
+- `limit` (optional, default: 20) - Number of recent events to return
+
+Response:
+```json
+{
+  "success": true,
+  "history": [
+    {
+      "name": "Magic Storm",
+      "eventType": "location",
+      "scope": "location",
+      "executedAt": 1234567890,
+      "locationId": "town-square"
+    }
+  ]
+}
+```
+
+### POST /api/events/inject
+
+Manually inject an event (admin operation).
+
+Request body:
+```json
+{
+  "event": {
+    "name": "Test Event",
+    "description": "A test event for debugging",
+    "scope": "global" | "location" | "player",
+    "eventType": "custom",
+    "locationId": "town-square",
+    "eventData": {}
+  }
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Event Test Event queued"
+}
+```
+
+**Note:** Admin authentication/authorization not yet implemented. Use with caution in production.
 
 ### GET /
 
