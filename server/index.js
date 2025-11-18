@@ -13,6 +13,7 @@ const GameManager = require('./game/GameManager');
 const PlayerManager = require('./game/PlayerManager');
 const LocationManager = require('./game/LocationManager');
 const EventDispatcher = require('./game/EventDispatcher');
+const MessagingManager = require('./game/MessagingManager');
 const RateLimiter = require('./utils/RateLimiter');
 
 class HighWizardryServer {
@@ -26,6 +27,7 @@ class HighWizardryServer {
     this.authManager = new AuthManager();
     this.playerManager = new PlayerManager();
     this.locationManager = new LocationManager();
+    this.messagingManager = new MessagingManager();
     this.eventDispatcher = new EventDispatcher(this.playerManager, this.locationManager);
     this.gameManager = new GameManager(this.playerManager, this.locationManager, this.eventDispatcher);
     
@@ -40,6 +42,11 @@ class HighWizardryServer {
       this.actionLimiter.cleanup();
       this.chatLimiter.cleanup();
     }, 5 * 60 * 1000);
+    
+    // Clean up messaging data every 24 hours
+    setInterval(() => {
+      this.messagingManager.cleanup();
+    }, 24 * 60 * 60 * 1000);
     
     // Set up event dispatcher handlers
     this.eventDispatcher.setHandlers(
@@ -154,6 +161,54 @@ class HighWizardryServer {
       }
       const result = this.eventDispatcher.injectEvent(event);
       res.json(result);
+    });
+    
+    // Messaging API endpoints
+    this.app.get('/api/messaging/chat-history', (req, res) => {
+      const { channel, locationId, limit, offset } = req.query;
+      const history = this.messagingManager.getChatHistory(
+        channel, 
+        locationId, 
+        parseInt(limit) || 50, 
+        parseInt(offset) || 0
+      );
+      res.json({ success: true, messages: history });
+    });
+    
+    this.app.get('/api/messaging/mailbox/:username', (req, res) => {
+      const { username } = req.params;
+      const mailbox = this.messagingManager.getMailbox(username);
+      res.json({ success: true, mailbox });
+    });
+    
+    this.app.get('/api/messaging/conversation', (req, res) => {
+      const { user1, user2, limit } = req.query;
+      const conversation = this.messagingManager.getConversation(
+        user1, 
+        user2, 
+        parseInt(limit) || 50
+      );
+      res.json({ success: true, messages: conversation });
+    });
+    
+    this.app.get('/api/messaging/forum/topics', (req, res) => {
+      const { category, page, perPage } = req.query;
+      const result = this.messagingManager.getForumTopics(
+        category, 
+        parseInt(page) || 1, 
+        parseInt(perPage) || 20
+      );
+      res.json({ success: true, ...result });
+    });
+    
+    this.app.get('/api/messaging/forum/topic/:topicId', (req, res) => {
+      const { topicId } = req.params;
+      const topic = this.messagingManager.getForumTopic(topicId);
+      if (topic) {
+        res.json({ success: true, topic });
+      } else {
+        res.status(404).json({ success: false, error: 'Topic not found' });
+      }
     });
     
     // Default route - serve index.html with explicit rate limiting
@@ -273,7 +328,26 @@ class HighWizardryServer {
         this.handleLocationChange(client, data);
         break;
       case 'chat':
+      case 'chat_message':
         this.handleChat(client, data);
+        break;
+      case 'direct_message':
+        this.handleDirectMessage(client, data);
+        break;
+      case 'send_mail':
+        this.handleSendMail(client, data);
+        break;
+      case 'mark_mail_read':
+        this.handleMarkMailRead(client, data);
+        break;
+      case 'delete_mail':
+        this.handleDeleteMail(client, data);
+        break;
+      case 'create_forum_topic':
+        this.handleCreateForumTopic(client, data);
+        break;
+      case 'forum_reply':
+        this.handleForumReply(client, data);
         break;
       case 'action':
         this.handleAction(client, data);
@@ -608,26 +682,190 @@ class HighWizardryServer {
     
     if (!player) return;
     
-    // Sanitize message (basic XSS prevention)
-    const sanitizedMessage = message
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .substring(0, 500); // Max 500 characters
+    // Use MessagingManager for enhanced chat handling
+    const result = this.messagingManager.handleChatMessage(
+      { username: player.username, id: client.playerId, location: player.location },
+      channel,
+      message
+    );
+    
+    if (!result.success) {
+      this.send(client.ws, {
+        type: 'error',
+        message: result.error
+      });
+      return;
+    }
     
     const chatMessage = {
       type: 'chat_message',
-      channel,
-      from: player.username,
-      playerId: client.playerId,
-      message: sanitizedMessage,
-      timestamp: Date.now()
+      ...result.message
     };
     
-    if (channel === 'global') {
+    if (channel === 'global' || channel === 'trade' || channel === 'help') {
       this.broadcast(chatMessage);
     } else if (channel === 'local') {
       this.broadcastToLocation(player.location, chatMessage);
     }
+  }
+  
+  handleDirectMessage(client, data) {
+    const { recipient, message } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const result = this.messagingManager.handleDirectMessage(
+      player.username,
+      recipient,
+      message
+    );
+    
+    if (!result.success) {
+      this.send(client.ws, {
+        type: 'error',
+        message: result.error
+      });
+      return;
+    }
+    
+    // Send confirmation to sender
+    this.send(client.ws, {
+      type: 'direct_message_sent',
+      dm: result.dm
+    });
+    
+    // Send to recipient if online
+    const recipientClient = this.getClientByUsername(recipient);
+    if (recipientClient) {
+      this.send(recipientClient.ws, {
+        type: 'direct_message_received',
+        dm: result.dm
+      });
+    }
+  }
+  
+  handleSendMail(client, data) {
+    const { mail } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const result = this.messagingManager.handleSendMail(
+      player.username,
+      mail.to,
+      mail.subject,
+      mail.body
+    );
+    
+    if (!result.success) {
+      this.send(client.ws, {
+        type: 'error',
+        message: result.error
+      });
+      return;
+    }
+    
+    // Notify sender
+    this.send(client.ws, {
+      type: 'mail_sent',
+      mail: result.mail
+    });
+    
+    // Notify recipient if online
+    const recipientClient = this.getClientByUsername(mail.to);
+    if (recipientClient) {
+      this.send(recipientClient.ws, {
+        type: 'mail_received',
+        mail: result.mail
+      });
+    }
+  }
+  
+  handleMarkMailRead(client, data) {
+    const { mailId } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const success = this.messagingManager.markMailAsRead(mailId, player.username);
+    
+    this.send(client.ws, {
+      type: 'mail_marked_read',
+      success,
+      mailId
+    });
+  }
+  
+  handleDeleteMail(client, data) {
+    const { mailId, folder } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const success = this.messagingManager.deleteMail(mailId, player.username, folder);
+    
+    this.send(client.ws, {
+      type: 'mail_deleted',
+      success,
+      mailId
+    });
+  }
+  
+  handleCreateForumTopic(client, data) {
+    const { topic } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const result = this.messagingManager.createForumTopic(
+      player.username,
+      topic.category,
+      topic.title,
+      topic.content
+    );
+    
+    if (!result.success) {
+      this.send(client.ws, {
+        type: 'error',
+        message: result.error
+      });
+      return;
+    }
+    
+    // Notify all clients
+    this.broadcast({
+      type: 'forum_topic_created',
+      topic: result.topic
+    });
+  }
+  
+  handleForumReply(client, data) {
+    const { topicId, reply } = data;
+    const player = this.playerManager.getPlayer(client.playerId);
+    
+    if (!player) return;
+    
+    const result = this.messagingManager.replyToForumTopic(
+      topicId,
+      player.username,
+      reply.content
+    );
+    
+    if (!result.success) {
+      this.send(client.ws, {
+        type: 'error',
+        message: result.error
+      });
+      return;
+    }
+    
+    // Notify all clients viewing the topic
+    this.broadcast({
+      type: 'forum_reply_added',
+      topicId,
+      reply: result.reply
+    });
   }
   
   handleAction(client, data) {
@@ -823,6 +1061,21 @@ class HighWizardryServer {
     for (const client of this.wss.clients) {
       if (client.playerId === playerId) {
         return client;
+      }
+    }
+    return null;
+  }
+  
+  /**
+   * Helper method to find a client by username
+   */
+  getClientByUsername(username) {
+    for (const client of this.wss.clients) {
+      if (client.playerId) {
+        const player = this.playerManager.getPlayer(client.playerId);
+        if (player && player.username === username) {
+          return client;
+        }
       }
     }
     return null;

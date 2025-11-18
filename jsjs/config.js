@@ -98,8 +98,47 @@ const CONFIG = {
   // Chat Settings
   CHAT: {
     MESSAGE_LIMIT: 100,
+    HISTORY_LIMIT: 500, // Server-side history limit per channel
     COOLDOWN: 1000, // 1 second
-    CHANNELS: ['global', 'guild', 'trade', 'help']
+    SLOWMODE_DELAY: 5000, // 5 seconds slowmode
+    MAX_MESSAGE_LENGTH: 500,
+    CHANNELS: ['global', 'local', 'guild', 'trade', 'help'],
+    RATE_LIMIT: {
+      MAX_MESSAGES: 10,
+      TIME_WINDOW: 10000 // 10 seconds
+    },
+    MODERATION: {
+      ENABLE_SPAM_FILTER: true,
+      ENABLE_LINK_FILTER: true,
+      ENABLE_PROFANITY_FILTER: true,
+      MAX_CAPS_PERCENT: 70,
+      MAX_REPEAT_CHARS: 5
+    }
+  },
+  
+  // Direct Messaging Settings
+  DM: {
+    MAX_UNREAD: 100,
+    MAX_CONVERSATIONS: 50,
+    MESSAGE_LIMIT: 200, // Per conversation
+    MAX_MESSAGE_LENGTH: 1000
+  },
+  
+  // Mail System Settings
+  MAIL: {
+    MAX_INBOX_SIZE: 200,
+    MAX_SENT_SIZE: 100,
+    MAX_SUBJECT_LENGTH: 100,
+    MAX_BODY_LENGTH: 5000,
+    RETENTION_DAYS: 30
+  },
+  
+  // Forum Settings
+  FORUM: {
+    MAX_TOPICS_PER_PAGE: 20,
+    MAX_REPLIES_PER_PAGE: 50,
+    MAX_TITLE_LENGTH: 200,
+    MAX_POST_LENGTH: 10000
   },
   
   // API Endpoints
