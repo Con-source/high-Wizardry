@@ -75,6 +75,36 @@ The server runs on port 8080 by default. You can change this by setting the PORT
 PORT=3000 npm start
 ```
 
+#### Email Configuration (Optional)
+
+For production deployments, configure email delivery for verification and password reset:
+
+```bash
+# Enable email sending
+export EMAIL_ENABLED=true
+export EMAIL_SERVICE=gmail  # or smtp, etc.
+export EMAIL_HOST=smtp.gmail.com
+export EMAIL_PORT=587
+export EMAIL_SECURE=false
+export EMAIL_USER=your-email@gmail.com
+export EMAIL_PASS=your-app-password
+export EMAIL_FROM=noreply@highwizardry.game
+
+# Require email verification before login (default: true)
+export EMAIL_REQUIRE_VERIFICATION=true
+
+# Then start the server
+npm start
+```
+
+**Development Mode:** If email is not configured, verification codes and reset tokens will be printed to the server console (CLI fallback) for easy testing.
+
+**Recommended Services:**
+- SendGrid (free tier available)
+- Mailgun (free tier available)
+- Gmail SMTP (requires app password)
+- Any SMTP service supported by Nodemailer
+
 ## How to Play
 
 1. **Register/Login**: Create an account or login with existing credentials (for multiplayer) or just open the game (for single player)
@@ -168,10 +198,38 @@ npm run dev
 The game uses WebSocket connections for real-time communication:
 
 1. **Authentication**: Secure login with bcrypt password hashing
-2. **Player Sync**: Server-side player state management
-3. **Location System**: Players can see others in the same location
-4. **Action Validation**: Critical calculations happen server-side to prevent cheating
-5. **Chat System**: Global and location-based messaging
+2. **Email Verification**: New accounts require email verification (configurable)
+3. **Password Recovery**: Forgot password flow with email/CLI-based reset
+4. **Account Security**: Ban/mute support for moderation
+5. **Session Management**: Tokens with expiration and revocation support
+6. **Player Sync**: Server-side player state management
+7. **Location System**: Players can see others in the same location
+8. **Action Validation**: Critical calculations happen server-side to prevent cheating
+9. **Chat System**: Global and location-based messaging with mute enforcement
+
+### Account Management
+
+#### Registration
+- Username (3-20 characters)
+- Email (required for account recovery)
+- Password (minimum 6 characters)
+- Email verification sent upon registration
+
+#### Login
+- Accounts with unverified emails must verify before login (configurable)
+- Banned accounts cannot log in
+- Session tokens valid for 7 days
+
+#### Password Reset
+- Request reset via username or email
+- Receive reset code via email or console (development)
+- Reset tokens expire in 1 hour
+- All sessions revoked after password reset
+
+#### Legacy Account Support
+- Accounts created before email requirement can still log in
+- Prompted to add email for security
+- Can add email anytime from account settings
 
 ## Save Data Migration
 
@@ -208,10 +266,16 @@ localStorage.removeItem('highWizardryPlayer');
 
 ## Security
 
-- Passwords are hashed using bcrypt
+- Passwords are hashed using bcrypt (salt rounds: 10)
+- Email verification required for new accounts
+- Password reset with time-limited tokens
+- Session tokens with 7-day expiration
+- Session revocation and single-session enforcement available
+- Ban/mute system for moderation
 - Critical game calculations (rewards, crafting) are server-side
 - Input validation on both client and server
-- Session tokens for authentication
+- XSS prevention in chat messages
+- Rate limiting on authentication and actions
 
 ## API Reference
 

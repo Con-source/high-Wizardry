@@ -27,7 +27,8 @@ All messages follow this format:
 {
   "type": "register",
   "username": "string (3-20 chars)",
-  "password": "string (min 6 chars)"
+  "password": "string (min 6 chars)",
+  "email": "string (optional, but recommended for account recovery)"
 }
 ```
 
@@ -37,7 +38,9 @@ Response (success):
   "type": "auth_success",
   "playerId": "uuid",
   "token": "session_token",
-  "playerData": { /* player object */ }
+  "playerData": { /* player object */ },
+  "emailVerified": false,
+  "needsEmailVerification": true
 }
 ```
 
@@ -60,6 +63,8 @@ Response (failure):
 
 Response: Same as register
 
+**Note:** Login will fail if the user account is banned or if email verification is required but not completed. In case of unverified email, the response will include `needsEmailVerification: true`.
+
 #### Authenticate with Token
 ```json
 {
@@ -69,6 +74,100 @@ Response: Same as register
 ```
 
 Response: Same as register
+
+### Email Verification
+
+#### Verify Email
+```json
+{
+  "type": "verify_email",
+  "username": "string",
+  "code": "string (6-digit code)"
+}
+```
+
+Response:
+```json
+{
+  "type": "email_verification_result",
+  "success": true | false,
+  "message": "verification status message"
+}
+```
+
+#### Resend Verification Code
+```json
+{
+  "type": "resend_verification",
+  "username": "string"
+}
+```
+
+Response:
+```json
+{
+  "type": "resend_verification_result",
+  "success": true | false,
+  "message": "status message"
+}
+```
+
+#### Add Email to Account (for legacy accounts)
+```json
+{
+  "type": "add_email",
+  "username": "string",
+  "email": "string"
+}
+```
+
+Response:
+```json
+{
+  "type": "add_email_result",
+  "success": true | false,
+  "message": "status message"
+}
+```
+
+### Password Reset
+
+#### Request Password Reset
+```json
+{
+  "type": "request_password_reset",
+  "usernameOrEmail": "string"
+}
+```
+
+Response:
+```json
+{
+  "type": "password_reset_request_result",
+  "success": true,
+  "message": "If an account exists, a reset email has been sent"
+}
+```
+
+**Note:** For security, this always returns success even if the account doesn't exist.
+
+#### Reset Password
+```json
+{
+  "type": "reset_password",
+  "token": "string (reset token from email)",
+  "newPassword": "string (min 6 chars)"
+}
+```
+
+Response:
+```json
+{
+  "type": "password_reset_result",
+  "success": true | false,
+  "message": "status message"
+}
+```
 
 ### Game Actions
 
@@ -379,11 +478,35 @@ Exceeding these limits will result in error messages and temporary blocks.
 
 ## Security Notes
 
-1. Passwords are hashed using bcrypt
-2. Session tokens expire after 7 days
-3. All critical calculations (rewards, costs) are server-side
-4. Chat messages are sanitized to prevent XSS
-5. Player updates from clients are validated and filtered
+1. **Passwords** are hashed using bcrypt with salt rounds of 10
+2. **Session tokens** expire after 7 days and can be revoked
+3. **Email verification** is required for new accounts (configurable via `EMAIL_REQUIRE_VERIFICATION` env var)
+4. **Password reset tokens** expire after 1 hour
+5. **Ban enforcement**: Banned users cannot log in and all their tokens are revoked
+6. **Mute enforcement**: Muted users cannot send chat messages
+7. All critical calculations (rewards, costs) are server-side
+8. Chat messages are sanitized to prevent XSS
+9. Player updates from clients are validated and filtered
+10. **Email handling**: Emails can be sent via SMTP (production) or CLI fallback (development)
+11. **Rate limiting**: Protection against brute force attacks on authentication endpoints
+
+### Email Configuration
+
+To enable email sending in production, set these environment variables:
+
+```bash
+EMAIL_ENABLED=true
+EMAIL_SERVICE=gmail  # or other nodemailer service
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+EMAIL_FROM=noreply@highwizardry.game
+EMAIL_REQUIRE_VERIFICATION=true  # Set to false to disable verification requirement
+```
+
+If email is not configured, verification codes and reset tokens will be printed to the server console (CLI fallback) for development purposes.
 
 ## HTTP Endpoints
 
@@ -397,6 +520,84 @@ Response:
   "status": "ok",
   "players": 5,
   "uptime": 1234.567
+}
+```
+
+### POST /api/auth/request-reset
+
+Request a password reset email.
+
+Request body:
+```json
+{
+  "usernameOrEmail": "string"
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "If an account exists, a reset email has been sent"
+}
+```
+
+### POST /api/auth/reset-password
+
+Reset password with token.
+
+Request body:
+```json
+{
+  "token": "string (reset token)",
+  "newPassword": "string (min 6 chars)"
+}
+```
+
+Response:
+```json
+{
+  "success": true | false,
+  "message": "status message"
+}
+```
+
+### POST /api/auth/verify-email
+
+Verify email address with code.
+
+Request body:
+```json
+{
+  "username": "string",
+  "code": "string (6-digit code)"
+}
+```
+
+Response:
+```json
+{
+  "success": true | false,
+  "message": "status message"
+}
+```
+
+### POST /api/auth/resend-verification
+
+Resend email verification code.
+
+Request body:
+```json
+{
+  "username": "string"
+}
+```
+
+Response:
+```json
+{
+  "success": true | false,
+  "message": "status message"
 }
 ```
 

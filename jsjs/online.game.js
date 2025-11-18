@@ -139,6 +139,26 @@ const onlineGame = {
             case 'auth_failed':
                 this.handleAuthFailed(message);
                 break;
+            
+            case 'email_verification_result':
+                this.handleEmailVerificationResult(message);
+                break;
+            
+            case 'resend_verification_result':
+                this.handleResendVerificationResult(message);
+                break;
+            
+            case 'add_email_result':
+                this.handleAddEmailResult(message);
+                break;
+            
+            case 'password_reset_request_result':
+                this.handlePasswordResetRequestResult(message);
+                break;
+            
+            case 'password_reset_result':
+                this.handlePasswordResetResult(message);
+                break;
                 
             case 'player_updated':
                 this.handlePlayerUpdate(message);
@@ -197,6 +217,24 @@ const onlineGame = {
             localStorage.setItem('wizardToken', this.sessionToken);
         }
         
+        // Check if email verification is needed
+        if (message.needsEmailVerification) {
+            this.showMessage('Please verify your email. Check your inbox for the verification code.', 'info');
+            this.showEmailVerificationModal(message.playerData.username);
+            return;
+        }
+        
+        // Check if user needs to add email (legacy account)
+        if (message.needsEmailSetup) {
+            this.showMessage('Welcome back! Please add an email for account security.', 'info');
+            this.showAddEmailModal(message.playerData.username);
+        }
+        
+        // Check if user is muted
+        if (message.muted) {
+            this.showMessage('Note: You are currently muted and cannot send chat messages.', 'warning');
+        }
+        
         // Update UI
         this.updatePlayerInfo();
         this.showGameScreen();
@@ -205,7 +243,17 @@ const onlineGame = {
     
     handleAuthFailed: function(message) {
         this.showMessage(message.message || 'Authentication failed', 'error');
-        this.showLoginScreen();
+        
+        // If needs email verification, show verification modal
+        if (message.needsEmailVerification) {
+            // Extract username from the context or ask user
+            const username = document.getElementById('login-username')?.value;
+            if (username) {
+                this.showEmailVerificationModal(username);
+            }
+        } else {
+            this.showLoginScreen();
+        }
     },
     
     handleConnected: function(message) {
@@ -226,6 +274,57 @@ const onlineGame = {
         // Remove player from local players list
         if (this.players[message.playerId]) {
             delete this.players[message.playerId];
+        }
+    },
+    
+    handleEmailVerificationResult: function(message) {
+        if (message.success) {
+            this.showMessage(message.message || 'Email verified successfully!', 'success');
+            document.getElementById('email-verification-modal').classList.add('hidden');
+            this.showGameScreen();
+        } else {
+            this.showMessage(message.message || 'Verification failed', 'error');
+        }
+    },
+    
+    handleResendVerificationResult: function(message) {
+        if (message.success) {
+            this.showMessage('Verification code resent. Check your email.', 'success');
+        } else {
+            this.showMessage(message.message || 'Failed to resend code', 'error');
+        }
+    },
+    
+    handleAddEmailResult: function(message) {
+        if (message.success) {
+            this.showMessage(message.message || 'Email added successfully!', 'success');
+            document.getElementById('add-email-modal').classList.add('hidden');
+            // Show verification modal
+            const username = this.playerData?.username;
+            if (username) {
+                this.showEmailVerificationModal(username);
+            }
+        } else {
+            this.showMessage(message.message || 'Failed to add email', 'error');
+        }
+    },
+    
+    handlePasswordResetRequestResult: function(message) {
+        if (message.success) {
+            this.showMessage(message.message || 'Password reset email sent!', 'success');
+            document.getElementById('forgot-password-modal').classList.add('hidden');
+        } else {
+            this.showMessage(message.message || 'Failed to send reset email', 'error');
+        }
+    },
+    
+    handlePasswordResetResult: function(message) {
+        if (message.success) {
+            this.showMessage('Password reset successfully! Please log in.', 'success');
+            document.getElementById('password-reset-modal').classList.add('hidden');
+            this.showLoginScreen();
+        } else {
+            this.showMessage(message.message || 'Failed to reset password', 'error');
         }
     },
     
@@ -426,6 +525,7 @@ const onlineGame = {
             registerForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
                 const password = document.getElementById('register-password').value;
                 const passwordConfirm = document.getElementById('register-password-confirm').value;
                 
@@ -437,6 +537,7 @@ const onlineGame = {
                 this.sendToServer({
                     type: 'register',
                     username: username,
+                    email: email,
                     password: password
                 });
             });
@@ -454,6 +555,138 @@ const onlineGame = {
                     }
                 }
             });
+        }
+        
+        // Forgot password link
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('forgot-password-modal').classList.remove('hidden');
+            });
+        }
+        
+        // Forgot password form
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const usernameOrEmail = document.getElementById('reset-username-email').value;
+                
+                this.sendToServer({
+                    type: 'request_password_reset',
+                    usernameOrEmail: usernameOrEmail
+                });
+            });
+        }
+        
+        // Password reset form
+        const passwordResetForm = document.getElementById('password-reset-form');
+        if (passwordResetForm) {
+            passwordResetForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const token = document.getElementById('reset-token').value;
+                const newPassword = document.getElementById('new-password').value;
+                const newPasswordConfirm = document.getElementById('new-password-confirm').value;
+                
+                if (newPassword !== newPasswordConfirm) {
+                    this.showMessage('Passwords do not match', 'error');
+                    return;
+                }
+                
+                this.sendToServer({
+                    type: 'reset_password',
+                    token: token,
+                    newPassword: newPassword
+                });
+            });
+        }
+        
+        // Email verification form
+        const emailVerificationForm = document.getElementById('email-verification-form');
+        if (emailVerificationForm) {
+            emailVerificationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = document.getElementById('verification-code').value;
+                const username = emailVerificationForm.dataset.username;
+                
+                this.sendToServer({
+                    type: 'verify_email',
+                    username: username,
+                    code: code
+                });
+            });
+        }
+        
+        // Resend verification button
+        const resendVerificationBtn = document.getElementById('resend-verification-btn');
+        if (resendVerificationBtn) {
+            resendVerificationBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const form = document.getElementById('email-verification-form');
+                const username = form.dataset.username;
+                
+                this.sendToServer({
+                    type: 'resend_verification',
+                    username: username
+                });
+            });
+        }
+        
+        // Add email form
+        const addEmailForm = document.getElementById('add-email-form');
+        if (addEmailForm) {
+            addEmailForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('add-email-input').value;
+                const username = addEmailForm.dataset.username;
+                
+                this.sendToServer({
+                    type: 'add_email',
+                    username: username,
+                    email: email
+                });
+            });
+        }
+        
+        // Check for reset token in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const resetToken = urlParams.get('reset');
+        if (resetToken) {
+            this.showPasswordResetModal(resetToken);
+        }
+    },
+    
+    showEmailVerificationModal: function(username) {
+        const modal = document.getElementById('email-verification-modal');
+        const form = document.getElementById('email-verification-form');
+        if (modal && form) {
+            form.dataset.username = username;
+            document.getElementById('verification-code').value = '';
+            document.getElementById('login-screen').classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+    },
+    
+    showAddEmailModal: function(username) {
+        const modal = document.getElementById('add-email-modal');
+        const form = document.getElementById('add-email-form');
+        if (modal && form) {
+            form.dataset.username = username;
+            document.getElementById('add-email-input').value = '';
+            modal.classList.remove('hidden');
+        }
+    },
+    
+    showPasswordResetModal: function(token) {
+        const modal = document.getElementById('password-reset-modal');
+        if (modal) {
+            document.getElementById('reset-token').value = token;
+            document.getElementById('new-password').value = '';
+            document.getElementById('new-password-confirm').value = '';
+            document.getElementById('login-screen').classList.add('hidden');
+            modal.classList.remove('hidden');
         }
     },
     
