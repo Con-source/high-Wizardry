@@ -257,7 +257,8 @@ class HighWizardryServer {
     }
   }
   
-  handleAuth(client, data) {
+  // BUGFIX: Made async to properly await authentication calls and prevent race conditions
+  async handleAuth(client, data) {
     const { type, username, password, token, email } = data;
     
     // Rate limit authentication attempts
@@ -270,9 +271,11 @@ class HighWizardryServer {
       return;
     }
     
-    if (type === 'register') {
-      // Register new user
-      this.authManager.register(username, password, email).then(result => {
+    try {
+      if (type === 'register') {
+        // Register new user - BUGFIX: Now using await for consistency
+        const result = await this.authManager.register(username, password, email);
+        
         if (result.success) {
           client.authenticated = true;
           client.playerId = result.playerId;
@@ -280,31 +283,48 @@ class HighWizardryServer {
           // Create player state
           const playerData = this.playerManager.createPlayer(result.playerId, username);
           
+          // BUGFIX: Standardized auth_success response with all required fields
           this.send(client.ws, {
             type: 'auth_success',
             playerId: result.playerId,
+            username: username,
             token: result.token,
             playerData,
             emailVerified: result.emailVerified,
-            needsEmailVerification: result.needsEmailVerification
+            needsEmailVerification: result.needsEmailVerification || false,
+            needsEmailSetup: false, // New registrations always have email or explicitly no email
+            muted: false,
+            banned: false
           });
           
-          // Notify other players
-          this.broadcast({
-            type: 'player_connected',
-            playerId: result.playerId,
-            username
-          }, client.playerId);
+          // BUGFIX: Only broadcast player_connected AFTER successful auth AND when email verification
+          // is not required or already complete (prevents race condition)
+          if (!result.needsEmailVerification) {
+            this.broadcast({
+              type: 'player_connected',
+              playerId: result.playerId,
+              username
+            }, client.playerId);
+          }
         } else {
+          // BUGFIX: Standardized auth_failed response
           this.send(client.ws, {
             type: 'auth_failed',
+            playerId: null,
+            username: null,
+            playerData: null,
+            token: null,
+            needsEmailVerification: false,
+            needsEmailSetup: false,
+            muted: false,
+            banned: false,
             message: result.message
           });
         }
-      });
-    } else if (type === 'login') {
-      // Login existing user
-      this.authManager.login(username, password).then(result => {
+      } else if (type === 'login') {
+        // Login existing user - BUGFIX: Now using await for consistency
+        const result = await this.authManager.login(username, password);
+        
         if (result.success) {
           client.authenticated = true;
           client.playerId = result.playerId;
@@ -312,64 +332,145 @@ class HighWizardryServer {
           // Load or create player state
           let playerData = this.playerManager.getPlayer(result.playerId);
           if (!playerData) {
-            playerData = this.playerManager.createPlayer(result.playerId, username);
+            playerData = this.playerManager.createPlayer(result.playerId, result.username);
           }
           
+          // BUGFIX: Standardized auth_success response with all required fields
           this.send(client.ws, {
             type: 'auth_success',
             playerId: result.playerId,
+            username: result.username,
             token: result.token,
             playerData,
-            emailVerified: result.emailVerified,
-            needsEmailSetup: result.needsEmailSetup,
-            muted: result.muted
+            emailVerified: result.emailVerified || false,
+            needsEmailVerification: false, // Already checked in login()
+            needsEmailSetup: result.needsEmailSetup || false,
+            muted: result.muted || false,
+            banned: false // If banned, login would have failed
           });
           
-          // Notify other players
+          // BUGFIX: Only broadcast player_connected AFTER successful login (no email verification needed)
           this.broadcast({
             type: 'player_connected',
             playerId: result.playerId,
-            username
+            username: result.username
           }, client.playerId);
         } else {
+          // BUGFIX: Standardized auth_failed response
           this.send(client.ws, {
             type: 'auth_failed',
-            message: result.message,
-            needsEmailVerification: result.needsEmailVerification
+            playerId: null,
+            username: null,
+            playerData: null,
+            token: null,
+            needsEmailVerification: result.needsEmailVerification || false,
+            needsEmailSetup: false,
+            muted: false,
+            banned: result.message && result.message.includes('banned') || false,
+            message: result.message
           });
         }
-      });
-    } else if (type === 'authenticate' && token) {
-      // Authenticate with token
-      const result = this.authManager.validateToken(token);
-      if (result.success) {
-        client.authenticated = true;
-        client.playerId = result.playerId;
+      } else if (type === 'authenticate' && token) {
+        // Authenticate with token
+        const result = this.authManager.validateToken(token);
         
-        // Load player state
-        let playerData = this.playerManager.getPlayer(result.playerId);
-        if (!playerData) {
-          playerData = this.playerManager.createPlayer(result.playerId, result.username);
+        if (result.success) {
+          // BUGFIX: Check user's current ban/mute status from user data
+          const userData = this.authManager.getUserByPlayerId(result.playerId);
+          
+          if (!userData) {
+            this.send(client.ws, {
+              type: 'auth_failed',
+              playerId: null,
+              username: null,
+              playerData: null,
+              token: null,
+              needsEmailVerification: false,
+              needsEmailSetup: false,
+              muted: false,
+              banned: false,
+              message: 'User not found'
+            });
+            return;
+          }
+          
+          // BUGFIX: Check if user is banned
+          if (userData.banned) {
+            this.send(client.ws, {
+              type: 'auth_failed',
+              playerId: null,
+              username: null,
+              playerData: null,
+              token: null,
+              needsEmailVerification: false,
+              needsEmailSetup: false,
+              muted: false,
+              banned: true,
+              message: 'Account has been banned. Please contact support.'
+            });
+            return;
+          }
+          
+          client.authenticated = true;
+          client.playerId = result.playerId;
+          
+          // Load player state
+          let playerData = this.playerManager.getPlayer(result.playerId);
+          if (!playerData) {
+            playerData = this.playerManager.createPlayer(result.playerId, result.username);
+          }
+          
+          // BUGFIX: Standardized auth_success response with all required fields including ban/mute status
+          this.send(client.ws, {
+            type: 'auth_success',
+            playerId: result.playerId,
+            username: result.username,
+            token: token,
+            playerData,
+            emailVerified: userData.emailVerified || false,
+            needsEmailVerification: false, // Token auth means already verified
+            needsEmailSetup: !userData.email,
+            muted: userData.muted || false,
+            banned: false // Already checked above
+          });
+          
+          // BUGFIX: Only broadcast player_connected AFTER token validation and ban check
+          this.broadcast({
+            type: 'player_connected',
+            playerId: result.playerId,
+            username: result.username
+          }, client.playerId);
+        } else {
+          // BUGFIX: Standardized auth_failed response
+          this.send(client.ws, {
+            type: 'auth_failed',
+            playerId: null,
+            username: null,
+            playerData: null,
+            token: null,
+            needsEmailVerification: false,
+            needsEmailSetup: false,
+            muted: false,
+            banned: false,
+            message: result.message || 'Invalid token'
+          });
         }
-        
-        this.send(client.ws, {
-          type: 'auth_success',
-          playerId: result.playerId,
-          playerData
-        });
-        
-        // Notify other players
-        this.broadcast({
-          type: 'player_connected',
-          playerId: result.playerId,
-          username: result.username
-        }, client.playerId);
-      } else {
-        this.send(client.ws, {
-          type: 'auth_failed',
-          message: 'Invalid token'
-        });
       }
+    } catch (error) {
+      // BUGFIX: Proper error handling for async operations
+      console.error('Authentication error:', error);
+      this.send(client.ws, {
+        type: 'auth_failed',
+        playerId: null,
+        username: null,
+        playerData: null,
+        token: null,
+        needsEmailVerification: false,
+        needsEmailSetup: false,
+        muted: false,
+        banned: false,
+        message: 'Authentication failed due to server error'
+      });
     }
   }
   
@@ -524,64 +625,123 @@ class HighWizardryServer {
     }
   }
   
-  handleEmailVerification(client, data) {
+  // BUGFIX: Made async for consistent async handling
+  async handleEmailVerification(client, data) {
     const { username, code } = data;
     
-    this.authManager.verifyEmail(username, code).then(result => {
+    try {
+      const result = await this.authManager.verifyEmail(username, code);
+      
       this.send(client.ws, {
         type: 'email_verification_result',
         success: result.success,
         message: result.message
       });
-    });
+      
+      // BUGFIX: After successful email verification, if user is authenticated, broadcast player_connected
+      // This fixes the race condition where registration completes but broadcast was skipped due to pending verification
+      if (result.success && client.authenticated && client.playerId) {
+        const userData = this.authManager.getUserByPlayerId(client.playerId);
+        if (userData && !userData.banned) {
+          this.broadcast({
+            type: 'player_connected',
+            playerId: client.playerId,
+            username: userData.username
+          }, client.playerId);
+        }
+      }
+    } catch (error) {
+      console.error('Email verification error:', error);
+      this.send(client.ws, {
+        type: 'email_verification_result',
+        success: false,
+        message: 'Verification failed due to server error'
+      });
+    }
   }
   
-  handleResendVerification(client, data) {
+  // BUGFIX: Made async for consistent async handling
+  async handleResendVerification(client, data) {
     const { username } = data;
     
-    this.authManager.resendVerificationEmail(username).then(result => {
+    try {
+      const result = await this.authManager.resendVerificationEmail(username);
       this.send(client.ws, {
         type: 'resend_verification_result',
         success: result.success,
         message: result.message
       });
-    });
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      this.send(client.ws, {
+        type: 'resend_verification_result',
+        success: false,
+        message: 'Failed to resend verification code'
+      });
+    }
   }
   
-  handleAddEmail(client, data) {
+  // BUGFIX: Made async for consistent async handling
+  async handleAddEmail(client, data) {
     const { username, email } = data;
     
-    this.authManager.addEmail(username, email).then(result => {
+    try {
+      const result = await this.authManager.addEmail(username, email);
       this.send(client.ws, {
         type: 'add_email_result',
         success: result.success,
         message: result.message
       });
-    });
+    } catch (error) {
+      console.error('Add email error:', error);
+      this.send(client.ws, {
+        type: 'add_email_result',
+        success: false,
+        message: 'Failed to add email'
+      });
+    }
   }
   
-  handlePasswordResetRequest(client, data) {
+  // BUGFIX: Made async for consistent async handling
+  async handlePasswordResetRequest(client, data) {
     const { usernameOrEmail } = data;
     
-    this.authManager.requestPasswordReset(usernameOrEmail).then(result => {
+    try {
+      const result = await this.authManager.requestPasswordReset(usernameOrEmail);
       this.send(client.ws, {
         type: 'password_reset_request_result',
         success: result.success,
         message: result.message
       });
-    });
+    } catch (error) {
+      console.error('Password reset request error:', error);
+      this.send(client.ws, {
+        type: 'password_reset_request_result',
+        success: false,
+        message: 'Failed to process password reset request'
+      });
+    }
   }
   
-  handlePasswordReset(client, data) {
+  // BUGFIX: Made async for consistent async handling
+  async handlePasswordReset(client, data) {
     const { token, newPassword } = data;
     
-    this.authManager.resetPassword(token, newPassword).then(result => {
+    try {
+      const result = await this.authManager.resetPassword(token, newPassword);
       this.send(client.ws, {
         type: 'password_reset_result',
         success: result.success,
         message: result.message
       });
-    });
+    } catch (error) {
+      console.error('Password reset error:', error);
+      this.send(client.ws, {
+        type: 'password_reset_result',
+        success: false,
+        message: 'Failed to reset password'
+      });
+    }
   }
   
   send(ws, data) {
