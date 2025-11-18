@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High Wizardry - Messaging System Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #f8f9fa;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .demo-section {
+      background: rgba(26, 26, 46, 0.9);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2d3748;
+    }
+    
+    .channel-tab {
+      cursor: pointer;
+      padding: 8px 16px;
+      margin-right: 8px;
+      background: rgba(42, 42, 60, 0.7);
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    
+    .channel-tab:hover {
+      background: rgba(124, 92, 231, 0.3);
+      border-color: #7c5ce7;
+    }
+    
+    .channel-tab.active {
+      background: #7c5ce7;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .badge {
+      background: #f39c12;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    
+    .chat-messages {
+      height: 300px;
+      overflow-y: auto;
+      background: rgba(15, 15, 26, 0.5);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .chat-message {
+      margin-bottom: 10px;
+      padding: 8px;
+      background: rgba(42, 42, 60, 0.5);
+      border-radius: 6px;
+    }
+    
+    .chat-username {
+      color: #7c5ce7;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    .chat-time {
+      color: #adb5bd;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+    
+    .dm-conversation, .mail-item, .forum-topic {
+      background: rgba(42, 42, 60, 0.7);
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-left: 3px solid transparent;
+    }
+    
+    .dm-conversation:hover, .mail-item:hover, .forum-topic:hover {
+      background: rgba(124, 92, 231, 0.2);
+      border-left-color: #7c5ce7;
+    }
+    
+    .unread {
+      border-left-color: #f39c12;
+      font-weight: bold;
+    }
+    
+    .pinned {
+      border-left-color: #00b894;
+    }
+    
+    .locked {
+      opacity: 0.7;
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, rgba(124, 92, 231, 0.3), rgba(162, 155, 254, 0.2));
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #7c5ce7;
+    }
+    
+    .stats-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #7c5ce7;
+    }
+    
+    .stats-label {
+      color: #adb5bd;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-4">
+      <i class="fas fa-comments"></i> High Wizardry Messaging System Demo
+    </h1>
+    
+    <!-- System Stats -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="stats-card">
+          <div class="stats-number" id="stat-channels">5</div>
+          <div class="stats-label">Chat Channels</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card">
+          <div class="stats-number" id="stat-dms">0</div>
+          <div class="stats-label">Unread DMs</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card">
+          <div class="stats-number" id="stat-mail">0</div>
+          <div class="stats-label">Unread Mail</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card">
+          <div class="stats-number" id="stat-topics">0</div>
+          <div class="stats-label">Forum Topics</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Multi-Channel Chat -->
+    <div class="demo-section">
+      <h3><i class="fas fa-comments"></i> Multi-Channel Chat</h3>
+      <p class="text-muted">Rate limited (10/10s), content filtered, persistent history</p>
+      
+      <div class="mb-3">
+        <span class="channel-tab active" data-channel="global">
+          <i class="fas fa-globe"></i> Global
+          <span class="badge" id="channel-global-badge" style="display: none;">0</span>
+        </span>
+        <span class="channel-tab" data-channel="local">
+          <i class="fas fa-map-marker-alt"></i> Local
+          <span class="badge" id="channel-local-badge" style="display: none;">0</span>
+        </span>
+        <span class="channel-tab" data-channel="trade">
+          <i class="fas fa-exchange-alt"></i> Trade
+          <span class="badge" id="channel-trade-badge" style="display: none;">0</span>
+        </span>
+        <span class="channel-tab" data-channel="help">
+          <i class="fas fa-question-circle"></i> Help
+          <span class="badge" id="channel-help-badge" style="display: none;">0</span>
+        </span>
+      </div>
+      
+      <div class="chat-messages" id="chat-global"></div>
+      
+      <div class="input-group">
+        <input type="text" class="form-control" id="chat-input" placeholder="Type a message...">
+        <button class="btn btn-primary" onclick="sendChatMessage()">
+          <i class="fas fa-paper-plane"></i> Send
+        </button>
+      </div>
+    </div>
+    
+    <!-- Direct Messages -->
+    <div class="demo-section">
+      <h3><i class="fas fa-envelope"></i> Direct Messages</h3>
+      <p class="text-muted">Private persistent messaging, conversation threads</p>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Conversations</h5>
+          <div id="dm-list">
+            <div class="dm-conversation unread">
+              <strong>Wizard123</strong>
+              <span class="badge">3</span>
+              <div class="dm-preview text-muted small">Hey, want to team up for...</div>
+            </div>
+            <div class="dm-conversation">
+              <strong>DragonSlayer</strong>
+              <div class="dm-preview text-muted small">Thanks for the potion!</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <h5>Send New DM</h5>
+          <div class="mb-2">
+            <input type="text" class="form-control" id="dm-recipient" placeholder="Recipient username">
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" id="dm-message" placeholder="Message (max 1000 chars)">
+            <button class="btn btn-primary" onclick="sendDM()">
+              <i class="fas fa-paper-plane"></i> Send DM
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mail System -->
+    <div class="demo-section">
+      <h3><i class="fas fa-inbox"></i> Mail System</h3>
+      <p class="text-muted">Long-form messages, system notifications, 30-day retention</p>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Inbox (2 unread)</h5>
+          <div id="mail-list">
+            <div class="mail-item unread">
+              <div class="mail-from">🔔 System</div>
+              <div class="mail-subject"><strong>Auction Won!</strong></div>
+              <div class="mail-time text-muted small">2 hours ago</div>
+            </div>
+            <div class="mail-item unread">
+              <div class="mail-from">GuildMaster</div>
+              <div class="mail-subject"><strong>Guild Meeting Tonight</strong></div>
+              <div class="mail-time text-muted small">5 hours ago</div>
+            </div>
+            <div class="mail-item">
+              <div class="mail-from">Healer42</div>
+              <div class="mail-subject"><strong>Re: Trading Request</strong></div>
+              <div class="mail-time text-muted small">Yesterday</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <h5>Compose Mail</h5>
+          <div class="mb-2">
+            <input type="text" class="form-control" id="mail-recipient" placeholder="Recipient username">
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control" id="mail-subject" placeholder="Subject (max 100 chars)">
+          </div>
+          <div class="mb-2">
+            <textarea class="form-control" id="mail-body" rows="4" placeholder="Message body (max 5000 chars)"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="sendMail()">
+            <i class="fas fa-paper-plane"></i> Send Mail
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Forum System -->
+    <div class="demo-section">
+      <h3><i class="fas fa-comments-alt"></i> Forum System</h3>
+      <p class="text-muted">Threaded discussions, categories, moderation tools</p>
+      
+      <div class="row">
+        <div class="col-md-8">
+          <h5>Recent Topics</h5>
+          <div id="forum-list">
+            <div class="forum-topic pinned">
+              📌 <strong>Server Rules and Guidelines</strong>
+              <div class="forum-meta text-muted small">
+                by Admin | 150 replies | 2.5k views
+              </div>
+            </div>
+            <div class="forum-topic">
+              <strong>Best grinding spots for level 20+?</strong>
+              <div class="forum-meta text-muted small">
+                by Newbie123 | 23 replies | 450 views
+              </div>
+            </div>
+            <div class="forum-topic locked">
+              🔒 <strong>Trading Thread - December 2024</strong>
+              <div class="forum-meta text-muted small">
+                by Trader | 89 replies | 1.2k views
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h5>Categories</h5>
+          <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action">📝 General</a>
+            <a href="#" class="list-group-item list-group-item-action">📖 Guides</a>
+            <a href="#" class="list-group-item list-group-item-action">💰 Trading</a>
+            <a href="#" class="list-group-item list-group-item-action">🏰 Guilds</a>
+            <a href="#" class="list-group-item list-group-item-action">📢 Announcements</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Features Overview -->
+    <div class="demo-section">
+      <h3><i class="fas fa-shield-alt"></i> Security & Features</h3>
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Content Filtering</h5>
+          <ul>
+            <li>Profanity filter (expandable word list)</li>
+            <li>Link/URL removal</li>
+            <li>Spam pattern detection</li>
+            <li>Excessive caps filtering</li>
+            <li>Repeated character limiting</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h5>Moderation Tools</h5>
+          <ul>
+            <li>Mute/unmute users</li>
+            <li>Slow mode (5s delay)</li>
+            <li>Lock/unlock forum topics</li>
+            <li>Pin/unpin topics</li>
+            <li>Delete messages/topics</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h5>Rate Limiting</h5>
+          <ul>
+            <li>10 messages per 10 seconds</li>
+            <li>Per-user tracking</li>
+            <li>Prevents spam and DoS</li>
+            <li>Automatic cooldown reset</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h5>Persistence & Cleanup</h5>
+          <ul>
+            <li>Server-side message storage</li>
+            <li>30-day retention period</li>
+            <li>Automatic cleanup every 24h</li>
+            <li>Configurable limits per feature</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="jsjs/config.js"></script>
+  <script src="jsjs/messaging.js"></script>
+  <script>
+    // Demo functions
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (message) {
+        const currentChannel = document.querySelector('.channel-tab.active').dataset.channel;
+        Messaging.sendChannelMessage(currentChannel, message);
+        input.value = '';
+        
+        // Add to UI
+        addChatMessageToUI(currentChannel, {
+          username: 'You',
+          message: message,
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    function sendDM() {
+      const recipient = document.getElementById('dm-recipient').value.trim();
+      const message = document.getElementById('dm-message').value.trim();
+      if (recipient && message) {
+        Messaging.sendDirectMessage(recipient, message);
+        document.getElementById('dm-recipient').value = '';
+        document.getElementById('dm-message').value = '';
+        alert(`DM sent to ${recipient}!`);
+      }
+    }
+    
+    function sendMail() {
+      const recipient = document.getElementById('mail-recipient').value.trim();
+      const subject = document.getElementById('mail-subject').value.trim();
+      const body = document.getElementById('mail-body').value.trim();
+      if (recipient && subject && body) {
+        Messaging.sendMail(recipient, subject, body);
+        document.getElementById('mail-recipient').value = '';
+        document.getElementById('mail-subject').value = '';
+        document.getElementById('mail-body').value = '';
+        alert(`Mail sent to ${recipient}!`);
+      }
+    }
+    
+    function addChatMessageToUI(channel, msg) {
+      const container = document.getElementById(`chat-${channel}`);
+      if (container) {
+        const msgEl = document.createElement('div');
+        msgEl.className = 'chat-message';
+        msgEl.innerHTML = `
+          <span class="chat-username">${msg.username}</span>
+          <span class="chat-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+          <div class="chat-text">${msg.message}</div>
+        `;
+        container.appendChild(msgEl);
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+    
+    // Channel switching
+    document.querySelectorAll('.channel-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const channel = this.dataset.channel;
+        Messaging.switchChannel(channel);
+      });
+    });
+    
+    // Enter key to send
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+    
+    // Initialize with demo data
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add some demo messages
+      addChatMessageToUI('global', {
+        username: 'Wizard123',
+        message: 'Welcome to High Wizardry!',
+        timestamp: Date.now() - 60000
+      });
+      addChatMessageToUI('global', {
+        username: 'DragonSlayer',
+        message: 'Anyone want to team up for a quest?',
+        timestamp: Date.now() - 30000
+      });
+    });
+  </script>
+</body>
+</html>
