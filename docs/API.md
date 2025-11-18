@@ -18,6 +18,20 @@ All messages follow this format:
 }
 ```
 
+## Table of Contents
+
+1. [Client → Server Messages](#client--server-messages)
+   - [Authentication](#authentication)
+   - [Email Verification](#email-verification)
+   - [Password Reset](#password-reset)
+   - [Game Actions](#game-actions)
+   - [Messaging System](#messaging-system-new)
+   - [Event Management](#event-management)
+   - [Heartbeat](#heartbeat)
+2. [Server → Client Messages](#server--client-messages)
+3. [HTTP Endpoints](#http-endpoints)
+4. [Data Structures](#data-structures)
+
 ## Client → Server Messages
 
 ### Authentication
@@ -243,6 +257,226 @@ Response:
   }
 }
 ```
+
+### Messaging System (NEW)
+
+#### Send Chat Message
+```json
+{
+  "type": "chat_message",
+  "channel": "global" | "local" | "guild" | "trade" | "help",
+  "message": "string (max 500 chars)"
+}
+```
+
+Response: Broadcast to relevant players
+```json
+{
+  "type": "chat_message",
+  "id": "message_id",
+  "username": "sender",
+  "playerId": "uuid",
+  "message": "filtered_message",
+  "channel": "channel_name",
+  "timestamp": 1234567890
+}
+```
+
+**Features:**
+- Rate limiting: 10 messages per 10 seconds
+- Content filtering: profanity, links, spam patterns
+- Moderation: muted users cannot send messages
+- History: Server stores last 500 messages per channel
+
+#### Send Direct Message
+```json
+{
+  "type": "direct_message",
+  "recipient": "username",
+  "message": "string (max 1000 chars)"
+}
+```
+
+Response to sender:
+```json
+{
+  "type": "direct_message_sent",
+  "dm": {
+    "id": "message_id",
+    "from": "sender",
+    "to": "recipient",
+    "message": "message_text",
+    "timestamp": 1234567890,
+    "read": false
+  }
+}
+```
+
+Response to recipient (if online):
+```json
+{
+  "type": "direct_message_received",
+  "dm": {
+    "id": "message_id",
+    "from": "sender",
+    "to": "recipient",
+    "message": "message_text",
+    "timestamp": 1234567890,
+    "read": false
+  }
+}
+```
+
+**Features:**
+- Persistent storage: Messages saved for offline delivery
+- Conversation threads: Messages grouped by participants
+- Block/report: Can block users from sending DMs
+- Read status: Track read/unread messages
+
+#### Send Mail
+```json
+{
+  "type": "send_mail",
+  "mail": {
+    "to": "recipient_username",
+    "subject": "string (max 100 chars)",
+    "body": "string (max 5000 chars)"
+  }
+}
+```
+
+Response to sender:
+```json
+{
+  "type": "mail_sent",
+  "mail": {
+    "id": "mail_id",
+    "from": "sender",
+    "to": "recipient",
+    "subject": "subject",
+    "body": "body",
+    "timestamp": 1234567890,
+    "read": false,
+    "archived": false
+  }
+}
+```
+
+Response to recipient (if online):
+```json
+{
+  "type": "mail_received",
+  "mail": { /* mail object */ }
+}
+```
+
+**Features:**
+- Long-form messaging with subject and body
+- Inbox/Sent folders (max 200/100 messages)
+- System mail for important events
+- 30-day retention period
+
+#### Mark Mail as Read
+```json
+{
+  "type": "mark_mail_read",
+  "mailId": "mail_id"
+}
+```
+
+Response:
+```json
+{
+  "type": "mail_marked_read",
+  "success": true,
+  "mailId": "mail_id"
+}
+```
+
+#### Delete Mail
+```json
+{
+  "type": "delete_mail",
+  "mailId": "mail_id",
+  "folder": "inbox" | "sent"
+}
+```
+
+Response:
+```json
+{
+  "type": "mail_deleted",
+  "success": true,
+  "mailId": "mail_id"
+}
+```
+
+#### Create Forum Topic
+```json
+{
+  "type": "create_forum_topic",
+  "topic": {
+    "category": "general" | "guides" | "trading" | "guilds" | "announcements",
+    "title": "string (max 200 chars)",
+    "content": "string (max 10000 chars)"
+  }
+}
+```
+
+Response: Broadcast to all
+```json
+{
+  "type": "forum_topic_created",
+  "topic": {
+    "id": "topic_id",
+    "category": "category",
+    "title": "title",
+    "author": "username",
+    "content": "content",
+    "timestamp": 1234567890,
+    "replies": [],
+    "locked": false,
+    "pinned": false,
+    "views": 0
+  }
+}
+```
+
+**Features:**
+- Categorized discussions
+- Pin/lock topics (admin)
+- View count tracking
+- Pagination support
+
+#### Reply to Forum Topic
+```json
+{
+  "type": "forum_reply",
+  "topicId": "topic_id",
+  "reply": {
+    "content": "string (max 10000 chars)"
+  }
+}
+```
+
+Response: Broadcast to all
+```json
+{
+  "type": "forum_reply_added",
+  "topicId": "topic_id",
+  "reply": {
+    "id": "reply_id",
+    "author": "username",
+    "content": "content",
+    "timestamp": 1234567890
+  }
+}
+```
+
+**Features:**
+- Threaded conversations
+- Cannot reply to locked topics
+- Admin moderation (delete, move)
 
 ### Event Management
 
@@ -759,3 +993,187 @@ Response:
 ### GET /
 
 Serves the game client (index.html)
+
+### Messaging API Endpoints (NEW)
+
+#### GET /api/messaging/chat-history
+
+Get chat history for a channel.
+
+Query parameters:
+- `channel` (required) - Channel name (global, local, trade, help)
+- `locationId` (optional) - For local chat, the location ID
+- `limit` (optional, default: 50) - Number of messages to retrieve
+- `offset` (optional, default: 0) - Offset for pagination
+
+Response:
+```json
+{
+  "success": true,
+  "messages": [
+    {
+      "id": "message_id",
+      "username": "sender",
+      "playerId": "uuid",
+      "message": "message_text",
+      "channel": "channel_name",
+      "timestamp": 1234567890
+    }
+  ]
+}
+```
+
+#### GET /api/messaging/mailbox/:username
+
+Get mailbox (inbox and sent folders) for a user.
+
+Response:
+```json
+{
+  "success": true,
+  "mailbox": {
+    "inbox": [
+      {
+        "id": "mail_id",
+        "from": "sender",
+        "to": "recipient",
+        "subject": "subject",
+        "body": "body",
+        "timestamp": 1234567890,
+        "read": false,
+        "archived": false,
+        "system": false
+      }
+    ],
+    "sent": [ /* array of sent mail objects */ ]
+  }
+}
+```
+
+#### GET /api/messaging/conversation
+
+Get direct message conversation between two users.
+
+Query parameters:
+- `user1` (required) - First username
+- `user2` (required) - Second username
+- `limit` (optional, default: 50) - Number of messages to retrieve
+
+Response:
+```json
+{
+  "success": true,
+  "messages": [
+    {
+      "id": "message_id",
+      "from": "sender",
+      "to": "recipient",
+      "message": "message_text",
+      "timestamp": 1234567890,
+      "read": false
+    }
+  ]
+}
+```
+
+#### GET /api/messaging/forum/topics
+
+Get forum topics with pagination.
+
+Query parameters:
+- `category` (optional) - Filter by category (general, guides, trading, guilds, announcements)
+- `page` (optional, default: 1) - Page number
+- `perPage` (optional, default: 20) - Results per page
+
+Response:
+```json
+{
+  "success": true,
+  "topics": [
+    {
+      "id": "topic_id",
+      "category": "category",
+      "title": "title",
+      "author": "username",
+      "content": "content",
+      "timestamp": 1234567890,
+      "replies": [ /* array of reply objects */ ],
+      "locked": false,
+      "pinned": false,
+      "views": 0
+    }
+  ],
+  "total": 100,
+  "page": 1,
+  "perPage": 20,
+  "totalPages": 5
+}
+```
+
+#### GET /api/messaging/forum/topic/:topicId
+
+Get a specific forum topic by ID. Increments view count.
+
+Response:
+```json
+{
+  "success": true,
+  "topic": {
+    "id": "topic_id",
+    "category": "category",
+    "title": "title",
+    "author": "username",
+    "content": "content",
+    "timestamp": 1234567890,
+    "replies": [
+      {
+        "id": "reply_id",
+        "author": "username",
+        "content": "content",
+        "timestamp": 1234567890
+      }
+    ],
+    "locked": false,
+    "pinned": false,
+    "views": 1
+  }
+}
+```
+
+**Error response (404):**
+```json
+{
+  "success": false,
+  "error": "Topic not found"
+}
+```
+
+### Messaging System Features
+
+#### Content Filtering
+- **Profanity filter**: Replaces banned words with asterisks
+- **Link filter**: Removes HTTP/HTTPS URLs
+- **Spam detection**: Limits excessive caps and repeated characters
+- **Rate limiting**: 10 messages per 10 seconds per user
+
+#### Moderation Tools
+- **Mute users**: Prevent specific users from sending messages
+- **Slow mode**: Enforce delay between messages (5 seconds)
+- **Block users**: Users can block others from sending DMs
+- **Lock topics**: Admins can lock forum topics to prevent replies
+- **Pin topics**: Admins can pin topics to top of list
+- **Delete content**: Admins can delete topics and replies
+
+#### Persistence
+- **Chat history**: Last 500 messages per channel
+- **DM conversations**: Last 200 messages per conversation
+- **Mail retention**: 30 days, max 200 inbox / 100 sent
+- **Forum topics**: No automatic deletion
+- **Cleanup**: Runs every 24 hours to remove old data
+
+#### Scalability Considerations
+- In-memory storage (can be migrated to database)
+- Message sharding by channel/location
+- Efficient broadcast to specific groups (location, guild)
+- Rate limiting prevents spam/DoS
+- Automatic cleanup of old messages

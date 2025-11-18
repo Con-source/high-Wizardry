@@ -1,6 +1,6 @@
 # High Wizardry
 
-A web-based wizard/RPG game with online multiplayer support, achievements system, and consumable items.
+A web-based wizard/RPG game with online multiplayer support, achievements system, consumable items, and comprehensive messaging features.
 
 ## ✨ Features
 
@@ -11,7 +11,7 @@ A web-based wizard/RPG game with online multiplayer support, achievements system
 - **Crafting System**: Gather resources and craft powerful items
 - **Guild System**: Join guilds for unique benefits
 - **Location-based Gameplay**: Travel between various magical locations
-- **Chat System**: Communicate with other players globally or locally
+- **Advanced Messaging**: Multi-channel chat, DMs, mail, and forums
 - **Event System**: Experience real-time game world events that affect players
 
 ### 🎮 NEW Features (v2.0)
@@ -25,6 +25,15 @@ A web-based wizard/RPG game with online multiplayer support, achievements system
   - Food items with multiple benefits
   - Legendary elixirs with powerful permanent effects
   - Cooldown and duration system for balanced gameplay
+- **💬 Advanced Messaging System** (NEW):
+  - **Multi-Channel Chat**: Global, local, guild, trade, and help channels
+  - **Direct Messages**: Private persistent messaging between players (online/offline)
+  - **Mail System**: Long-form messages with subject/body, inbox/sent folders
+  - **Forum System**: Threaded discussions with categories, topics, and replies
+  - **Content Filtering**: Profanity, link, and spam filters
+  - **Moderation Tools**: Mute users, slow mode, lock/pin topics
+  - **Rate Limiting**: Protection against spam and abuse
+  - **Persistent Storage**: All messages saved and retrievable
 - **📊 Enhanced Player Stats**: New tracking for crafting, exploration, and more
 - **🎨 Improved UI**: Better organization and user experience
 
@@ -152,6 +161,56 @@ Use various items to enhance your gameplay:
 
 All consumables have cooldowns to maintain game balance.
 
+### 🎮 Messaging and Communication (NEW!)
+
+High Wizardry features a comprehensive messaging system for player interaction:
+
+#### Multi-Channel Chat
+- **Global**: Visible to all online players
+- **Local**: Only players in the same location
+- **Guild**: Guild members only (coming soon)
+- **Trade**: For buying, selling, and trading
+- **Help**: Ask questions and get assistance
+
+**Features:**
+- Message history (last 500 per channel)
+- Rate limiting (10 messages per 10 seconds)
+- Content filters (profanity, links, spam)
+- Moderation tools (mute, slow mode)
+- Unread message indicators
+
+#### Direct Messages (DMs)
+Send private messages to other players:
+- **Persistent**: Messages saved for offline delivery
+- **Conversations**: Threaded message history
+- **Read Status**: Track unread messages
+- **Block Users**: Prevent unwanted messages
+- **Notifications**: Alert when new DMs arrive
+
+#### Mail System
+Long-form messaging for important communications:
+- **Subject and Body**: Write detailed messages (up to 5000 characters)
+- **Inbox/Sent Folders**: Organize your mail
+- **System Mail**: Receive notifications about game events
+- **Search and Filter**: Find messages quickly
+- **Archive**: Keep important messages
+- **30-day Retention**: Old mail automatically cleaned up
+
+System mail examples:
+- Auction house notifications
+- Guild invitations
+- Quest completions
+- Account security alerts
+
+#### Forum System
+Community discussions and guides:
+- **Categories**: General, Guides, Trading, Guilds, Announcements
+- **Topics and Replies**: Threaded conversations
+- **Pin Important Topics**: Sticky threads stay at top
+- **Lock Discussions**: Close completed topics
+- **View Counter**: Track popular discussions
+- **Admin Moderation**: Maintain community standards
+
 ## Development
 
 ### Project Structure
@@ -162,12 +221,13 @@ high-Wizardry/
 ├── jsjs/               # Client-side JavaScript modules
 │   ├── main.js         # Game initialization
 │   ├── player.js       # Player state management
-│   ├── achievements.js # Achievement system (NEW)
-│   ├── consumables.js  # Consumable items system (NEW)
+│   ├── achievements.js # Achievement system
+│   ├── consumables.js  # Consumable items system
+│   ├── messaging.js    # Advanced messaging system (NEW)
 │   ├── online.game.js  # Multiplayer client
 │   ├── locations.js    # Location system
 │   ├── ui.js           # UI components
-│   ├── chat.js         # Chat system
+│   ├── chat.js         # Basic chat (legacy)
 │   ├── guilds.js       # Guild management
 │   ├── workshop.js     # Crafting system
 │   ├── black-market.js # Black market trading
@@ -176,6 +236,11 @@ high-Wizardry/
 │   ├── index.js        # Main server file
 │   ├── auth/           # Authentication system
 │   └── game/           # Game logic managers
+│       ├── GameManager.js
+│       ├── PlayerManager.js
+│       ├── LocationManager.js
+│       ├── EventDispatcher.js
+│       └── MessagingManager.js  # Messaging backend (NEW)
 ├── {css/               # Stylesheets
 └── package.json        # Dependencies
 ```
