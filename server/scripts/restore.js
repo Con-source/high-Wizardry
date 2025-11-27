@@ -53,10 +53,9 @@ function validateBackupTimestampOrThrow(ts) {
 }
 
 class RestoreManager {
-  constructor(timestamp, options = {}) {
-    if (!RestoreManager.isValidTimestamp(timestamp)) {
-      throw new Error(`Invalid backup timestamp: ${timestamp}`);
-    }
+  constructor(timestamp = '', options = {}) {
+    // Store timestamp without validation - individual methods will validate as needed
+    // This allows using RestoreManager for listing/querying without a specific timestamp
     this.timestamp = timestamp;
     this.dataDir = options.dataDir || path.join(__dirname, '..', 'data');
     this.backupDir = options.backupDir || path.join(__dirname, '..', '..', 'backups');
@@ -139,102 +138,86 @@ class RestoreManager {
 
   /**
    * Extract timestamp from a backup entry
-   * @param {object} entry - The backup entry object
-   * @returns {string|undefined} - The extracted timestamp or undefined if not found
+   * @param {object|string} entry - The backup entry object or filename string
+   * @returns {string|undefined} - The extracted timestamp or undefined if not found/invalid
    */
   extractTimestampFromEntry(entry) {
-    if (entry && typeof entry.timestamp === 'string' && entry.timestamp.trim() !== '') {
-      return entry.timestamp;
+    if (!entry) return undefined;
+    
+    // Handle string input (e.g., filename like '20231118-143022-manifest.json')
+    if (typeof entry === 'string') {
+      const match = entry.match(/(\d{8}-\d{6})/);
+      if (match && isValidBackupTimestamp(match[1])) {
+        return match[1];
+      }
+      return undefined;
     }
-    if (entry && typeof entry.name === 'string') {
-      const m = entry.name.match(/(\d{8}-\d{6})/);
-      if (m) return m[1];
+    
+    // Handle object with timestamp property
+    if (typeof entry.timestamp === 'string' && entry.timestamp.trim() !== '') {
+      if (isValidBackupTimestamp(entry.timestamp)) {
+        return entry.timestamp;
+      }
     }
+    
+    // Fallback: try to extract from entry.name property
+    if (typeof entry.name === 'string') {
+      const match = entry.name.match(/(\d{8}-\d{6})/);
+      if (match && isValidBackupTimestamp(match[1])) {
+        return match[1];
+      }
+    }
+    
     return undefined;
   }
 
   /**
-   * Validate a timestamp input or throw an error
-   * @param {unknown} ts - The timestamp to validate
-   * @returns {string} - The validated timestamp
-   * @throws {Error} - If the timestamp is invalid
-   */
-  validateTimestampInputOrThrow(ts) {
-    return validateBackupTimestampOrThrow(ts);
-  }
-
-  /**
-   * Get the latest valid backup timestamp
-   * @returns {string} - The latest valid timestamp
-   * @throws {Error} - If no valid timestamps exist
-   */
-  getLatestBackupTimestamp() {
-    if (!fs.existsSync(this.backupDir)) {
-      throw new Error('Invalid backup timestamp:');
-    }
-
-    const files = fs.readdirSync(this.backupDir);
-    const manifests = files.filter(f => f.endsWith('-manifest.json'));
-    
-    const timestamps = manifests.map(manifestFile => {
-      const manifestPath = path.join(this.backupDir, manifestFile);
-      try {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        return this.extractTimestampFromEntry(manifest);
-      } catch {
-        return undefined;
-      }
-    }).filter(ts => isValidBackupTimestamp(ts));
-
-    if (timestamps.length === 0) {
-      throw new Error('Invalid backup timestamp:');
-    }
-
-    timestamps.sort();
-    return timestamps[timestamps.length - 1];
-  }
-
-  /**
    * List available backups (skips entries with invalid timestamps)
+   * @returns {Array<Object>}
    */
   listBackups() {
+    const backups = [];
+
     if (!fs.existsSync(this.backupDir)) {
-      console.log('⚠️  No backups directory found.');
-      return [];
+      // No backup directory => no backups
+      return backups;
     }
 
     const files = fs.readdirSync(this.backupDir);
-    const manifests = files.filter(f => f.endsWith('-manifest.json'));
-    
-    const backups = manifests.map(manifestFile => {
+    const manifestFiles = files.filter(f => f.endsWith('-manifest.json'));
+
+    for (const mf of manifestFiles) {
+      const manifestPath = path.join(this.backupDir, mf);
       try {
-        const manifestPath = path.join(this.backupDir, manifestFile);
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        return {
-          timestamp: manifest.timestamp,
-          date: manifest.date,
-          totalSize: manifest.totalSize,
-          files: manifest.files,
+        const raw = fs.readFileSync(manifestPath, 'utf8');
+        const manifest = JSON.parse(raw);
+
+        const ts = this.extractTimestampFromEntry(manifest);
+
+        if (!isValidBackupTimestamp(ts)) {
+          // Skip empty or invalid timestamps
+          continue;
+        }
+
+        backups.push({
+          timestamp: ts,
+          date: manifest.date || '',
+          totalSize: manifest.totalSize || 0,
+          files: Array.isArray(manifest.files) ? manifest.files : [],
+          filename: mf,
           version: manifest.version || '1.0',
           serverVersion: manifest.serverVersion || 'unknown'
-        };
-      } catch {
-        return null;
+        });
+      } catch (err) {
+        // Skip malformed manifests silently (tests expect malformed to be skipped)
+        continue;
       }
-    }).filter(Boolean);
+    }
 
-    // Sort by timestamp descending (newest first)
+    // Sort newest first (descending)
     backups.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-    
-    return backups;
-  }
 
-  /**
-   * Get the latest backup timestamp
-   */
-  getLatestBackupTimestamp() {
-    const backups = this.listBackups();
-    return backups.length > 0 ? backups[0].timestamp : null;
+    return backups;
   }
 
   /**

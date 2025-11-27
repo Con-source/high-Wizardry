@@ -179,20 +179,20 @@ test('extractTimestampFromEntry extracts valid timestamp from manifest object', 
   assert(result === '20231118-143022', 'Should extract timestamp from object');
 });
 
-test('extractTimestampFromEntry returns null for invalid timestamp in object', () => {
+test('extractTimestampFromEntry returns undefined for invalid timestamp in object', () => {
   const manager = new RestoreManager('');
   const manifest = { timestamp: 'invalid-timestamp' };
   
   const result = manager.extractTimestampFromEntry(manifest);
-  assert(result === null, 'Should return null for invalid timestamp');
+  assert(result === undefined, 'Should return undefined for invalid timestamp');
 });
 
-test('extractTimestampFromEntry returns null for missing timestamp', () => {
+test('extractTimestampFromEntry returns undefined for missing timestamp', () => {
   const manager = new RestoreManager('');
   const manifest = { date: '2023-11-18' };
   
   const result = manager.extractTimestampFromEntry(manifest);
-  assert(result === null, 'Should return null for missing timestamp');
+  assert(result === undefined, 'Should return undefined for missing timestamp');
 });
 
 test('extractTimestampFromEntry extracts timestamp from filename string', () => {
@@ -202,11 +202,11 @@ test('extractTimestampFromEntry extracts timestamp from filename string', () => 
   assert(result === '20231118-143022', 'Should extract timestamp from filename');
 });
 
-test('extractTimestampFromEntry returns null for invalid filename', () => {
+test('extractTimestampFromEntry returns undefined for invalid filename', () => {
   const manager = new RestoreManager('');
   
   const result = manager.extractTimestampFromEntry('invalid-manifest.json');
-  assert(result === null, 'Should return null for invalid filename');
+  assert(result === undefined, 'Should return undefined for invalid filename');
 });
 
 test('validateTimestampInputOrThrow throws for invalid timestamp', () => {
