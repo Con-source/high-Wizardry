@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { isValidBackupTimestamp, validateBackupTimestampOrThrow } = require('../utils/backupTimestamp');
 
 class RestoreManager {
   constructor(timestamp) {
@@ -50,7 +51,64 @@ class RestoreManager {
   }
 
   /**
-   * List available backups
+   * Extract timestamp from a backup entry
+   * @param {object} entry - The backup entry object
+   * @returns {string|undefined} - The extracted timestamp or undefined if not found
+   */
+  extractTimestampFromEntry(entry) {
+    if (entry && typeof entry.timestamp === 'string' && entry.timestamp.trim() !== '') {
+      return entry.timestamp;
+    }
+    if (entry && typeof entry.name === 'string') {
+      const m = entry.name.match(/(\d{8}-\d{6})/);
+      if (m) return m[1];
+    }
+    return undefined;
+  }
+
+  /**
+   * Validate a timestamp input or throw an error
+   * @param {unknown} ts - The timestamp to validate
+   * @returns {string} - The validated timestamp
+   * @throws {Error} - If the timestamp is invalid
+   */
+  validateTimestampInputOrThrow(ts) {
+    return validateBackupTimestampOrThrow(ts);
+  }
+
+  /**
+   * Get the latest valid backup timestamp
+   * @returns {string} - The latest valid timestamp
+   * @throws {Error} - If no valid timestamps exist
+   */
+  getLatestBackupTimestamp() {
+    if (!fs.existsSync(this.backupDir)) {
+      throw new Error('Invalid backup timestamp:');
+    }
+
+    const files = fs.readdirSync(this.backupDir);
+    const manifests = files.filter(f => f.endsWith('-manifest.json'));
+    
+    const timestamps = manifests.map(manifestFile => {
+      const manifestPath = path.join(this.backupDir, manifestFile);
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        return this.extractTimestampFromEntry(manifest);
+      } catch {
+        return undefined;
+      }
+    }).filter(ts => isValidBackupTimestamp(ts));
+
+    if (timestamps.length === 0) {
+      throw new Error('Invalid backup timestamp:');
+    }
+
+    timestamps.sort();
+    return timestamps[timestamps.length - 1];
+  }
+
+  /**
+   * List available backups (skips entries with invalid timestamps)
    */
   listBackups() {
     if (!fs.existsSync(this.backupDir)) {
@@ -63,14 +121,25 @@ class RestoreManager {
     
     const backups = manifests.map(manifestFile => {
       const manifestPath = path.join(this.backupDir, manifestFile);
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-      return {
-        timestamp: manifest.timestamp,
-        date: manifest.date,
-        totalSize: manifest.totalSize,
-        files: manifest.files
-      };
-    });
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        const candidateTimestamp = this.extractTimestampFromEntry(manifest);
+        return {
+          timestamp: candidateTimestamp,
+          date: manifest.date,
+          totalSize: manifest.totalSize,
+          files: manifest.files,
+          __timestampCandidate: candidateTimestamp
+        };
+      } catch {
+        return null;
+      }
+    })
+      .filter(backup => backup !== null && isValidBackupTimestamp(backup.__timestampCandidate))
+      .map(backup => {
+        const { __timestampCandidate, ...rest } = backup;
+        return { ...rest, timestamp: __timestampCandidate };
+      });
 
     // Sort by timestamp descending (newest first)
     backups.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
