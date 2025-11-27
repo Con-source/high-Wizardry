@@ -1,0 +1,55 @@
+# Docker ignore file for High Wizardry
+
+# Git
+.git
+.gitignore
+
+# Development files
+.env*
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test files
+tests/
+test-*.js
+coverage/
+.nyc_output/
+
+# Node modules (will be rebuilt)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Server data (use volumes instead)
+server/data/
+backups/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+nginx/
+
+# GitHub
+.github/
+
+# Admin tools (not needed in production image)
+admin-inject-event.js
+
+# Extra documentation files (keep main docs for reference)
+*.md
+!README.md

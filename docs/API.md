@@ -756,6 +756,626 @@ Response:
 
 **Note:** Admin authentication/authorization not yet implemented. Use with caution in production.
 
+---
+
+## Trading API
+
+### WebSocket Messages
+
+#### Client → Server
+
+**Note:** All currency values are in **pennies** (1 shilling = 12 pennies).
+
+##### Propose Trade
+```json
+{
+  "type": "trade_propose",
+  "toPlayerId": "uuid",
+  "offer": {
+    "items": ["item-id-1", "item-id-2"],
+    "currency": 120
+  }
+}
+```
+*Example: `currency: 120` = 10 shillings (120 ÷ 12)*
+
+##### Update Trade Offer
+```json
+{
+  "type": "trade_update",
+  "tradeId": "trade-uuid",
+  "offer": {
+    "items": ["item-id-1"],
+    "currency": 240
+  }
+}
+```
+*Example: `currency: 240` = 20 shillings (240 ÷ 12)*
+
+##### Confirm Trade
+```json
+{
+  "type": "trade_confirm",
+  "tradeId": "trade-uuid"
+}
+```
+
+##### Cancel Trade
+```json
+{
+  "type": "trade_cancel",
+  "tradeId": "trade-uuid"
+}
+```
+
+#### Server → Client
+
+##### Trade Invitation
+```json
+{
+  "type": "trade_invitation",
+  "trade": {
+    "id": "trade-uuid",
+    "fromPlayerId": "uuid",
+    "toPlayerId": "uuid",
+    "fromUsername": "string",
+    "toUsername": "string",
+    "status": "proposed",
+    "fromOffer": { "items": [], "currency": 0 },
+    "toOffer": { "items": [], "currency": 0 },
+    "fromConfirmed": false,
+    "toConfirmed": false,
+    "createdAt": 1234567890,
+    "updatedAt": 1234567890
+  }
+}
+```
+
+##### Trade Proposal Result
+```json
+{
+  "type": "trade_propose_result",
+  "success": true,
+  "trade": { /* trade object */ },
+  "message": "Trade invitation sent"
+}
+```
+
+##### Trade Updated
+```json
+{
+  "type": "trade_updated",
+  "trade": { /* updated trade object */ }
+}
+```
+
+##### Trade Confirmed
+```json
+{
+  "type": "trade_confirmed",
+  "trade": {
+    "...": "trade object",
+    "status": "completed"
+  }
+}
+```
+
+##### Trade Cancelled
+```json
+{
+  "type": "trade_cancelled",
+  "tradeId": "trade-uuid"
+}
+```
+
+##### Trade Confirm Result
+```json
+{
+  "type": "trade_confirm_result",
+  "success": true,
+  "trade": { /* trade object */ },
+  "message": "Trade confirmed"
+}
+```
+
+### Trade Object Structure
+
+```json
+{
+  "id": "trade-uuid",
+  "fromPlayerId": "uuid",
+  "toPlayerId": "uuid",
+  "fromUsername": "string",
+  "toUsername": "string",
+  "status": "proposed | negotiating | confirmed | completed | cancelled | failed",
+  "fromOffer": {
+    "items": ["item-id-1", "item-id-2"],
+    "currency": 120
+  },
+  "toOffer": {
+    "items": [],
+    "currency": 0
+  },
+  "fromConfirmed": false,
+  "toConfirmed": false,
+  "createdAt": 1234567890,
+  "updatedAt": 1234567890
+}
+```
+
+### Trade Status Flow
+
+```
+proposed → negotiating → confirmed → completed
+                ↓
+            cancelled (either party)
+                ↓
+              failed (validation error)
+```
+
+---
+
+## Auction API
+
+### WebSocket Messages
+
+#### Client → Server
+
+##### Get Auctions
+```json
+{
+  "type": "auction_get",
+  "scope": "global | location",
+  "locationId": "town-square"
+}
+```
+
+##### Create Auction
+```json
+{
+  "type": "auction_create",
+  "item": {
+    "type": "item | currency",
+    "id": "item-id",
+    "amount": 100
+  },
+  "startingBid": 120,
+  "duration": 3600000,
+  "options": {
+    "scope": "global | location",
+    "locationId": "town-square"
+  }
+}
+```
+
+##### Place Bid
+```json
+{
+  "type": "auction_bid",
+  "auctionId": "auction-uuid",
+  "bidAmount": 150
+}
+```
+
+##### Cancel Auction
+```json
+{
+  "type": "auction_cancel",
+  "auctionId": "auction-uuid"
+}
+```
+
+#### Server → Client
+
+##### Auction List
+```json
+{
+  "type": "auction_list",
+  "auctions": [
+    {
+      "id": "auction-uuid",
+      "sellerId": "uuid",
+      "sellerUsername": "string",
+      "item": { "type": "item", "id": "health-potion" },
+      "startingBid": 100,
+      "currentBid": 150,
+      "highestBidderId": "uuid",
+      "highestBidderUsername": "string",
+      "bids": [],
+      "status": "active",
+      "scope": "global",
+      "createdAt": 1234567890,
+      "endsAt": 1234571490
+    }
+  ]
+}
+```
+
+##### Auction Create Result
+```json
+{
+  "type": "auction_create_result",
+  "success": true,
+  "auction": { /* auction object */ },
+  "message": "Auction created successfully"
+}
+```
+
+##### Auction Bid Result
+```json
+{
+  "type": "auction_bid_result",
+  "success": true,
+  "auction": { /* updated auction object */ },
+  "message": "Bid placed successfully"
+}
+```
+
+##### New Auction (Broadcast)
+```json
+{
+  "type": "auction_new",
+  "auction": { /* auction object */ }
+}
+```
+
+##### Bid Placed (Broadcast)
+```json
+{
+  "type": "auction_bid_placed",
+  "auction": { /* updated auction object */ }
+}
+```
+
+##### Outbid Notification
+```json
+{
+  "type": "auction_outbid",
+  "auction": { /* auction object */ }
+}
+```
+
+##### Auction Closed
+```json
+{
+  "type": "auction_closed",
+  "auction": { /* final auction object */ },
+  "role": "seller | winner"
+}
+```
+
+##### Auction Cancelled
+```json
+{
+  "type": "auction_cancelled",
+  "auctionId": "auction-uuid"
+}
+```
+
+### HTTP Endpoints
+
+#### GET /api/auctions
+
+Get all active auctions.
+
+Query parameters:
+- `scope` (optional) - Filter by scope: `global` or `location`
+- `locationId` (optional) - Filter by location (when scope is `location`)
+
+Response:
+```json
+{
+  "success": true,
+  "auctions": [ /* array of auction objects */ ]
+}
+```
+
+#### GET /api/auctions/player
+
+Get auctions and bids for a specific player.
+
+Query parameters:
+- `playerId` (required) - Player's unique identifier
+
+Response:
+```json
+{
+  "success": true,
+  "auctions": [ /* player's active auctions */ ],
+  "bids": [ /* auctions player has bid on */ ]
+}
+```
+
+### Auction Object Structure
+
+```json
+{
+  "id": "auction-uuid",
+  "sellerId": "player-uuid",
+  "sellerUsername": "string",
+  "item": {
+    "type": "item | currency",
+    "id": "item-id",
+    "amount": 1
+  },
+  "startingBid": 100,
+  "currentBid": 150,
+  "highestBidderId": "player-uuid | null",
+  "highestBidderUsername": "string | null",
+  "bids": [
+    {
+      "playerId": "uuid",
+      "username": "string",
+      "amount": 150,
+      "timestamp": 1234567890
+    }
+  ],
+  "status": "active | completed | cancelled",
+  "scope": "global | location",
+  "locationId": "town-square",
+  "createdAt": 1234567890,
+  "endsAt": 1234571490
+}
+```
+
+### Auction Duration Options
+
+| Duration | Milliseconds |
+|----------|--------------|
+| 5 minutes | 300000 |
+| 30 minutes | 1800000 |
+| 1 hour | 3600000 |
+| 24 hours | 86400000 |
+| 3 days | 259200000 |
+| 7 days | 604800000 |
+
+---
+
+## Community API
+
+### WebSocket Messages
+
+#### Client → Server
+
+##### Search Players
+```json
+{
+  "type": "player_search",
+  "query": "username query"
+}
+```
+
+##### Get Player Profile
+```json
+{
+  "type": "player_profile",
+  "playerId": "player-uuid"
+}
+```
+
+#### Server → Client
+
+##### Search Results
+```json
+{
+  "type": "player_search_result",
+  "success": true,
+  "players": [
+    {
+      "id": "player-uuid",
+      "username": "string",
+      "level": 15,
+      "guild": "Guild Name",
+      "online": true
+    }
+  ]
+}
+```
+
+##### Player Profile
+```json
+{
+  "type": "player_profile_result",
+  "success": true,
+  "player": {
+    "id": "player-uuid",
+    "username": "string",
+    "level": 15,
+    "guild": "Guild Name",
+    "stats": {
+      "intelligence": 25,
+      "endurance": 18,
+      "charisma": 20,
+      "dexterity": 15
+    },
+    "achievements": [ /* achievement array */ ],
+    "questsCompleted": 42,
+    "itemsCrafted": 156,
+    "joinDate": "2025-01-15",
+    "online": true
+  }
+}
+```
+
+---
+
+## Guild API
+
+### WebSocket Messages
+
+#### Client → Server
+
+##### Get Guild Info
+```json
+{
+  "type": "guild_get",
+  "guildId": "artisan"
+}
+```
+
+##### Join Guild
+```json
+{
+  "type": "guild_join",
+  "guildId": "artisan"
+}
+```
+
+##### Leave Guild
+```json
+{
+  "type": "guild_leave",
+  "guildId": "artisan"
+}
+```
+
+#### Server → Client
+
+##### Guild Info
+```json
+{
+  "type": "guild_info",
+  "guild": {
+    "id": "artisan",
+    "name": "Artisan Guild",
+    "description": "Masters of crafting and creation",
+    "icon": "fa-hammer",
+    "joinCost": 1000,
+    "perks": { /* perk definitions */ }
+  },
+  "membership": {
+    "isMember": true,
+    "reputation": 250,
+    "level": 3
+  }
+}
+```
+
+##### Guild Join Result
+```json
+{
+  "type": "guild_join_result",
+  "success": true,
+  "guildId": "artisan",
+  "message": "Joined Artisan Guild!"
+}
+```
+
+##### Guild Leave Result
+```json
+{
+  "type": "guild_leave_result",
+  "success": true,
+  "guildId": "artisan",
+  "message": "Left Artisan Guild"
+}
+```
+
+### Guild IDs
+
+| ID | Name |
+|----|------|
+| `artisan` | Artisan Guild |
+| `smuggler` | Smugglers' Guild |
+| `explorer` | Explorer's Guild |
+
+---
+
 ### GET /
 
 Serves the game client (index.html)
+
+---
+
+## Deployment
+
+### Docker Deployment
+
+The server can be containerized and deployed using Docker:
+
+```bash
+# Build Docker image
+docker build -t high-wizardry .
+
+# Run container
+docker run -d \
+  -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e EMAIL_ENABLED=false \
+  -v game-data:/app/server/data \
+  --name high-wizardry \
+  high-wizardry
+
+# Check health
+curl http://localhost:8080/api/health
+```
+
+### Docker Compose
+
+For full deployment with nginx and SSL:
+
+```bash
+# Development
+docker compose up -d game-server
+
+# Production (with nginx + SSL)
+docker compose --profile production up -d
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development` |
+| `PORT` | Server port | `8080` |
+| `EMAIL_ENABLED` | Enable email sending | `false` |
+| `EMAIL_SERVICE` | Email service type | - |
+| `EMAIL_HOST` | SMTP host | - |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_SECURE` | Use TLS | `false` |
+| `EMAIL_USER` | SMTP username | - |
+| `EMAIL_PASS` | SMTP password | - |
+| `EMAIL_FROM` | From address | - |
+| `EMAIL_REQUIRE_VERIFICATION` | Require email verification | `true` |
+
+### Health Check Monitoring
+
+The `/api/health` endpoint returns server status:
+
+```json
+{
+  "status": "ok",
+  "players": 5,
+  "uptime": 1234.567
+}
+```
+
+**Response Codes:**
+- `200 OK`: Server is healthy
+- `5xx`: Server error
+
+For production monitoring, poll this endpoint every 30 seconds.
+
+### WebSocket Connection
+
+For production deployments behind a reverse proxy (nginx), ensure WebSocket upgrade headers are configured:
+
+```nginx
+location / {
+    proxy_pass http://game_server:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400s;  # Long timeout for WebSocket
+}
+```
+
+### Further Documentation
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide including:
+- Cloud provider setup (AWS, GCP, Azure, DigitalOcean)
+- SSL/TLS configuration
+- CDN and DNS setup
+- Scaling recommendations
+- Monitoring and alerting
+- Backup and recovery
