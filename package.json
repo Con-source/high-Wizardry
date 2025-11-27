@@ -6,10 +6,17 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node server/index.js",
-    "test": "node tests/security-tests.js",
+    "test": "node tests/security-tests.js && node tests/backup-tests.js",
     "test:security": "node tests/security-tests.js",
+    "test:backup": "node tests/backup-tests.js",
     "backup": "node server/scripts/backup.js",
-    "restore": "node server/scripts/restore.js"
+    "backup:schedule": "node server/scripts/backup.js --schedule",
+    "backup:status": "node server/scripts/backup.js --status",
+    "backup:list": "node server/scripts/backup.js --list",
+    "backup:cleanup": "node server/scripts/backup.js --cleanup",
+    "restore": "node server/scripts/restore.js",
+    "restore:list": "node server/scripts/restore.js --list",
+    "restore:latest": "node server/scripts/restore.js --latest"
   },
   "keywords": [
     "game",

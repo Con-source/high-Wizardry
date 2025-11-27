@@ -756,6 +756,278 @@ Response:
 
 **Note:** Admin authentication/authorization not yet implemented. Use with caution in production.
 
+## Backup & Restore Admin API
+
+The backup system provides automated and on-demand backup capabilities for all persistent game data, including users, player stats, and game state.
+
+### GET /api/admin/backup/status
+
+Get backup system status and statistics.
+
+Response:
+```json
+{
+  "success": true,
+  "backupDirectory": "/path/to/backups",
+  "dataDirectory": "/path/to/data",
+  "totalBackups": 5,
+  "retentionPolicy": 30,
+  "latestBackup": {
+    "timestamp": "20231118-030000",
+    "date": "2023-11-18T03:00:00.000Z",
+    "size": 15420
+  },
+  "scheduledBackup": {
+    "enabled": true,
+    "time": "03:00",
+    "lastRun": "2023-11-18"
+  },
+  "diskUsage": 77100
+}
+```
+
+### GET /api/admin/backup/list
+
+List all available backups.
+
+Response:
+```json
+{
+  "success": true,
+  "backups": [
+    {
+      "timestamp": "20231118-030000",
+      "date": "2023-11-18T03:00:00.000Z",
+      "totalSize": 15420,
+      "fileCount": 3,
+      "version": "2.0",
+      "serverVersion": "1.0.0"
+    }
+  ],
+  "count": 1
+}
+```
+
+### GET /api/admin/backup/:timestamp
+
+Get details for a specific backup.
+
+Response:
+```json
+{
+  "success": true,
+  "backup": {
+    "timestamp": "20231118-030000",
+    "date": "2023-11-18T03:00:00.000Z",
+    "totalSize": 15420,
+    "files": [
+      {
+        "name": "20231118-030000-users.json",
+        "size": 5120,
+        "checksum": "abc123..."
+      }
+    ],
+    "version": "2.0",
+    "serverVersion": "1.0.0"
+  }
+}
+```
+
+### POST /api/admin/backup/trigger
+
+Trigger an on-demand backup immediately.
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Backup completed successfully",
+  "timestamp": "20231118-143022",
+  "files": [
+    "20231118-143022-users.json",
+    "20231118-143022-players.json",
+    "20231118-143022-manifest.json"
+  ],
+  "totalSize": 15420,
+  "formattedSize": "15.06 KB"
+}
+```
+
+### GET /api/admin/backup/verify/:timestamp
+
+Verify backup integrity by checking file checksums and structure.
+
+Response (success):
+```json
+{
+  "success": true,
+  "timestamp": "20231118-030000",
+  "date": "2023-11-18T03:00:00.000Z",
+  "message": "All 2 file(s) verified successfully",
+  "verified": 2,
+  "failed": 0,
+  "errors": []
+}
+```
+
+Response (failure):
+```json
+{
+  "success": false,
+  "timestamp": "20231118-030000",
+  "message": "Verification failed: 1 file(s) have issues",
+  "verified": 1,
+  "failed": 1,
+  "errors": ["Checksum mismatch for 20231118-030000-users.json"]
+}
+```
+
+### POST /api/admin/backup/cleanup
+
+Apply retention policy to delete old backups.
+
+Request body (optional):
+```json
+{
+  "keepCount": 10
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Deleted 5 old backup(s). Kept 10 most recent.",
+  "deleted": 5,
+  "deletedTimestamps": ["20231101-030000", "20231102-030000"],
+  "remaining": 10
+}
+```
+
+### GET /api/admin/restore/test/:timestamp
+
+Test restore (dry run) - shows what would be restored without making changes.
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Test restore completed successfully",
+  "timestamp": "20231118-030000",
+  "backupDate": "2023-11-18T03:00:00.000Z",
+  "wouldRestore": [
+    {
+      "type": "users",
+      "file": "users.json",
+      "action": "replace"
+    },
+    {
+      "type": "players",
+      "count": 15,
+      "action": "replace 12 with 15"
+    }
+  ]
+}
+```
+
+### POST /api/admin/restore/:timestamp
+
+Perform a restore from a specific backup point.
+
+**⚠️ Warning:** This operation will overwrite existing game data. The server should be restarted after restore for changes to take effect.
+
+Request body:
+```json
+{
+  "confirmed": true,
+  "skipPreBackup": false
+}
+```
+
+- `confirmed` (required): Must be `true` to proceed with restore
+- `skipPreBackup` (optional): Set to `true` to skip creating a backup of current data before restore
+
+Response (success):
+```json
+{
+  "success": true,
+  "message": "Restore completed successfully",
+  "timestamp": "20231118-030000",
+  "restored": {
+    "users": true,
+    "players": true
+  },
+  "warning": "Server should be restarted for restored data to take effect"
+}
+```
+
+Response (confirmation required):
+```json
+{
+  "success": false,
+  "message": "Restore requires confirmation. Set confirmed: true in request body.",
+  "warning": "This will overwrite existing game data. Consider testing restore first with GET /api/admin/restore/test/:timestamp"
+}
+```
+
+### GET /api/admin/backup/download/:timestamp
+
+Download a backup as a single JSON file.
+
+Response: JSON file download with `Content-Disposition: attachment` header.
+
+```json
+{
+  "manifest": {
+    "timestamp": "20231118-030000",
+    "date": "2023-11-18T03:00:00.000Z",
+    "files": [...]
+  },
+  "files": {
+    "20231118-030000-users.json": {...},
+    "20231118-030000-players.json": {...}
+  }
+}
+```
+
+## Backup CLI Commands
+
+The backup system can also be managed via command line:
+
+```bash
+# Run backup now
+npm run backup
+
+# List available backups
+npm run backup:list
+
+# Show backup status
+npm run backup:status
+
+# Start scheduled backup service (nightly at 3 AM)
+npm run backup:schedule
+
+# Apply retention policy (cleanup old backups)
+npm run backup:cleanup
+
+# Restore from backup
+npm run restore <timestamp>
+
+# List available restore points
+npm run restore:list
+
+# Restore from latest backup
+npm run restore:latest
+```
+
+### Environment Variables for Backup Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| BACKUP_RETENTION_COUNT | 30 | Number of backups to keep |
+| BACKUP_SCHEDULED_HOUR | 3 | Hour for nightly backup (0-23) |
+| BACKUP_SCHEDULED_MINUTE | 0 | Minute for nightly backup (0-59) |
+
 ### GET /
 
 Serves the game client (index.html)
