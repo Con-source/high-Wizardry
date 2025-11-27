@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { isValidBackupTimestamp, validateBackupTimestampOrThrow } = require('../utils/backupTimestamp');
 
 class RestoreManager {
   constructor(timestamp) {
@@ -50,6 +51,57 @@ class RestoreManager {
   }
 
   /**
+   * Extract timestamp from a manifest entry (filename or manifest object)
+   * @param {string|object} entry - The manifest filename or object with timestamp property
+   * @returns {string|null} The extracted timestamp or null if not found/invalid
+   */
+  extractTimestampFromEntry(entry) {
+    let timestamp = null;
+    
+    if (typeof entry === 'string') {
+      // Extract from filename like "20231118-143022-manifest.json"
+      const match = entry.match(/^(\d{8}-\d{6})-manifest\.json$/);
+      if (match) {
+        timestamp = match[1];
+      }
+    } else if (entry && typeof entry === 'object') {
+      timestamp = entry.timestamp;
+    }
+    
+    // Return null if timestamp is missing or invalid
+    if (!timestamp || !isValidBackupTimestamp(timestamp)) {
+      return null;
+    }
+    
+    return timestamp;
+  }
+
+  /**
+   * Validate a provided timestamp input and throw if invalid
+   * @param {string} timestamp - The timestamp to validate
+   * @throws {Error} If the timestamp is invalid
+   */
+  validateTimestampInputOrThrow(timestamp) {
+    validateBackupTimestampOrThrow(timestamp);
+  }
+
+  /**
+   * Get the latest valid backup timestamp
+   * @returns {string} The latest valid backup timestamp
+   * @throws {Error} If no valid backup timestamps exist
+   */
+  getLatestBackupTimestamp() {
+    const backups = this.listBackups();
+    
+    if (backups.length === 0) {
+      throw new Error('Invalid backup timestamp:');
+    }
+    
+    // Backups are already sorted by timestamp descending, first one is latest
+    return backups[0].timestamp;
+  }
+
+  /**
    * List available backups
    */
   listBackups() {
@@ -61,18 +113,33 @@ class RestoreManager {
     const files = fs.readdirSync(this.backupDir);
     const manifests = files.filter(f => f.endsWith('-manifest.json'));
     
-    const backups = manifests.map(manifestFile => {
+    const backups = [];
+    
+    for (const manifestFile of manifests) {
       const manifestPath = path.join(this.backupDir, manifestFile);
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-      return {
-        timestamp: manifest.timestamp,
-        date: manifest.date,
-        totalSize: manifest.totalSize,
-        files: manifest.files
-      };
-    });
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        
+        // Extract and validate timestamp - skip if invalid or missing
+        const timestamp = this.extractTimestampFromEntry(manifest);
+        if (timestamp === null) {
+          // Skip entries with invalid/missing timestamps
+          continue;
+        }
+        
+        backups.push({
+          timestamp: timestamp,
+          date: manifest.date,
+          totalSize: manifest.totalSize,
+          files: manifest.files
+        });
+      } catch (error) {
+        // Skip manifests that can't be parsed
+        continue;
+      }
+    }
 
-    // Sort by timestamp descending (newest first)
+    // Sort by timestamp descending (newest first) - lexicographic sort works for YYYYMMDD-HHmmss format
     backups.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     
     return backups;
