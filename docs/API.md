@@ -764,6 +764,8 @@ Response:
 
 #### Client → Server
 
+**Note:** All currency values are in **pennies** (1 shilling = 12 pennies).
+
 ##### Propose Trade
 ```json
 {
@@ -775,6 +777,7 @@ Response:
   }
 }
 ```
+*Example: `currency: 120` = 10 shillings (120 ÷ 12)*
 
 ##### Update Trade Offer
 ```json
@@ -787,6 +790,7 @@ Response:
   }
 }
 ```
+*Example: `currency: 240` = 20 shillings (240 ÷ 12)*
 
 ##### Confirm Trade
 ```json

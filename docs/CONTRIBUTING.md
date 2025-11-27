@@ -88,7 +88,7 @@ high-Wizardry/
 │       └── CsrfProtection.js
 ├── docs/                   # Documentation
 ├── tests/                  # Test files
-├── {css/                   # Stylesheets
+├── css/                    # Stylesheets (note: actual folder is named '{css')
 └── package.json            # Dependencies
 ```
 

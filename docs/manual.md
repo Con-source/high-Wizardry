@@ -673,7 +673,7 @@ When reporting bugs, include:
 
 ### Contributing
 
-Want to help improve the game? See our [Contributing Guide](../README.md#contributing).
+Want to help improve the game? See our [Contributing Guide](CONTRIBUTING.md).
 
 ---
 
