@@ -456,6 +456,15 @@ class HighWizardryServer {
     const BackupManager = require('./scripts/backup');
     const RestoreManager = require('./scripts/restore');
     
+    // Rate limiter for admin backup operations
+    const adminBackupLimiter = rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 30, // Limit each IP to 30 requests per minute for admin operations
+      message: 'Too many admin requests. Please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    
     // Create backup managers with notification callbacks
     this.backupManager = new BackupManager({
       notificationCallback: (notification) => {
@@ -468,7 +477,7 @@ class HighWizardryServer {
     });
     
     // Get backup status and statistics
-    this.app.get('/api/admin/backup/status', (req, res) => {
+    this.app.get('/api/admin/backup/status', adminBackupLimiter, (req, res) => {
       try {
         const status = this.backupManager.getStatus();
         res.json({ success: true, ...status });
@@ -478,7 +487,7 @@ class HighWizardryServer {
     });
     
     // List all backups
-    this.app.get('/api/admin/backup/list', (req, res) => {
+    this.app.get('/api/admin/backup/list', adminBackupLimiter, (req, res) => {
       try {
         const backups = this.backupManager.listBackups();
         res.json({ success: true, backups, count: backups.length });
@@ -488,7 +497,7 @@ class HighWizardryServer {
     });
     
     // Get specific backup details
-    this.app.get('/api/admin/backup/:timestamp', (req, res) => {
+    this.app.get('/api/admin/backup/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
         const backup = this.backupManager.getBackup(timestamp);
@@ -502,7 +511,7 @@ class HighWizardryServer {
     });
     
     // Trigger manual backup (on-demand)
-    this.app.post('/api/admin/backup/trigger', async (req, res) => {
+    this.app.post('/api/admin/backup/trigger', adminBackupLimiter, async (req, res) => {
       try {
         console.log('📦 Admin triggered backup...');
         const result = await this.backupManager.run({ silent: true });
@@ -513,7 +522,7 @@ class HighWizardryServer {
     });
     
     // Verify backup integrity
-    this.app.get('/api/admin/backup/verify/:timestamp', (req, res) => {
+    this.app.get('/api/admin/backup/verify/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
         const result = this.backupManager.verifyBackup(timestamp);
@@ -524,7 +533,7 @@ class HighWizardryServer {
     });
     
     // Apply retention policy (cleanup old backups)
-    this.app.post('/api/admin/backup/cleanup', (req, res) => {
+    this.app.post('/api/admin/backup/cleanup', adminBackupLimiter, (req, res) => {
       try {
         const { keepCount } = req.body;
         const result = this.backupManager.applyRetentionPolicy(keepCount);
@@ -535,7 +544,7 @@ class HighWizardryServer {
     });
     
     // Test restore (dry run)
-    this.app.get('/api/admin/restore/test/:timestamp', (req, res) => {
+    this.app.get('/api/admin/restore/test/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
         const restore = new RestoreManager(timestamp);
@@ -547,7 +556,7 @@ class HighWizardryServer {
     });
     
     // Perform restore (requires confirmation in request body)
-    this.app.post('/api/admin/restore/:timestamp', async (req, res) => {
+    this.app.post('/api/admin/restore/:timestamp', adminBackupLimiter, async (req, res) => {
       try {
         const { timestamp } = req.params;
         const { confirmed, skipPreBackup } = req.body;
@@ -589,7 +598,7 @@ class HighWizardryServer {
     });
     
     // Download backup file
-    this.app.get('/api/admin/backup/download/:timestamp', (req, res) => {
+    this.app.get('/api/admin/backup/download/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
         const backupDir = path.join(__dirname, '..', 'backups');
