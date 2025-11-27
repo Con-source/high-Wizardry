@@ -251,18 +251,27 @@ class BackupManager {
    * @returns {Object} - Verification result with details
    */
   verifyBackup(timestamp) {
-    // Validate timestamp: Only allow 14-digit (YYYYMMDDHHMMSS) values
-    if (!/^\d{14}$/.test(timestamp)) {
+    // Accept dashed (YYYYMMDD-HHMMSS) and undashed (YYYYMMDDHHMMSS) forms.
+    // Normalize to dashed format used in manifest filenames.
+    const tsStr = String(timestamp || '');
+    let normalizedTs;
+    if (/^[0-9]{8}-[0-9]{6}$/.test(tsStr)) {
+      normalizedTs = tsStr;
+    } else if (/^[0-9]{14}$/.test(tsStr)) {
+      normalizedTs = tsStr.slice(0, 8) + '-' + tsStr.slice(8);
+    } else {
+      // Keep error message consistent with tests/logs
       return {
         success: false,
-        message: `Invalid timestamp format`,
+        message: `Invalid backup timestamp: ${tsStr}`,
         verified: 0,
         failed: 0,
-        errors: ['Timestamp must be a 14-digit number (YYYYMMDDHHMMSS)']
+        errors: []
       };
     }
-    // Build absolute manifest file path
-    const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
+
+    // Build absolute manifest file path using normalized timestamp
+    const manifestFile = path.join(this.backupDir, `${normalizedTs}-manifest.json`);
     const manifestFileResolved = path.resolve(manifestFile);
     const backupDirResolved = path.resolve(this.backupDir);
     // Ensure file is under backup directory
@@ -278,7 +287,7 @@ class BackupManager {
     if (!fs.existsSync(manifestFileResolved)) {
       return { 
         success: false, 
-        message: `Backup manifest not found for timestamp: ${timestamp}`,
+        message: `Backup manifest not found for timestamp: ${normalizedTs}`,
         verified: 0,
         failed: 0,
         errors: []
@@ -310,7 +319,6 @@ class BackupManager {
           continue;
         }
         if (!fs.existsSync(filePathResolved)) {
-          results.failed++;
           results.failed++;
           results.errors.push(`Missing file: ${file.name}`);
           continue;
@@ -447,11 +455,19 @@ class BackupManager {
    * @returns {Object|null} - Backup info or null if not found
    */
   getBackup(timestamp) {
-    // Accept only timestamps that match the backup naming convention: e.g., YYYYMMDDHHmmss (up to 14 digits)
-    if (!/^\d{8,14}$/.test(timestamp)) {
+    // Accept dashed or undashed timestamps (YYYYMMDD-HHMMSS or YYYYMMDDHHMMSS)
+    const tsStr = String(timestamp || '');
+    let normalizedTs;
+    if (/^[0-9]{8}-[0-9]{6}$/.test(tsStr)) {
+      normalizedTs = tsStr;
+    } else if (/^[0-9]{14}$/.test(tsStr)) {
+      normalizedTs = tsStr.slice(0, 8) + '-' + tsStr.slice(8);
+    } else {
+      // Not a valid timestamp format
       return null;
     }
-    const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
+
+    const manifestFile = path.join(this.backupDir, `${normalizedTs}-manifest.json`);
     // Ensure manifestFile resolves *inside* backupDir (to prevent traversal)
     const resolvedManifestFile = path.resolve(manifestFile);
     const resolvedBackupDir = path.resolve(this.backupDir);
