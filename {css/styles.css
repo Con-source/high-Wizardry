@@ -18,6 +18,12 @@
   box-sizing: border-box;
 }
 
+/* Safari 15.4+ compatibility fix for table header text alignment */
+th {
+  text-align: -webkit-match-parent;
+  text-align: match-parent;
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
