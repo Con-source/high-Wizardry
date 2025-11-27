@@ -251,9 +251,31 @@ class BackupManager {
    * @returns {Object} - Verification result with details
    */
   verifyBackup(timestamp) {
+    // Validate timestamp: Only allow 14-digit (YYYYMMDDHHMMSS) values
+    if (!/^\d{14}$/.test(timestamp)) {
+      return {
+        success: false,
+        message: `Invalid timestamp format`,
+        verified: 0,
+        failed: 0,
+        errors: ['Timestamp must be a 14-digit number (YYYYMMDDHHMMSS)']
+      };
+    }
+    // Build absolute manifest file path
     const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
-    
-    if (!fs.existsSync(manifestFile)) {
+    const manifestFileResolved = path.resolve(manifestFile);
+    const backupDirResolved = path.resolve(this.backupDir);
+    // Ensure file is under backup directory
+    if (!manifestFileResolved.startsWith(backupDirResolved + path.sep)) {
+      return {
+        success: false,
+        message: `Path traversal attempt detected`,
+        verified: 0,
+        failed: 0,
+        errors: ['Manifest file must be located inside backup directory']
+      };
+    }
+    if (!fs.existsSync(manifestFileResolved)) {
       return { 
         success: false, 
         message: `Backup manifest not found for timestamp: ${timestamp}`,
@@ -264,7 +286,7 @@ class BackupManager {
     }
 
     try {
-      const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+      const manifest = JSON.parse(fs.readFileSync(manifestFileResolved, 'utf8'));
       const results = {
         success: true,
         timestamp: manifest.timestamp,
@@ -281,8 +303,14 @@ class BackupManager {
         }
 
         const filePath = path.join(this.backupDir, file.name);
-        
-        if (!fs.existsSync(filePath)) {
+        const filePathResolved = path.resolve(filePath);
+        // Check containment for each file as it comes from manifest (defense-in-depth)
+        if (!filePathResolved.startsWith(backupDirResolved + path.sep)) {
+          results.errors.push(`Manifest file '${file.name}' points outside backup directory`);
+          continue;
+        }
+        if (!fs.existsSync(filePathResolved)) {
+          results.failed++;
           results.failed++;
           results.errors.push(`Missing file: ${file.name}`);
           continue;
@@ -290,7 +318,7 @@ class BackupManager {
 
         // Verify checksum if available (v2.0 manifests)
         if (file.checksum) {
-          const actualChecksum = this.calculateChecksum(filePath);
+          const actualChecksum = this.calculateChecksum(filePathResolved);
           if (actualChecksum !== file.checksum) {
             results.failed++;
             results.errors.push(`Checksum mismatch for ${file.name}: expected ${file.checksum}, got ${actualChecksum}`);
@@ -299,7 +327,7 @@ class BackupManager {
         }
 
         // Verify file size
-        const actualSize = fs.statSync(filePath).size;
+        const actualSize = fs.statSync(filePathResolved).size;
         if (actualSize !== file.size) {
           results.failed++;
           results.errors.push(`Size mismatch for ${file.name}: expected ${file.size}, got ${actualSize}`);
@@ -308,7 +336,7 @@ class BackupManager {
 
         // Verify JSON is valid
         try {
-          JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          JSON.parse(fs.readFileSync(filePathResolved, 'utf8'));
         } catch {
           results.failed++;
           results.errors.push(`Invalid JSON in file: ${file.name}`);
