@@ -283,31 +283,34 @@ test('getLatestBackupTimestamp throws when no valid backups exist', () => {
   const manager = new RestoreManager('');
   // Create empty temp directory
   const emptyBackupDir = path.join(__dirname, '..', 'empty-backups-temp');
-  if (!fs.existsSync(emptyBackupDir)) {
-    fs.mkdirSync(emptyBackupDir, { recursive: true });
-  }
-  manager.backupDir = emptyBackupDir;
-  
-  let threw = false;
-  let errorMessage = '';
   
   try {
-    manager.getLatestBackupTimestamp();
-  } catch (error) {
-    threw = true;
-    errorMessage = error.message;
+    if (!fs.existsSync(emptyBackupDir)) {
+      fs.mkdirSync(emptyBackupDir, { recursive: true });
+    }
+    manager.backupDir = emptyBackupDir;
+    
+    let threw = false;
+    let errorMessage = '';
+    
+    try {
+      manager.getLatestBackupTimestamp();
+    } catch (error) {
+      threw = true;
+      errorMessage = error.message;
+    }
+    
+    assert(threw, 'Should throw when no valid backups exist');
+    assert(
+      errorMessage === 'Invalid backup timestamp:',
+      `Error message should be 'Invalid backup timestamp:', got: ${errorMessage}`
+    );
+  } finally {
+    // Cleanup - always runs even if test fails
+    if (fs.existsSync(emptyBackupDir)) {
+      fs.rmdirSync(emptyBackupDir);
+    }
   }
-  
-  // Cleanup
-  if (fs.existsSync(emptyBackupDir)) {
-    fs.rmdirSync(emptyBackupDir);
-  }
-  
-  assert(threw, 'Should throw when no valid backups exist');
-  assert(
-    errorMessage === 'Invalid backup timestamp:',
-    `Error message should be 'Invalid backup timestamp:', got: ${errorMessage}`
-  );
 });
 
 test('getLatestBackupTimestamp throws when only invalid timestamps exist', () => {
@@ -315,39 +318,45 @@ test('getLatestBackupTimestamp throws when only invalid timestamps exist', () =>
   
   // Create temp directory with only invalid timestamps
   const invalidBackupDir = path.join(__dirname, '..', 'invalid-backups-temp');
-  if (!fs.existsSync(invalidBackupDir)) {
-    fs.mkdirSync(invalidBackupDir, { recursive: true });
-  }
-  
-  // Write manifest with invalid timestamp
-  fs.writeFileSync(
-    path.join(invalidBackupDir, 'bad-manifest.json'),
-    JSON.stringify({ timestamp: 'invalid', date: '2023-01-01', totalSize: 0, files: [] })
-  );
-  
-  manager.backupDir = invalidBackupDir;
-  
-  let threw = false;
-  let errorMessage = '';
   
   try {
-    manager.getLatestBackupTimestamp();
-  } catch (error) {
-    threw = true;
-    errorMessage = error.message;
+    if (!fs.existsSync(invalidBackupDir)) {
+      fs.mkdirSync(invalidBackupDir, { recursive: true });
+    }
+    
+    // Write manifest with invalid timestamp
+    fs.writeFileSync(
+      path.join(invalidBackupDir, 'bad-manifest.json'),
+      JSON.stringify({ timestamp: 'invalid', date: '2023-01-01', totalSize: 0, files: [] })
+    );
+    
+    manager.backupDir = invalidBackupDir;
+    
+    let threw = false;
+    let errorMessage = '';
+    
+    try {
+      manager.getLatestBackupTimestamp();
+    } catch (error) {
+      threw = true;
+      errorMessage = error.message;
+    }
+    
+    assert(threw, 'Should throw when only invalid timestamps exist');
+    assert(
+      errorMessage === 'Invalid backup timestamp:',
+      `Error message should be 'Invalid backup timestamp:', got: ${errorMessage}`
+    );
+  } finally {
+    // Cleanup - always runs even if test fails
+    if (fs.existsSync(invalidBackupDir)) {
+      const files = fs.readdirSync(invalidBackupDir);
+      for (const file of files) {
+        fs.unlinkSync(path.join(invalidBackupDir, file));
+      }
+      fs.rmdirSync(invalidBackupDir);
+    }
   }
-  
-  // Cleanup
-  if (fs.existsSync(invalidBackupDir)) {
-    fs.unlinkSync(path.join(invalidBackupDir, 'bad-manifest.json'));
-    fs.rmdirSync(invalidBackupDir);
-  }
-  
-  assert(threw, 'Should throw when only invalid timestamps exist');
-  assert(
-    errorMessage === 'Invalid backup timestamp:',
-    `Error message should be 'Invalid backup timestamp:', got: ${errorMessage}`
-  );
 });
 
 // Cleanup test environment
