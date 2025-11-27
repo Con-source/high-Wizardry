@@ -381,8 +381,16 @@ const Travel = (() => {
     travelState.currentLocation = travelState.destination;
     
     // Navigate to destination
-    if (typeof Locations !== 'undefined') {
+    if (typeof Locations !== 'undefined' && Locations && typeof Locations.navigateToLocation === 'function') {
       Locations.navigateToLocation(travelState.destination);
+    } else {
+      console.warn('Locations module not available — skipping navigateToLocation. Falling back to HighWizardry.Game or UI update if available.');
+      if (window.HighWizardry && window.HighWizardry.Game && typeof window.HighWizardry.Game.setLocation === 'function') {
+        window.HighWizardry.Game.setLocation(travelState.destination);
+      } else {
+        const el = document.getElementById('location-name');
+        if (el) el.textContent = travelState.destination;
+      }
     }
     
     // Show completion message
