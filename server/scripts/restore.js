@@ -381,23 +381,39 @@ class RestoreManager {
    * Validate backup exists
    */
   validateBackup() {
+    // Helper to safely resolve and validate file path
+    function getSafeFilePath(filePath, rootDir) {
+      if (!fs.existsSync(filePath)) return null;
+      try {
+        const resolvedPath = fs.realpathSync(path.resolve(filePath));
+        const backupRoot = fs.realpathSync(path.resolve(rootDir));
+        if (!resolvedPath.startsWith(backupRoot + path.sep)) {
+          // Defensive: don't allow files outside the root (including the root itself)
+          return null;
+        }
+        return resolvedPath;
+      } catch (e) {
+        return null;
+      }
+    }
+
     const usersBackup = path.join(this.backupDir, `${this.timestamp}-users.json`);
     const playersBackup = path.join(this.backupDir, `${this.timestamp}-players.json`);
     const manifestBackup = path.join(this.backupDir, `${this.timestamp}-manifest.json`);
 
-    const backupExists = fs.existsSync(manifestBackup);
-    
-    if (!backupExists) {
-      console.error(`❌ Backup not found: ${this.timestamp}`);
+    const manifestPath = getSafeFilePath(manifestBackup, this.backupDir);
+
+    if (!manifestPath) {
+      console.error(`❌ Backup not found or invalid path: ${this.timestamp}`);
       console.log('\nRun this command to see available backups:');
       console.log('  node server/scripts/restore.js --list');
       return false;
     }
 
     return {
-      users: fs.existsSync(usersBackup) ? usersBackup : null,
-      players: fs.existsSync(playersBackup) ? playersBackup : null,
-      manifest: manifestBackup
+      users: getSafeFilePath(usersBackup, this.backupDir),
+      players: getSafeFilePath(playersBackup, this.backupDir),
+      manifest: manifestPath
     };
   }
 
