@@ -1,42 +1,33 @@
 /**
- * Backup Timestamp Utilities
+ * Backup Timestamp Validation Utilities
  * 
- * Provides validation functions for backup timestamps in YYYYMMDD-HHmmss format.
+ * Provides strict validation for backup timestamps in the format YYYYMMDD-HHmmss
  */
 
 /**
- * Regex pattern for valid backup timestamp format: YYYYMMDD-HHmmss
- * Examples: 20231118-143022, 20240101-000000
+ * Check if a value is a valid backup timestamp
+ * @param {unknown} ts - The value to validate
+ * @returns {boolean} - True if ts is a valid timestamp string
  */
-const TIMESTAMP_PATTERN = /^\d{8}-\d{6}$/;
-
-/**
- * Check if a timestamp string matches the valid backup timestamp format.
- * 
- * @param {string} timestamp - The timestamp string to validate
- * @returns {boolean} True if the timestamp is valid, false otherwise
- */
-function isValidBackupTimestamp(timestamp) {
-  if (typeof timestamp !== 'string') {
-    return false;
-  }
-  return TIMESTAMP_PATTERN.test(timestamp);
+function isValidBackupTimestamp(ts) {
+  return typeof ts === 'string' && /^\d{8}-\d{6}$/.test(ts);
 }
 
 /**
- * Validate a timestamp string and throw an error if invalid.
- * 
- * @param {string} timestamp - The timestamp string to validate
- * @throws {Error} If the timestamp is invalid (includes the invalid value in message)
+ * Validate a backup timestamp and throw if invalid
+ * @param {unknown} ts - The value to validate
+ * @returns {string} - The validated timestamp string
+ * @throws {Error} - If the timestamp is invalid
  */
-function validateBackupTimestampOrThrow(timestamp) {
-  if (!isValidBackupTimestamp(timestamp)) {
-    throw new Error(`Invalid backup timestamp: ${timestamp}`);
+function validateBackupTimestampOrThrow(ts) {
+  if (!isValidBackupTimestamp(ts)) {
+    // Include invalid value in message; if undefined/empty, produce empty trailing text
+    throw new Error(`Invalid backup timestamp: ${ts ?? ''}`);
   }
+  return ts;
 }
 
 module.exports = {
-  TIMESTAMP_PATTERN,
   isValidBackupTimestamp,
   validateBackupTimestampOrThrow
 };

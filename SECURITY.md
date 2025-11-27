@@ -497,9 +497,54 @@ Test Categories:
 3. **Reverse Proxy**: Use Nginx/Cloudflare for additional protection
 4. **Environment Variables**: Never commit credentials to git
 5. **Regular Updates**: Keep dependencies updated (npm audit)
-6. **Backup Strategy**: Regular backups of user data
+6. **Backup Strategy**: Regular backups of user data (see Backup Security below)
 7. **Monitoring**: Set up logging and alerting
 8. **Separate Secrets**: Use secrets manager (AWS Secrets Manager, HashiCorp Vault)
+
+### Backup Security
+
+High Wizardry includes a comprehensive backup and restore system with the following security features:
+
+#### Data Integrity
+- **SHA-256 Checksums**: All backup files include cryptographic checksums in the manifest
+- **Integrity Verification**: Backups can be verified before restore using `npm run backup:verify <timestamp>` or the API
+- **JSON Validation**: Backup files are validated for proper JSON structure before restore
+
+#### Backup Best Practices
+1. **Encryption at Rest**: Store backup directories on encrypted storage (LUKS, BitLocker, or cloud provider encryption)
+2. **Access Control**: Restrict access to backup directories using filesystem permissions
+3. **Off-site Storage**: Copy backups to a separate location/cloud storage for disaster recovery
+4. **Retention Policy**: Use the built-in retention policy to automatically delete old backups (default: 30 backups)
+5. **Test Restores**: Regularly test restore capability using `--test` mode to verify backups are valid
+6. **Pre-Restore Backups**: The system automatically creates a backup before restore operations (can be skipped if needed)
+
+#### Backup API Security
+- **Admin Authentication Required**: Backup/restore API endpoints should be protected with admin authentication in production
+- **Rate Limiting**: API endpoints are rate-limited to prevent abuse
+- **Confirmation Required**: Restore operations require explicit confirmation in the request body
+- **Audit Logging**: All backup/restore operations are logged with timestamps
+
+#### Secure Backup Schedule
+```bash
+# Configure nightly backups at 3 AM (default)
+export BACKUP_SCHEDULED_HOUR=3
+export BACKUP_SCHEDULED_MINUTE=0
+export BACKUP_RETENTION_COUNT=30
+
+# Start scheduled backups
+npm run backup:schedule
+```
+
+#### Recovery Procedures
+1. **Point-in-Time Recovery**: Restore from any backup timestamp
+2. **Latest Backup Recovery**: Quick restore using `--latest` flag
+3. **Verification Before Restore**: Always verify backup integrity before restore
+4. **Dry Run Testing**: Use `--test` mode to preview what would be restored
+
+#### Backup Monitoring
+- **Notification Callbacks**: Receive notifications on backup/restore events
+- **WebSocket Broadcasts**: Admin clients receive real-time backup event notifications
+- **Status API**: Monitor backup system health via `/api/admin/backup/status`
 
 ### Email Security
 1. **Use Dedicated Service**: SendGrid, Mailgun, or similar
