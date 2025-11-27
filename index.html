@@ -332,6 +332,12 @@
       border: 1px solid var(--border-color);
     }
 
+    /* Safari 15.4+ compatibility fix for table header text alignment */
+    th {
+      text-align: -webkit-match-parent;
+      text-align: match-parent;
+    }
+
     .table thead th {
       background: var(--primary-dark);
       color: white;
