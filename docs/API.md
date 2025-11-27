@@ -1284,3 +1284,98 @@ Response:
 ### GET /
 
 Serves the game client (index.html)
+
+---
+
+## Deployment
+
+### Docker Deployment
+
+The server can be containerized and deployed using Docker:
+
+```bash
+# Build Docker image
+docker build -t high-wizardry .
+
+# Run container
+docker run -d \
+  -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e EMAIL_ENABLED=false \
+  -v game-data:/app/server/data \
+  --name high-wizardry \
+  high-wizardry
+
+# Check health
+curl http://localhost:8080/api/health
+```
+
+### Docker Compose
+
+For full deployment with nginx and SSL:
+
+```bash
+# Development
+docker compose up -d game-server
+
+# Production (with nginx + SSL)
+docker compose --profile production up -d
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development` |
+| `PORT` | Server port | `8080` |
+| `EMAIL_ENABLED` | Enable email sending | `false` |
+| `EMAIL_SERVICE` | Email service type | - |
+| `EMAIL_HOST` | SMTP host | - |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_SECURE` | Use TLS | `false` |
+| `EMAIL_USER` | SMTP username | - |
+| `EMAIL_PASS` | SMTP password | - |
+| `EMAIL_FROM` | From address | - |
+| `EMAIL_REQUIRE_VERIFICATION` | Require email verification | `true` |
+
+### Health Check Monitoring
+
+The `/api/health` endpoint returns server status:
+
+```json
+{
+  "status": "ok",
+  "players": 5,
+  "uptime": 1234.567
+}
+```
+
+**Response Codes:**
+- `200 OK`: Server is healthy
+- `5xx`: Server error
+
+For production monitoring, poll this endpoint every 30 seconds.
+
+### WebSocket Connection
+
+For production deployments behind a reverse proxy (nginx), ensure WebSocket upgrade headers are configured:
+
+```nginx
+location / {
+    proxy_pass http://game_server:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400s;  # Long timeout for WebSocket
+}
+```
+
+### Further Documentation
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide including:
+- Cloud provider setup (AWS, GCP, Azure, DigitalOcean)
+- SSL/TLS configuration
+- CDN and DNS setup
+- Scaling recommendations
+- Monitoring and alerting
+- Backup and recovery
