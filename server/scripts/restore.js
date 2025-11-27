@@ -32,6 +32,9 @@ const BackupManager = require('./backup');
 
 class RestoreManager {
   constructor(timestamp, options = {}) {
+    if (!RestoreManager.isValidTimestamp(timestamp)) {
+      throw new Error(`Invalid backup timestamp: ${timestamp}`);
+    }
     this.timestamp = timestamp;
     this.dataDir = options.dataDir || path.join(__dirname, '..', 'data');
     this.backupDir = options.backupDir || path.join(__dirname, '..', '..', 'backups');
@@ -45,6 +48,16 @@ class RestoreManager {
       // Notification callback
       notificationCallback: options.notificationCallback || null
     };
+  }
+
+  /**
+   * Validate backup timestamp to prevent path traversal.
+   * Accepts format YYYYMMDD-HHMMSS
+   */
+  static isValidTimestamp(ts) {
+    // Only allow digits and dash in the expected position, exactly 15 chars: 8 digits, dash, 6 digits
+    // Ex: 20231118-143022
+    return typeof ts === 'string' && /^[0-9]{8}-[0-9]{6}$/.test(ts);
   }
 
   /**
