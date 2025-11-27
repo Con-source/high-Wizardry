@@ -537,14 +537,28 @@ class RestoreManager {
       return { success: false, wouldRestore: [], error: 'Invalid timestamp format' };
     }
     
-    const manifestPath = path.join(this.backupDir, `${this.timestamp}-manifest.json`);
-    
-    if (!fs.existsSync(manifestPath)) {
-      return { success: false, wouldRestore: [], error: 'Manifest not found' };
-    }
-    
+    // Canonicalize backupDir
+    let backupDirReal;
     try {
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      backupDirReal = fs.realpathSync(this.backupDir);
+    } catch (e) {
+      return { success: false, wouldRestore: [], error: 'Backup directory inaccessible' };
+    }
+
+    // Construct and resolve manifest path; ensure it does not escape backupDir
+    const manifestPath = path.resolve(this.backupDir, `${this.timestamp}-manifest.json`);
+    let manifestPathReal;
+    try {
+      manifestPathReal = fs.realpathSync(manifestPath);
+    } catch (e) {
+      return { success: false, wouldRestore: [], error: 'Manifest not found or inaccessible' };
+    }
+    if (!manifestPathReal.startsWith(backupDirReal)) {
+      return { success: false, wouldRestore: [], error: 'Manifest path escaped backup directory' };
+    }
+
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPathReal, 'utf8'));
       const wouldRestore = (manifest.files || []).map(f => f.name);
       
       return {
