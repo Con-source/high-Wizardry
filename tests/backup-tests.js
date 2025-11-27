@@ -397,13 +397,20 @@ async function runTests() {
   });
   
   test('RestoreManager handles invalid timestamp', () => {
-    const restore = new RestoreManager('invalid-timestamp', {
-      dataDir: testDataDir,
-      backupDir: testBackupDir
-    });
+    let threw = false;
+    let errorMessage = '';
+    try {
+      new RestoreManager('invalid-timestamp', {
+        dataDir: testDataDir,
+        backupDir: testBackupDir
+      });
+    } catch (error) {
+      threw = true;
+      errorMessage = error.message;
+    }
     
-    const result = restore.verifyBackupIntegrity('invalid-timestamp');
-    assert(!result.success, 'Verification should fail for invalid timestamp');
+    assert(threw, 'Should throw an error for invalid timestamp');
+    assert(errorMessage.includes('Invalid backup timestamp'), 'Error message should mention invalid timestamp');
   });
   
   test('BackupManager notification callback is called', async () => {
