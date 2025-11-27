@@ -397,8 +397,14 @@ class RestoreManager {
       try {
         const resolvedPath = fs.realpathSync(path.resolve(filePath));
         const backupRoot = fs.realpathSync(path.resolve(rootDir));
-        if (!resolvedPath.startsWith(backupRoot + path.sep)) {
-          // Defensive: don't allow files outside the root (including the root itself)
+        // Ensure the file is strictly within the backupRoot, not the root itself, and not above
+        const rel = path.relative(backupRoot, resolvedPath);
+        if (
+          rel.startsWith('..') ||         // outside root
+          path.isAbsolute(rel) ||         // absolute path (malicious input)
+          rel === ''                      // backupRoot itself (disallowed)
+        ) {
+          // Defensive: don't allow files outside or at the root directory
           return null;
         }
         return resolvedPath;
