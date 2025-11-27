@@ -146,6 +146,9 @@ class HighWizardryServer {
       // Permissions policy
       res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
       
+      // Cache control - prevent caching of sensitive data
+      res.setHeader('Cache-Control', 'no-store');
+      
       next();
     });
     
