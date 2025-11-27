@@ -601,6 +601,10 @@ class HighWizardryServer {
     this.app.get('/api/admin/backup/download/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
+        // Validate timestamp: only allow 13 digit numbers (assuming backup timestamps are ms)
+        if (!/^\d{13}$/.test(timestamp)) {
+          return res.status(400).json({ success: false, message: 'Invalid backup timestamp format' });
+        }
         const backupDir = path.join(__dirname, '..', 'backups');
         const manifestFile = path.join(backupDir, `${timestamp}-manifest.json`);
         
