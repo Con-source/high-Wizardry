@@ -397,6 +397,58 @@ node admin-inject-event.js --event magic-storm
 node admin-inject-event.js --custom --name "Test" --scope global --description "Test event"
 ```
 
+## 🚀 Deployment
+
+High Wizardry can be deployed to cloud/VPS environments using Docker.
+
+### Quick Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker compose up -d
+
+# Access the game
+open http://localhost:8080
+
+# Check health
+curl http://localhost:8080/api/health
+```
+
+### Production Deployment
+
+For production deployments with SSL and nginx:
+
+```bash
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# 2. Start with production profile
+docker compose --profile production up -d
+```
+
+### Cloud Providers
+
+Deployment guides are available for:
+- **AWS** (EC2, ECS, ELB)
+- **DigitalOcean** (Droplets)
+- **Google Cloud Platform** (GCE, GKE)
+- **Microsoft Azure** (VMs, AKS)
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete deployment documentation including:
+- SSL/TLS configuration with Let's Encrypt
+- CDN and DNS setup
+- Load testing and scaling
+- Monitoring and alerting
+- Backup and recovery procedures
+
+### CI/CD
+
+The repository includes GitHub Actions workflows for:
+- Automated testing on pull requests
+- Docker image building and security scanning
+- Staging and production deployments
+
 ## Roadmap
 
 ### Planned Features
