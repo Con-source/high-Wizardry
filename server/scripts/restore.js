@@ -28,6 +28,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const crypto = require('crypto');
+const BackupManager = require('./backup');
 
 class RestoreManager {
   constructor(timestamp, options = {}) {
@@ -240,7 +241,6 @@ class RestoreManager {
    * @returns {Object} - Backup result
    */
   createPreRestoreBackup() {
-    const BackupManager = require('./backup');
     const backup = new BackupManager({
       dataDir: this.dataDir,
       backupDir: this.backupDir

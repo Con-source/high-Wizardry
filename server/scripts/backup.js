@@ -27,11 +27,20 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Load package.json version once at module load time
+let packageVersion = '1.0.0';
+try {
+  packageVersion = require('../../package.json').version || '1.0.0';
+} catch {
+  // Use default version if package.json cannot be loaded
+}
+
 class BackupManager {
   constructor(options = {}) {
     this.dataDir = options.dataDir || path.join(__dirname, '..', 'data');
     this.backupDir = options.backupDir || path.join(__dirname, '..', '..', 'backups');
     this.timestamp = this.generateTimestamp();
+    this.serverVersion = packageVersion;
     
     // Configuration with defaults
     this.config = {
@@ -184,30 +193,6 @@ class BackupManager {
   }
 
   /**
-   * Create a manifest file with backup metadata
-   */
-  createManifest(backedUpFiles) {
-    const manifest = {
-      timestamp: this.timestamp,
-      date: new Date().toISOString(),
-      files: backedUpFiles.map(file => ({
-        name: path.basename(file),
-        path: file,
-        size: fs.existsSync(file) ? fs.statSync(file).size : 0
-      })),
-      totalSize: backedUpFiles.reduce((total, file) => {
-        return total + (fs.existsSync(file) ? fs.statSync(file).size : 0);
-      }, 0)
-    };
-
-    const manifestFile = path.join(this.backupDir, `${this.timestamp}-manifest.json`);
-    fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
-    console.log(`✅ Created backup manifest`);
-    
-    return manifestFile;
-  }
-
-  /**
    * Format bytes to human-readable format
    */
   formatBytes(bytes) {
@@ -250,7 +235,7 @@ class BackupManager {
       date: new Date().toISOString(),
       files: filesWithChecksums,
       totalSize: filesWithChecksums.reduce((total, file) => total + file.size, 0),
-      serverVersion: require('../../package.json').version || '1.0.0'
+      serverVersion: this.serverVersion
     };
 
     const manifestFile = path.join(this.backupDir, `${this.timestamp}-manifest.json`);

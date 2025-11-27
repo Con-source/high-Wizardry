@@ -238,26 +238,46 @@ async function runTests() {
   });
   
   await asyncTest('BackupManager applies retention policy', async () => {
-    const backup = new BackupManager({
+    // Clean up any existing backups first to have a clean slate
+    const existingBackups = fs.readdirSync(testBackupDir);
+    for (const file of existingBackups) {
+      fs.unlinkSync(path.join(testBackupDir, file));
+    }
+    
+    // Create multiple backups with unique timestamps by creating new manager instances
+    const timestamps = ['20231101-000001', '20231101-000002', '20231101-000003'];
+    
+    for (const ts of timestamps) {
+      const backup = new BackupManager({
+        dataDir: testDataDir,
+        backupDir: testBackupDir
+      });
+      // Override the generated timestamp before any operations
+      backup.timestamp = ts;
+      
+      // Manually perform backup operations to avoid timestamp regeneration
+      backup.ensureBackupDirectory();
+      const files = [];
+      const usersBackup = backup.backupUsers();
+      if (usersBackup) files.push(usersBackup);
+      const playersBackup = backup.backupPlayers();
+      if (playersBackup) files.push(playersBackup);
+      backup.createManifest(files);
+    }
+    
+    const backupLister = new BackupManager({
       dataDir: testDataDir,
       backupDir: testBackupDir
     });
     
-    // Create multiple backups
-    for (let i = 0; i < 3; i++) {
-      await backup.run({ silent: true });
-      // Small delay to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 1100));
-    }
-    
-    const backupsBefore = backup.listBackups();
-    assert(backupsBefore.length >= 3, 'Should have at least 3 backups');
+    const backupsBefore = backupLister.listBackups();
+    assert(backupsBefore.length >= 3, `Should have at least 3 backups, got ${backupsBefore.length}`);
     
     // Apply retention to keep only 2
-    const result = backup.applyRetentionPolicy(2);
+    const result = backupLister.applyRetentionPolicy(2);
     
     assert(result.success, 'Retention should succeed');
-    assert(result.remaining === 2, 'Should have 2 backups remaining');
+    assert(result.remaining === 2, `Should have 2 backups remaining, got ${result.remaining}`);
   });
   
   // =============================================================================
