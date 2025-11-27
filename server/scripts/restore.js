@@ -165,8 +165,18 @@ class RestoreManager {
    */
   verifyBackupIntegrity(timestamp) {
     const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
-    
-    if (!fs.existsSync(manifestFile)) {
+    const resolvedManifestFile = path.resolve(manifestFile);
+    const resolvedBackupDir = path.resolve(this.backupDir);
+    if (!resolvedManifestFile.startsWith(resolvedBackupDir + path.sep)) {
+      return {
+        success: false,
+        message: `Manifest file path is outside of backup directory: ${resolvedManifestFile}`,
+        verified: 0,
+        failed: 0,
+        errors: ['Manifest path containment check failed']
+      };
+    }
+    if (!fs.existsSync(resolvedManifestFile)) {
       return { 
         success: false, 
         message: `Backup manifest not found for timestamp: ${timestamp}`,
