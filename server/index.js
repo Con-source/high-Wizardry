@@ -7,6 +7,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const AuthManager = require('./auth/AuthManager');
 const GameManager = require('./game/GameManager');
@@ -445,6 +446,194 @@ class HighWizardryServer {
       
       const history = this.auctionManager.getPlayerAuctionHistory(playerId, limit);
       res.json({ success: true, history });
+    });
+    
+    // =========================================================================
+    // Backup & Restore Admin API
+    // TODO: Add admin authentication middleware for production
+    // =========================================================================
+    
+    const BackupManager = require('./scripts/backup');
+    const RestoreManager = require('./scripts/restore');
+    
+    // Rate limiter for admin backup operations
+    const adminBackupLimiter = rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 30, // Limit each IP to 30 requests per minute for admin operations
+      message: 'Too many admin requests. Please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    
+    // Create backup managers with notification callbacks
+    this.backupManager = new BackupManager({
+      notificationCallback: (notification) => {
+        // Broadcast backup events to all connected admin clients
+        this.broadcast({
+          type: 'backup_notification',
+          ...notification
+        });
+      }
+    });
+    
+    // Get backup status and statistics
+    this.app.get('/api/admin/backup/status', adminBackupLimiter, (req, res) => {
+      try {
+        const status = this.backupManager.getStatus();
+        res.json({ success: true, ...status });
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // List all backups
+    this.app.get('/api/admin/backup/list', adminBackupLimiter, (req, res) => {
+      try {
+        const backups = this.backupManager.listBackups();
+        res.json({ success: true, backups, count: backups.length });
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Get specific backup details
+    this.app.get('/api/admin/backup/:timestamp', adminBackupLimiter, (req, res) => {
+      try {
+        const { timestamp } = req.params;
+        const backup = this.backupManager.getBackup(timestamp);
+        if (!backup) {
+          return res.status(404).json({ success: false, message: 'Backup not found' });
+        }
+        res.json({ success: true, backup });
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Trigger manual backup (on-demand)
+    this.app.post('/api/admin/backup/trigger', adminBackupLimiter, async (req, res) => {
+      try {
+        console.log('📦 Admin triggered backup...');
+        const result = await this.backupManager.run({ silent: true });
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Verify backup integrity
+    this.app.get('/api/admin/backup/verify/:timestamp', adminBackupLimiter, (req, res) => {
+      try {
+        const { timestamp } = req.params;
+        const result = this.backupManager.verifyBackup(timestamp);
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Apply retention policy (cleanup old backups)
+    this.app.post('/api/admin/backup/cleanup', adminBackupLimiter, (req, res) => {
+      try {
+        const { keepCount } = req.body;
+        const result = this.backupManager.applyRetentionPolicy(keepCount);
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Test restore (dry run)
+    this.app.get('/api/admin/restore/test/:timestamp', adminBackupLimiter, (req, res) => {
+      try {
+        const { timestamp } = req.params;
+        const restore = new RestoreManager(timestamp);
+        const result = restore.testRestore();
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Perform restore (requires confirmation in request body)
+    this.app.post('/api/admin/restore/:timestamp', adminBackupLimiter, async (req, res) => {
+      try {
+        const { timestamp } = req.params;
+        const { confirmed, skipPreBackup } = req.body;
+        
+        if (!confirmed) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Restore requires confirmation. Set confirmed: true in request body.',
+            warning: 'This will overwrite existing game data. Consider testing restore first with GET /api/admin/restore/test/:timestamp'
+          });
+        }
+        
+        console.log(`🔄 Admin triggered restore from backup: ${timestamp}`);
+        
+        const restore = new RestoreManager(timestamp, {
+          force: true,
+          preRestoreBackup: !skipPreBackup,
+          notificationCallback: (notification) => {
+            this.broadcast({
+              type: 'restore_notification',
+              ...notification
+            });
+          }
+        });
+        
+        const result = await restore.run({ silent: true, returnResult: true });
+        
+        if (result.success) {
+          res.json({
+            ...result,
+            warning: 'Server should be restarted for restored data to take effect'
+          });
+        } else {
+          res.status(400).json(result);
+        }
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+    
+    // Download backup file
+    this.app.get('/api/admin/backup/download/:timestamp', adminBackupLimiter, (req, res) => {
+      try {
+        const { timestamp } = req.params;
+        // Validate timestamp: only allow 13 digit numbers (assuming backup timestamps are ms)
+        if (!/^\d{13}$/.test(timestamp)) {
+          return res.status(400).json({ success: false, message: 'Invalid backup timestamp format' });
+        }
+        const backupDir = path.join(__dirname, '..', 'backups');
+        const manifestFile = path.join(backupDir, `${timestamp}-manifest.json`);
+        
+        if (!fs.existsSync(manifestFile)) {
+          return res.status(404).json({ success: false, message: 'Backup not found' });
+        }
+        
+        // Create a combined backup object for download
+        const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+        const backupData = {
+          manifest,
+          files: {}
+        };
+        
+        for (const file of manifest.files) {
+          if (!file.name.endsWith('-manifest.json')) {
+            const filePath = path.join(backupDir, file.name);
+            if (fs.existsSync(filePath)) {
+              backupData.files[file.name] = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            }
+          }
+        }
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="backup-${timestamp}.json"`);
+        res.json(backupData);
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+      }
     });
     
     // Default route - serve index.html with explicit rate limiting
