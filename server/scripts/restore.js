@@ -30,6 +30,28 @@ const readline = require('readline');
 const crypto = require('crypto');
 const BackupManager = require('./backup');
 
+/**
+ * Validate backup timestamp format (YYYYMMDD-HHmmss)
+ * @param {*} ts - The timestamp to validate
+ * @returns {boolean} - True if valid, false otherwise
+ */
+function isValidBackupTimestamp(ts) {
+  return typeof ts === 'string' && /^\d{8}-\d{6}$/.test(ts);
+}
+
+/**
+ * Validate a timestamp and throw an error if invalid
+ * @param {*} ts - The timestamp to validate
+ * @throws {Error} - If the timestamp is invalid
+ * @returns {string} - The validated timestamp
+ */
+function validateBackupTimestampOrThrow(ts) {
+  if (!isValidBackupTimestamp(ts)) {
+    throw new Error(`Invalid backup timestamp: ${ts || ''}`);
+  }
+  return ts;
+}
+
 class RestoreManager {
   constructor(timestamp, options = {}) {
     if (!RestoreManager.isValidTimestamp(timestamp)) {
@@ -415,6 +437,139 @@ class RestoreManager {
       backupDate: manifest.date,
       wouldRestore
     };
+  }
+
+  /**
+   * Get the latest valid backup timestamp
+   * @returns {string} - The latest valid timestamp
+   * @throws {Error} - If no valid timestamps are found
+   */
+  getLatestBackupTimestamp() {
+    const backups = this.listBackups();
+    
+    if (backups.length === 0) {
+      throw new Error('Invalid backup timestamp:');
+    }
+    
+    // listBackups() already filters and sorts (newest first)
+    // The first element is the latest
+    return backups[0].timestamp;
+  }
+
+  /**
+   * Validate an explicit timestamp input (throws with the invalid value in the message)
+   * @param {*} ts - The timestamp to validate
+   * @throws {Error} - If the timestamp is invalid
+   * @returns {string} - The validated timestamp
+   */
+  validateTimestampInputOrThrow(ts) {
+    return validateBackupTimestampOrThrow(ts);
+  }
+
+  /**
+   * Verify backup integrity
+   * @param {string} timestamp - The backup timestamp to verify
+   * @returns {Object} - Verification result
+   */
+  verifyBackupIntegrity(timestamp) {
+    if (!isValidBackupTimestamp(timestamp)) {
+      return { success: false, verified: 0, failed: 0, error: 'Invalid timestamp format' };
+    }
+
+    // Ensure backupDir is canonical
+    const backupDirReal = fs.realpathSync(this.backupDir);
+
+    // Construct and resolve manifest path; ensure it does not escape backupDir
+    const manifestPath = path.resolve(this.backupDir, `${timestamp}-manifest.json`);
+    let manifestPathReal;
+    try {
+      manifestPathReal = fs.realpathSync(manifestPath);
+    } catch (e) {
+      return { success: false, verified: 0, failed: 0, error: 'Manifest not found or inaccessible' };
+    }
+    if (!manifestPathReal.startsWith(backupDirReal)) {
+      return { success: false, verified: 0, failed: 0, error: 'Manifest path escaped backup directory' };
+    }
+
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPathReal, 'utf8'));
+      let verified = 0;
+      let failed = 0;
+      let errors = [];
+
+      for (const file of manifest.files || []) {
+        const filePath = path.resolve(this.backupDir, file.name);
+        let filePathReal;
+        try {
+          filePathReal = fs.realpathSync(filePath);
+          if (!filePathReal.startsWith(backupDirReal)) {
+            failed++;
+            errors.push(`File path ${filePathReal} escaped backup directory`);
+            continue;
+          }
+          verified++;
+        } catch (e) {
+          failed++;
+          errors.push(`File missing or inaccessible: ${file.name}`);
+          continue;
+        }
+      }
+
+      return {
+        success: failed === 0,
+        verified,
+        failed,
+        total: (manifest.files || []).length,
+        errors
+      };
+    } catch (error) {
+      return { success: false, verified: 0, failed: 0, error: error.message };
+    }
+  }
+
+  /**
+   * Test restore (dry run)
+   * @returns {Object} - Test result
+   */
+  testRestore() {
+    // Validate timestamp format first
+    if (!isValidBackupTimestamp(this.timestamp)) {
+      return { success: false, wouldRestore: [], error: 'Invalid timestamp format' };
+    }
+    
+    // Canonicalize backupDir
+    let backupDirReal;
+    try {
+      backupDirReal = fs.realpathSync(this.backupDir);
+    } catch (e) {
+      return { success: false, wouldRestore: [], error: 'Backup directory inaccessible' };
+    }
+
+    // Construct and resolve manifest path; ensure it does not escape backupDir
+    const manifestPath = path.resolve(this.backupDir, `${this.timestamp}-manifest.json`);
+    let manifestPathReal;
+    try {
+      manifestPathReal = fs.realpathSync(manifestPath);
+    } catch (e) {
+      return { success: false, wouldRestore: [], error: 'Manifest not found or inaccessible' };
+    }
+    if (!manifestPathReal.startsWith(backupDirReal)) {
+      return { success: false, wouldRestore: [], error: 'Manifest path escaped backup directory' };
+    }
+
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPathReal, 'utf8'));
+      const wouldRestore = (manifest.files || []).map(f => f.name);
+      
+      return {
+        success: true,
+        wouldRestore,
+        timestamp: this.timestamp,
+        date: manifest.date
+      };
+    } catch (error) {
+      return { success: false, wouldRestore: [], error: error.message };
+    }
   }
 
   /**
@@ -867,3 +1022,5 @@ if (require.main === module) {
 }
 
 module.exports = RestoreManager;
+module.exports.isValidBackupTimestamp = isValidBackupTimestamp;
+module.exports.validateBackupTimestampOrThrow = validateBackupTimestampOrThrow;
