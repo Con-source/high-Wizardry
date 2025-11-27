@@ -925,6 +925,139 @@
     .hidden {
       display: none !important;
     }
+    
+    /* Admin Panel Styles */
+    .admin-panel {
+      padding: 1rem;
+    }
+    
+    .admin-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .admin-section h4 {
+      color: var(--primary-light);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .admin-form-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .admin-form-row .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .admin-user-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .admin-user-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .admin-user-item .user-info {
+      flex: 1;
+    }
+    
+    .admin-user-item .user-name {
+      font-weight: bold;
+      color: var(--primary-light);
+    }
+    
+    .admin-user-item .user-reason {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .admin-user-item .user-expiry {
+      font-size: 0.75rem;
+      color: var(--warning);
+    }
+    
+    .admin-user-item .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .admin-tab-content {
+      display: none;
+    }
+    
+    .admin-tab-content.active {
+      display: block;
+    }
+    
+    .admin-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .admin-tabs .nav-link {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .admin-tabs .nav-link:hover {
+      background: var(--primary-dark);
+    }
+    
+    .admin-tabs .nav-link.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .admin-stat-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    .admin-stat-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-light);
+    }
+    
+    .admin-stat-card .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
   </style>
 </head>
 <body>
@@ -1192,6 +1325,7 @@
         <button class="location-btn" data-location="fair-alley"><i class="fas fa-store"></i> Fair Alleyway</button>
         <button class="location-btn" data-location="guild-district"><i class="fas fa-shield-alt"></i> Guild District</button>
         <button class="location-btn" data-location="smuggling-routes"><i class="fas fa-user-secret"></i> Smuggling Routes</button>
+        <button class="location-btn" data-location="admin-panel" id="admin-panel-btn" style="display: none;"><i class="fas fa-cog"></i> Admin Panel</button>
       </nav>
     </div>
 
@@ -2002,6 +2136,147 @@
           </div>
         </div>
       </div>
+
+      <!-- Admin Panel -->
+      <div id="location-content-admin-panel" class="location-content admin-panel" style="display: none;">
+        <h2><i class="fas fa-cog me-2"></i>Admin Panel</h2>
+        <p class="text-muted">Manage users, view bans, and configure game settings.</p>
+        
+        <!-- Admin Stats -->
+        <div class="admin-stats" id="admin-stats">
+          <div class="admin-stat-card">
+            <div class="stat-value" id="admin-stat-banned">0</div>
+            <div class="stat-label">Banned Users</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-value" id="admin-stat-muted">0</div>
+            <div class="stat-label">Muted Users</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-value" id="admin-stat-online">0</div>
+            <div class="stat-label">Online Players</div>
+          </div>
+        </div>
+        
+        <!-- Admin Tabs -->
+        <div class="admin-tabs">
+          <button class="nav-link active" data-admin-tab="ban-user">Ban User</button>
+          <button class="nav-link" data-admin-tab="mute-user">Mute User</button>
+          <button class="nav-link" data-admin-tab="ip-ban">IP Ban</button>
+          <button class="nav-link" data-admin-tab="banned-list">Banned List</button>
+          <button class="nav-link" data-admin-tab="muted-list">Muted List</button>
+        </div>
+        
+        <!-- Ban User Tab -->
+        <div id="admin-tab-ban-user" class="admin-tab-content active">
+          <div class="admin-section">
+            <h4><i class="fas fa-user-slash me-2"></i>Ban User</h4>
+            <form id="admin-ban-user-form">
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="ban-username" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="ban-username" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                  <label for="ban-duration" class="form-label">Duration (minutes)</label>
+                  <input type="number" class="form-control" id="ban-duration" min="0" placeholder="Leave empty for permanent">
+                </div>
+              </div>
+              <div class="form-group mb-3">
+                <label for="ban-reason" class="form-label">Reason</label>
+                <textarea class="form-control" id="ban-reason" rows="2" placeholder="Reason for ban"></textarea>
+              </div>
+              <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="ban-permanent">
+                <label class="form-check-label" for="ban-permanent">Permanent Ban</label>
+              </div>
+              <button type="submit" class="btn btn-danger"><i class="fas fa-ban me-1"></i> Ban User</button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Mute User Tab -->
+        <div id="admin-tab-mute-user" class="admin-tab-content">
+          <div class="admin-section">
+            <h4><i class="fas fa-volume-mute me-2"></i>Mute User</h4>
+            <form id="admin-mute-user-form">
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="mute-username" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="mute-username" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                  <label for="mute-duration" class="form-label">Duration (minutes)</label>
+                  <input type="number" class="form-control" id="mute-duration" min="0" placeholder="Leave empty for permanent">
+                </div>
+              </div>
+              <div class="form-group mb-3">
+                <label for="mute-reason" class="form-label">Reason</label>
+                <textarea class="form-control" id="mute-reason" rows="2" placeholder="Reason for mute"></textarea>
+              </div>
+              <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="mute-permanent">
+                <label class="form-check-label" for="mute-permanent">Permanent Mute</label>
+              </div>
+              <button type="submit" class="btn btn-warning"><i class="fas fa-volume-mute me-1"></i> Mute User</button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- IP Ban Tab -->
+        <div id="admin-tab-ip-ban" class="admin-tab-content">
+          <div class="admin-section">
+            <h4><i class="fas fa-network-wired me-2"></i>IP Ban</h4>
+            <form id="admin-ip-ban-form">
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="ban-ip" class="form-label">IP Address</label>
+                  <input type="text" class="form-control" id="ban-ip" required placeholder="e.g., 192.168.1.1">
+                </div>
+                <div class="form-group">
+                  <label for="ip-ban-duration" class="form-label">Duration (minutes)</label>
+                  <input type="number" class="form-control" id="ip-ban-duration" min="0" placeholder="Leave empty for permanent">
+                </div>
+              </div>
+              <div class="form-group mb-3">
+                <label for="ip-ban-reason" class="form-label">Reason</label>
+                <textarea class="form-control" id="ip-ban-reason" rows="2" placeholder="Reason for IP ban"></textarea>
+              </div>
+              <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="ip-ban-permanent">
+                <label class="form-check-label" for="ip-ban-permanent">Permanent Ban</label>
+              </div>
+              <button type="submit" class="btn btn-danger"><i class="fas fa-ban me-1"></i> Ban IP</button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Banned Users List Tab -->
+        <div id="admin-tab-banned-list" class="admin-tab-content">
+          <div class="admin-section">
+            <h4><i class="fas fa-user-slash me-2"></i>Banned Users</h4>
+            <button class="btn btn-sm btn-outline-primary mb-3" onclick="AdminPanel.refreshBannedUsers()">
+              <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <div class="admin-user-list" id="banned-users-list">
+              <p class="text-muted">Loading banned users...</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Muted Users List Tab -->
+        <div id="admin-tab-muted-list" class="admin-tab-content">
+          <div class="admin-section">
+            <h4><i class="fas fa-volume-mute me-2"></i>Muted Users</h4>
+            <button class="btn btn-sm btn-outline-primary mb-3" onclick="AdminPanel.refreshMutedUsers()">
+              <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <div class="admin-user-list" id="muted-users-list">
+              <p class="text-muted">Loading muted users...</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2046,7 +2321,8 @@
             'friends': 'location-content-friends',
             'fair-alley': 'location-content-fair-alley',
             'guild-district': 'location-content-guild-district',
-            'smuggling-routes': 'location-content-smuggling-routes'
+            'smuggling-routes': 'location-content-smuggling-routes',
+            'admin-panel': 'location-content-admin-panel'
           };
           
           if (contentMap[locationId]) {
@@ -2181,6 +2457,7 @@
   <script src="jsjs/consumables.js"></script><!-- NEW: Consumables system -->
   <script src="jsjs/trade.js"></script><!-- NEW: Trade system -->
   <script src="jsjs/auction.js"></script><!-- NEW: Auction system -->
+  <script src="jsjs/admin.js"></script><!-- NEW: Admin Panel for ban/mute management -->
   <script src="jsjs/online.game.js"></script>
   <script src="jsjs/main.js"></script>
 
