@@ -475,32 +475,52 @@ class RestoreManager {
     if (!isValidBackupTimestamp(timestamp)) {
       return { success: false, verified: 0, failed: 0, error: 'Invalid timestamp format' };
     }
-    
-    const manifestPath = path.join(this.backupDir, `${timestamp}-manifest.json`);
-    
-    if (!fs.existsSync(manifestPath)) {
-      return { success: false, verified: 0, failed: 0, error: 'Manifest not found' };
-    }
-    
+
+    // Ensure backupDir is canonical
+    const backupDirReal = fs.realpathSync(this.backupDir);
+
+    // Construct and resolve manifest path; ensure it does not escape backupDir
+    const manifestPath = path.resolve(this.backupDir, `${timestamp}-manifest.json`);
+    let manifestPathReal;
     try {
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      manifestPathReal = fs.realpathSync(manifestPath);
+    } catch (e) {
+      return { success: false, verified: 0, failed: 0, error: 'Manifest not found or inaccessible' };
+    }
+    if (!manifestPathReal.startsWith(backupDirReal)) {
+      return { success: false, verified: 0, failed: 0, error: 'Manifest path escaped backup directory' };
+    }
+
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPathReal, 'utf8'));
       let verified = 0;
       let failed = 0;
-      
+      let errors = [];
+
       for (const file of manifest.files || []) {
-        const filePath = path.join(this.backupDir, file.name);
-        if (fs.existsSync(filePath)) {
+        const filePath = path.resolve(this.backupDir, file.name);
+        let filePathReal;
+        try {
+          filePathReal = fs.realpathSync(filePath);
+          if (!filePathReal.startsWith(backupDirReal)) {
+            failed++;
+            errors.push(`File path ${filePathReal} escaped backup directory`);
+            continue;
+          }
           verified++;
-        } else {
+        } catch (e) {
           failed++;
+          errors.push(`File missing or inaccessible: ${file.name}`);
+          continue;
         }
       }
-      
+
       return {
         success: failed === 0,
         verified,
         failed,
-        total: (manifest.files || []).length
+        total: (manifest.files || []).length,
+        errors
       };
     } catch (error) {
       return { success: false, verified: 0, failed: 0, error: error.message };
