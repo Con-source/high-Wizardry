@@ -88,9 +88,11 @@ high-Wizardry/
 │       └── CsrfProtection.js
 ├── docs/                   # Documentation
 ├── tests/                  # Test files
-├── css/                    # Stylesheets (note: actual folder is named '{css')
+├── {css/                   # Stylesheets
 └── package.json            # Dependencies
 ```
+
+> **Note:** The stylesheet directory is named `{css` with a curly brace prefix. This is an unusual naming convention to be aware of when referencing files.
 
 ### Development Tools
 

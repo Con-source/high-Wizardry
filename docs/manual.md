@@ -297,9 +297,11 @@ You'll receive notifications when:
 
 ### Available Guilds
 
+> **Note:** Guild join costs are displayed in-game using the standard currency system (shillings and pennies).
+
 #### Artisan Guild
 - **Focus**: Crafting and creation
-- **Join Cost**: 1000 gold
+- **Join Cost**: ~83 shillings (1000 pennies)
 - **Perks**:
   - Level 1: Faster Crafting (20% reduction on rare items)
   - Level 3: Better Quality (higher quality chance)
@@ -307,7 +309,7 @@ You'll receive notifications when:
 
 #### Smugglers' Guild
 - **Focus**: Contraband and underground trade
-- **Join Cost**: 1500 gold
+- **Join Cost**: 125 shillings (1500 pennies)
 - **Perks**:
   - Level 1: Contraband Boost (25% higher sell value)
   - Level 2: Vendor Discount (15% off Lunar Powder)
@@ -315,7 +317,7 @@ You'll receive notifications when:
 
 #### Explorer's Guild
 - **Focus**: Adventure and discovery
-- **Join Cost**: 1200 gold
+- **Join Cost**: 100 shillings (1200 pennies)
 - **Perks**:
   - Level 1: Bonus Resources (extra gathering locations)
   - Level 2: Faster Gathering (25% less energy)
@@ -371,8 +373,8 @@ Access the Workshop to craft items using gathered resources.
 
 ### Fast-Track Crafting
 
-- Pay gold to complete crafting instantly
-- Cost = 1 gold per minute remaining
+- Pay currency to complete crafting instantly
+- Cost = approximately 1 shilling per minute remaining
 - Available on any in-progress item
 
 ### Guild Bonuses
