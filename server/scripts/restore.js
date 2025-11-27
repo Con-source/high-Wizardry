@@ -116,7 +116,64 @@ class RestoreManager {
   }
 
   /**
-   * List available backups
+   * Extract timestamp from a backup entry
+   * @param {object} entry - The backup entry object
+   * @returns {string|undefined} - The extracted timestamp or undefined if not found
+   */
+  extractTimestampFromEntry(entry) {
+    if (entry && typeof entry.timestamp === 'string' && entry.timestamp.trim() !== '') {
+      return entry.timestamp;
+    }
+    if (entry && typeof entry.name === 'string') {
+      const m = entry.name.match(/(\d{8}-\d{6})/);
+      if (m) return m[1];
+    }
+    return undefined;
+  }
+
+  /**
+   * Validate a timestamp input or throw an error
+   * @param {unknown} ts - The timestamp to validate
+   * @returns {string} - The validated timestamp
+   * @throws {Error} - If the timestamp is invalid
+   */
+  validateTimestampInputOrThrow(ts) {
+    return validateBackupTimestampOrThrow(ts);
+  }
+
+  /**
+   * Get the latest valid backup timestamp
+   * @returns {string} - The latest valid timestamp
+   * @throws {Error} - If no valid timestamps exist
+   */
+  getLatestBackupTimestamp() {
+    if (!fs.existsSync(this.backupDir)) {
+      throw new Error('Invalid backup timestamp:');
+    }
+
+    const files = fs.readdirSync(this.backupDir);
+    const manifests = files.filter(f => f.endsWith('-manifest.json'));
+    
+    const timestamps = manifests.map(manifestFile => {
+      const manifestPath = path.join(this.backupDir, manifestFile);
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        return this.extractTimestampFromEntry(manifest);
+      } catch {
+        return undefined;
+      }
+    }).filter(ts => isValidBackupTimestamp(ts));
+
+    if (timestamps.length === 0) {
+      throw new Error('Invalid backup timestamp:');
+    }
+
+    timestamps.sort();
+    return timestamps[timestamps.length - 1];
+  }
+
+  /**
+   * List available backups (skips entries with invalid timestamps)
    */
   listBackups() {
     if (!fs.existsSync(this.backupDir)) {
