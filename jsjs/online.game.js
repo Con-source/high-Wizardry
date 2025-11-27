@@ -530,28 +530,11 @@ const onlineGame = {
         this.updateUI();
     },
 
-    // Defensive updateUI method - prefers central GameCore UI, falls back to local updates
+    // Update UI elements during game loop
     updateUI: function() {
-        try {
-            // Try to use the central HighWizardry Game updateUI if available
-            if (typeof window !== 'undefined' && window.HighWizardry && 
-                window.HighWizardry.Game && typeof window.HighWizardry.Game.updateUI === 'function') {
-                window.HighWizardry.Game.updateUI();
-                return;
-            }
-            
-            // Fallback: try GameCore.updateUI if available
-            if (typeof window !== 'undefined' && window.GameCore && 
-                typeof window.GameCore.updateUI === 'function') {
-                window.GameCore.updateUI();
-                return;
-            }
-            
-            // Final fallback: perform local UI updates
+        // Update player info if data is available
+        if (this.playerData) {
             this.updatePlayerInfo();
-            this.updatePlayerList();
-        } catch (error) {
-            console.error('Error in onlineGame.updateUI:', error);
         }
     },
 
