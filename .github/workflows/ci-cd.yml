@@ -19,6 +19,10 @@ on:
           - staging
           - production
 
+# Set default permissions for all jobs
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: '20'
   DOCKER_IMAGE: high-wizardry
@@ -28,6 +32,8 @@ jobs:
   test:
     name: Test & Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -58,6 +64,8 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -120,6 +128,9 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
+      security-events: write
     
     steps:
       - name: Checkout code
@@ -144,6 +155,8 @@ jobs:
   validate-compose:
     name: Validate Docker Compose
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -160,6 +173,8 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: [build, security-scan]
+    permissions:
+      contents: read
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_target == 'staging')
@@ -184,6 +199,8 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build, security-scan]
+    permissions:
+      contents: read
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_target == 'production')
