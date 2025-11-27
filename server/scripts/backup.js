@@ -447,14 +447,22 @@ class BackupManager {
    * @returns {Object|null} - Backup info or null if not found
    */
   getBackup(timestamp) {
-    const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
-    
-    if (!fs.existsSync(manifestFile)) {
+    // Accept only timestamps that match the backup naming convention: e.g., YYYYMMDDHHmmss (up to 14 digits)
+    if (!/^\d{8,14}$/.test(timestamp)) {
       return null;
     }
-
+    const manifestFile = path.join(this.backupDir, `${timestamp}-manifest.json`);
+    // Ensure manifestFile resolves *inside* backupDir (to prevent traversal)
+    const resolvedManifestFile = path.resolve(manifestFile);
+    const resolvedBackupDir = path.resolve(this.backupDir);
+    if (!resolvedManifestFile.startsWith(resolvedBackupDir)) {
+      return null;
+    }
+    if (!fs.existsSync(resolvedManifestFile)) {
+      return null;
+    }
     try {
-      const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+      const manifest = JSON.parse(fs.readFileSync(resolvedManifestFile, 'utf8'));
       return {
         timestamp: manifest.timestamp,
         date: manifest.date,
