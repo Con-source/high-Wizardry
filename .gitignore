@@ -43,3 +43,8 @@ temp/
 
 # OS files
 Thumbs.db
+
+# Docker
+nginx/ssl/
+nginx/logs/
+nginx/certbot-webroot/

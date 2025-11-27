@@ -756,278 +756,626 @@ Response:
 
 **Note:** Admin authentication/authorization not yet implemented. Use with caution in production.
 
-## Backup & Restore Admin API
+---
 
-The backup system provides automated and on-demand backup capabilities for all persistent game data, including users, player stats, and game state.
+## Trading API
 
-### GET /api/admin/backup/status
+### WebSocket Messages
 
-Get backup system status and statistics.
+#### Client → Server
 
-Response:
+**Note:** All currency values are in **pennies** (1 shilling = 12 pennies).
+
+##### Propose Trade
 ```json
 {
-  "success": true,
-  "backupDirectory": "/path/to/backups",
-  "dataDirectory": "/path/to/data",
-  "totalBackups": 5,
-  "retentionPolicy": 30,
-  "latestBackup": {
-    "timestamp": "20231118-030000",
-    "date": "2023-11-18T03:00:00.000Z",
-    "size": 15420
-  },
-  "scheduledBackup": {
-    "enabled": true,
-    "time": "03:00",
-    "lastRun": "2023-11-18"
-  },
-  "diskUsage": 77100
+  "type": "trade_propose",
+  "toPlayerId": "uuid",
+  "offer": {
+    "items": ["item-id-1", "item-id-2"],
+    "currency": 120
+  }
+}
+```
+*Example: `currency: 120` = 10 shillings (120 ÷ 12)*
+
+##### Update Trade Offer
+```json
+{
+  "type": "trade_update",
+  "tradeId": "trade-uuid",
+  "offer": {
+    "items": ["item-id-1"],
+    "currency": 240
+  }
+}
+```
+*Example: `currency: 240` = 20 shillings (240 ÷ 12)*
+
+##### Confirm Trade
+```json
+{
+  "type": "trade_confirm",
+  "tradeId": "trade-uuid"
 }
 ```
 
-### GET /api/admin/backup/list
-
-List all available backups.
-
-Response:
+##### Cancel Trade
 ```json
 {
-  "success": true,
-  "backups": [
-    {
-      "timestamp": "20231118-030000",
-      "date": "2023-11-18T03:00:00.000Z",
-      "totalSize": 15420,
-      "fileCount": 3,
-      "version": "2.0",
-      "serverVersion": "1.0.0"
-    }
-  ],
-  "count": 1
+  "type": "trade_cancel",
+  "tradeId": "trade-uuid"
 }
 ```
 
-### GET /api/admin/backup/:timestamp
+#### Server → Client
 
-Get details for a specific backup.
-
-Response:
+##### Trade Invitation
 ```json
 {
-  "success": true,
-  "backup": {
-    "timestamp": "20231118-030000",
-    "date": "2023-11-18T03:00:00.000Z",
-    "totalSize": 15420,
-    "files": [
-      {
-        "name": "20231118-030000-users.json",
-        "size": 5120,
-        "checksum": "abc123..."
-      }
-    ],
-    "version": "2.0",
-    "serverVersion": "1.0.0"
+  "type": "trade_invitation",
+  "trade": {
+    "id": "trade-uuid",
+    "fromPlayerId": "uuid",
+    "toPlayerId": "uuid",
+    "fromUsername": "string",
+    "toUsername": "string",
+    "status": "proposed",
+    "fromOffer": { "items": [], "currency": 0 },
+    "toOffer": { "items": [], "currency": 0 },
+    "fromConfirmed": false,
+    "toConfirmed": false,
+    "createdAt": 1234567890,
+    "updatedAt": 1234567890
   }
 }
 ```
 
-### POST /api/admin/backup/trigger
-
-Trigger an on-demand backup immediately.
-
-Response:
+##### Trade Proposal Result
 ```json
 {
+  "type": "trade_propose_result",
   "success": true,
-  "message": "Backup completed successfully",
-  "timestamp": "20231118-143022",
-  "files": [
-    "20231118-143022-users.json",
-    "20231118-143022-players.json",
-    "20231118-143022-manifest.json"
-  ],
-  "totalSize": 15420,
-  "formattedSize": "15.06 KB"
+  "trade": { /* trade object */ },
+  "message": "Trade invitation sent"
 }
 ```
 
-### GET /api/admin/backup/verify/:timestamp
-
-Verify backup integrity by checking file checksums and structure.
-
-Response (success):
+##### Trade Updated
 ```json
 {
+  "type": "trade_updated",
+  "trade": { /* updated trade object */ }
+}
+```
+
+##### Trade Confirmed
+```json
+{
+  "type": "trade_confirmed",
+  "trade": {
+    "...": "trade object",
+    "status": "completed"
+  }
+}
+```
+
+##### Trade Cancelled
+```json
+{
+  "type": "trade_cancelled",
+  "tradeId": "trade-uuid"
+}
+```
+
+##### Trade Confirm Result
+```json
+{
+  "type": "trade_confirm_result",
   "success": true,
-  "timestamp": "20231118-030000",
-  "date": "2023-11-18T03:00:00.000Z",
-  "message": "All 2 file(s) verified successfully",
-  "verified": 2,
-  "failed": 0,
-  "errors": []
+  "trade": { /* trade object */ },
+  "message": "Trade confirmed"
 }
 ```
 
-Response (failure):
+### Trade Object Structure
+
 ```json
 {
-  "success": false,
-  "timestamp": "20231118-030000",
-  "message": "Verification failed: 1 file(s) have issues",
-  "verified": 1,
-  "failed": 1,
-  "errors": ["Checksum mismatch for 20231118-030000-users.json"]
+  "id": "trade-uuid",
+  "fromPlayerId": "uuid",
+  "toPlayerId": "uuid",
+  "fromUsername": "string",
+  "toUsername": "string",
+  "status": "proposed | negotiating | confirmed | completed | cancelled | failed",
+  "fromOffer": {
+    "items": ["item-id-1", "item-id-2"],
+    "currency": 120
+  },
+  "toOffer": {
+    "items": [],
+    "currency": 0
+  },
+  "fromConfirmed": false,
+  "toConfirmed": false,
+  "createdAt": 1234567890,
+  "updatedAt": 1234567890
 }
 ```
 
-### POST /api/admin/backup/cleanup
+### Trade Status Flow
 
-Apply retention policy to delete old backups.
+```
+proposed → negotiating → confirmed → completed
+                ↓
+            cancelled (either party)
+                ↓
+              failed (validation error)
+```
 
-Request body (optional):
+---
+
+## Auction API
+
+### WebSocket Messages
+
+#### Client → Server
+
+##### Get Auctions
 ```json
 {
-  "keepCount": 10
+  "type": "auction_get",
+  "scope": "global | location",
+  "locationId": "town-square"
 }
 ```
 
-Response:
+##### Create Auction
 ```json
 {
-  "success": true,
-  "message": "Deleted 5 old backup(s). Kept 10 most recent.",
-  "deleted": 5,
-  "deletedTimestamps": ["20231101-030000", "20231102-030000"],
-  "remaining": 10
+  "type": "auction_create",
+  "item": {
+    "type": "item | currency",
+    "id": "item-id",
+    "amount": 100
+  },
+  "startingBid": 120,
+  "duration": 3600000,
+  "options": {
+    "scope": "global | location",
+    "locationId": "town-square"
+  }
 }
 ```
 
-### GET /api/admin/restore/test/:timestamp
-
-Test restore (dry run) - shows what would be restored without making changes.
-
-Response:
+##### Place Bid
 ```json
 {
-  "success": true,
-  "message": "Test restore completed successfully",
-  "timestamp": "20231118-030000",
-  "backupDate": "2023-11-18T03:00:00.000Z",
-  "wouldRestore": [
+  "type": "auction_bid",
+  "auctionId": "auction-uuid",
+  "bidAmount": 150
+}
+```
+
+##### Cancel Auction
+```json
+{
+  "type": "auction_cancel",
+  "auctionId": "auction-uuid"
+}
+```
+
+#### Server → Client
+
+##### Auction List
+```json
+{
+  "type": "auction_list",
+  "auctions": [
     {
-      "type": "users",
-      "file": "users.json",
-      "action": "replace"
-    },
-    {
-      "type": "players",
-      "count": 15,
-      "action": "replace 12 with 15"
+      "id": "auction-uuid",
+      "sellerId": "uuid",
+      "sellerUsername": "string",
+      "item": { "type": "item", "id": "health-potion" },
+      "startingBid": 100,
+      "currentBid": 150,
+      "highestBidderId": "uuid",
+      "highestBidderUsername": "string",
+      "bids": [],
+      "status": "active",
+      "scope": "global",
+      "createdAt": 1234567890,
+      "endsAt": 1234571490
     }
   ]
 }
 ```
 
-### POST /api/admin/restore/:timestamp
-
-Perform a restore from a specific backup point.
-
-**⚠️ Warning:** This operation will overwrite existing game data. The server should be restarted after restore for changes to take effect.
-
-Request body:
+##### Auction Create Result
 ```json
 {
-  "confirmed": true,
-  "skipPreBackup": false
+  "type": "auction_create_result",
+  "success": true,
+  "auction": { /* auction object */ },
+  "message": "Auction created successfully"
 }
 ```
 
-- `confirmed` (required): Must be `true` to proceed with restore
-- `skipPreBackup` (optional): Set to `true` to skip creating a backup of current data before restore
+##### Auction Bid Result
+```json
+{
+  "type": "auction_bid_result",
+  "success": true,
+  "auction": { /* updated auction object */ },
+  "message": "Bid placed successfully"
+}
+```
 
-Response (success):
+##### New Auction (Broadcast)
+```json
+{
+  "type": "auction_new",
+  "auction": { /* auction object */ }
+}
+```
+
+##### Bid Placed (Broadcast)
+```json
+{
+  "type": "auction_bid_placed",
+  "auction": { /* updated auction object */ }
+}
+```
+
+##### Outbid Notification
+```json
+{
+  "type": "auction_outbid",
+  "auction": { /* auction object */ }
+}
+```
+
+##### Auction Closed
+```json
+{
+  "type": "auction_closed",
+  "auction": { /* final auction object */ },
+  "role": "seller | winner"
+}
+```
+
+##### Auction Cancelled
+```json
+{
+  "type": "auction_cancelled",
+  "auctionId": "auction-uuid"
+}
+```
+
+### HTTP Endpoints
+
+#### GET /api/auctions
+
+Get all active auctions.
+
+Query parameters:
+- `scope` (optional) - Filter by scope: `global` or `location`
+- `locationId` (optional) - Filter by location (when scope is `location`)
+
+Response:
 ```json
 {
   "success": true,
-  "message": "Restore completed successfully",
-  "timestamp": "20231118-030000",
-  "restored": {
-    "users": true,
-    "players": true
-  },
-  "warning": "Server should be restarted for restored data to take effect"
+  "auctions": [ /* array of auction objects */ ]
 }
 ```
 
-Response (confirmation required):
+#### GET /api/auctions/player
+
+Get auctions and bids for a specific player.
+
+Query parameters:
+- `playerId` (required) - Player's unique identifier
+
+Response:
 ```json
 {
-  "success": false,
-  "message": "Restore requires confirmation. Set confirmed: true in request body.",
-  "warning": "This will overwrite existing game data. Consider testing restore first with GET /api/admin/restore/test/:timestamp"
+  "success": true,
+  "auctions": [ /* player's active auctions */ ],
+  "bids": [ /* auctions player has bid on */ ]
 }
 ```
 
-### GET /api/admin/backup/download/:timestamp
-
-Download a backup as a single JSON file.
-
-Response: JSON file download with `Content-Disposition: attachment` header.
+### Auction Object Structure
 
 ```json
 {
-  "manifest": {
-    "timestamp": "20231118-030000",
-    "date": "2023-11-18T03:00:00.000Z",
-    "files": [...]
+  "id": "auction-uuid",
+  "sellerId": "player-uuid",
+  "sellerUsername": "string",
+  "item": {
+    "type": "item | currency",
+    "id": "item-id",
+    "amount": 1
   },
-  "files": {
-    "20231118-030000-users.json": {...},
-    "20231118-030000-players.json": {...}
+  "startingBid": 100,
+  "currentBid": 150,
+  "highestBidderId": "player-uuid | null",
+  "highestBidderUsername": "string | null",
+  "bids": [
+    {
+      "playerId": "uuid",
+      "username": "string",
+      "amount": 150,
+      "timestamp": 1234567890
+    }
+  ],
+  "status": "active | completed | cancelled",
+  "scope": "global | location",
+  "locationId": "town-square",
+  "createdAt": 1234567890,
+  "endsAt": 1234571490
+}
+```
+
+### Auction Duration Options
+
+| Duration | Milliseconds |
+|----------|--------------|
+| 5 minutes | 300000 |
+| 30 minutes | 1800000 |
+| 1 hour | 3600000 |
+| 24 hours | 86400000 |
+| 3 days | 259200000 |
+| 7 days | 604800000 |
+
+---
+
+## Community API
+
+### WebSocket Messages
+
+#### Client → Server
+
+##### Search Players
+```json
+{
+  "type": "player_search",
+  "query": "username query"
+}
+```
+
+##### Get Player Profile
+```json
+{
+  "type": "player_profile",
+  "playerId": "player-uuid"
+}
+```
+
+#### Server → Client
+
+##### Search Results
+```json
+{
+  "type": "player_search_result",
+  "success": true,
+  "players": [
+    {
+      "id": "player-uuid",
+      "username": "string",
+      "level": 15,
+      "guild": "Guild Name",
+      "online": true
+    }
+  ]
+}
+```
+
+##### Player Profile
+```json
+{
+  "type": "player_profile_result",
+  "success": true,
+  "player": {
+    "id": "player-uuid",
+    "username": "string",
+    "level": 15,
+    "guild": "Guild Name",
+    "stats": {
+      "intelligence": 25,
+      "endurance": 18,
+      "charisma": 20,
+      "dexterity": 15
+    },
+    "achievements": [ /* achievement array */ ],
+    "questsCompleted": 42,
+    "itemsCrafted": 156,
+    "joinDate": "2025-01-15",
+    "online": true
   }
 }
 ```
 
-## Backup CLI Commands
+---
 
-The backup system can also be managed via command line:
+## Guild API
 
-```bash
-# Run backup now
-npm run backup
+### WebSocket Messages
 
-# List available backups
-npm run backup:list
+#### Client → Server
 
-# Show backup status
-npm run backup:status
-
-# Start scheduled backup service (nightly at 3 AM)
-npm run backup:schedule
-
-# Apply retention policy (cleanup old backups)
-npm run backup:cleanup
-
-# Restore from backup
-npm run restore <timestamp>
-
-# List available restore points
-npm run restore:list
-
-# Restore from latest backup
-npm run restore:latest
+##### Get Guild Info
+```json
+{
+  "type": "guild_get",
+  "guildId": "artisan"
+}
 ```
 
-### Environment Variables for Backup Configuration
+##### Join Guild
+```json
+{
+  "type": "guild_join",
+  "guildId": "artisan"
+}
+```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| BACKUP_RETENTION_COUNT | 30 | Number of backups to keep |
-| BACKUP_SCHEDULED_HOUR | 3 | Hour for nightly backup (0-23) |
-| BACKUP_SCHEDULED_MINUTE | 0 | Minute for nightly backup (0-59) |
+##### Leave Guild
+```json
+{
+  "type": "guild_leave",
+  "guildId": "artisan"
+}
+```
+
+#### Server → Client
+
+##### Guild Info
+```json
+{
+  "type": "guild_info",
+  "guild": {
+    "id": "artisan",
+    "name": "Artisan Guild",
+    "description": "Masters of crafting and creation",
+    "icon": "fa-hammer",
+    "joinCost": 1000,
+    "perks": { /* perk definitions */ }
+  },
+  "membership": {
+    "isMember": true,
+    "reputation": 250,
+    "level": 3
+  }
+}
+```
+
+##### Guild Join Result
+```json
+{
+  "type": "guild_join_result",
+  "success": true,
+  "guildId": "artisan",
+  "message": "Joined Artisan Guild!"
+}
+```
+
+##### Guild Leave Result
+```json
+{
+  "type": "guild_leave_result",
+  "success": true,
+  "guildId": "artisan",
+  "message": "Left Artisan Guild"
+}
+```
+
+### Guild IDs
+
+| ID | Name |
+|----|------|
+| `artisan` | Artisan Guild |
+| `smuggler` | Smugglers' Guild |
+| `explorer` | Explorer's Guild |
+
+---
 
 ### GET /
 
 Serves the game client (index.html)
+
+---
+
+## Deployment
+
+### Docker Deployment
+
+The server can be containerized and deployed using Docker:
+
+```bash
+# Build Docker image
+docker build -t high-wizardry .
+
+# Run container
+docker run -d \
+  -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e EMAIL_ENABLED=false \
+  -v game-data:/app/server/data \
+  --name high-wizardry \
+  high-wizardry
+
+# Check health
+curl http://localhost:8080/api/health
+```
+
+### Docker Compose
+
+For full deployment with nginx and SSL:
+
+```bash
+# Development
+docker compose up -d game-server
+
+# Production (with nginx + SSL)
+docker compose --profile production up -d
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development` |
+| `PORT` | Server port | `8080` |
+| `EMAIL_ENABLED` | Enable email sending | `false` |
+| `EMAIL_SERVICE` | Email service type | - |
+| `EMAIL_HOST` | SMTP host | - |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_SECURE` | Use TLS | `false` |
+| `EMAIL_USER` | SMTP username | - |
+| `EMAIL_PASS` | SMTP password | - |
+| `EMAIL_FROM` | From address | - |
+| `EMAIL_REQUIRE_VERIFICATION` | Require email verification | `true` |
+
+### Health Check Monitoring
+
+The `/api/health` endpoint returns server status:
+
+```json
+{
+  "status": "ok",
+  "players": 5,
+  "uptime": 1234.567
+}
+```
+
+**Response Codes:**
+- `200 OK`: Server is healthy
+- `5xx`: Server error
+
+For production monitoring, poll this endpoint every 30 seconds.
+
+### WebSocket Connection
+
+For production deployments behind a reverse proxy (nginx), ensure WebSocket upgrade headers are configured:
+
+```nginx
+location / {
+    proxy_pass http://game_server:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400s;  # Long timeout for WebSocket
+}
+```
+
+### Further Documentation
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide including:
+- Cloud provider setup (AWS, GCP, Azure, DigitalOcean)
+- SSL/TLS configuration
+- CDN and DNS setup
+- Scaling recommendations
+- Monitoring and alerting
+- Backup and recovery

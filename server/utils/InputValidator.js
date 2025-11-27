@@ -209,9 +209,13 @@ class InputValidator {
     const sanitized = {};
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
 
-    for (const key in obj) {
-      // Skip dangerous keys
-      if (dangerousKeys.includes(key)) {
+    // Use Object.keys() to only get own enumerable properties
+    // This is safer than for...in which includes inherited properties
+    const keys = Object.keys(obj);
+    
+    for (const key of keys) {
+      // Skip dangerous keys (case-insensitive for extra safety)
+      if (dangerousKeys.includes(key) || dangerousKeys.includes(key.toLowerCase())) {
         continue;
       }
 
@@ -220,8 +224,8 @@ class InputValidator {
         continue;
       }
 
-      // Only copy own properties
-      if (obj.hasOwnProperty(key)) {
+      // Only copy own properties (double-check with hasOwnProperty)
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         sanitized[key] = obj[key];
       }
     }
