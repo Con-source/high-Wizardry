@@ -326,21 +326,20 @@ test('Rate limit: Reset clears attempts', () => {
 });
 
 test('Rate limit: Cleanup removes old entries', () => {
-  const limiter = new RateLimiter(5, 100); // 100ms window for testing
+  const limiter = new RateLimiter(5, 1); // 1ms window for immediate testing
   
   limiter.isAllowed('key1');
   limiter.isAllowed('key2');
   
   assert(limiter.attempts.size === 2, 'Should have 2 entries');
   
-  // Wait for window to expire and cleanup
-  return new Promise(resolve => {
-    setTimeout(() => {
-      limiter.cleanup();
-      assert(limiter.attempts.size === 0, 'Should have 0 entries after cleanup');
-      resolve();
-    }, 150);
-  });
+  // Manually set timestamps to be old
+  limiter.attempts.set('key1', [Date.now() - 10000]); // 10 seconds ago
+  limiter.attempts.set('key2', [Date.now() - 10000]); // 10 seconds ago
+  
+  // Cleanup should remove old entries
+  limiter.cleanup();
+  assert(limiter.attempts.size === 0, 'Should have 0 entries after cleanup');
 });
 
 // =============================================================================
