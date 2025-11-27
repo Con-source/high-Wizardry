@@ -530,6 +530,14 @@ const onlineGame = {
         this.updateUI();
     },
 
+    // Update UI elements during game loop
+    updateUI: function() {
+        // Update player info if data is available
+        if (this.playerData) {
+            this.updatePlayerInfo();
+        }
+    },
+
     // UI functions
     showMessage: function(message, type = 'info') {
         console.log(`[${type}] ${message}`);
