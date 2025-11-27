@@ -124,22 +124,19 @@ class RestoreManager {
       try {
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
         const candidateTimestamp = this.extractTimestampFromEntry(manifest);
+        if (!isValidBackupTimestamp(candidateTimestamp)) {
+          return null;
+        }
         return {
           timestamp: candidateTimestamp,
           date: manifest.date,
           totalSize: manifest.totalSize,
-          files: manifest.files,
-          __timestampCandidate: candidateTimestamp
+          files: manifest.files
         };
       } catch {
         return null;
       }
-    })
-      .filter(backup => backup !== null && isValidBackupTimestamp(backup.__timestampCandidate))
-      .map(backup => {
-        const { __timestampCandidate, ...rest } = backup;
-        return { ...rest, timestamp: __timestampCandidate };
-      });
+    }).filter(backup => backup !== null);
 
     // Sort by timestamp descending (newest first)
     backups.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
