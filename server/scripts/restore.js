@@ -54,8 +54,10 @@ function validateBackupTimestampOrThrow(ts) {
 
 class RestoreManager {
   constructor(timestamp = '', options = {}) {
-    // Store timestamp without validation - individual methods will validate as needed
-    // This allows using RestoreManager for listing/querying without a specific timestamp
+    // Validate timestamp unless empty (for listing modes)
+    if (timestamp && !RestoreManager.isValidTimestamp(timestamp)) {
+      throw new Error(`Invalid backup timestamp: "${timestamp}". Expected format YYYYMMDD-HHmmss`);
+    }
     this.timestamp = timestamp;
     this.dataDir = options.dataDir || path.join(__dirname, '..', 'data');
     this.backupDir = options.backupDir || path.join(__dirname, '..', '..', 'backups');

@@ -547,6 +547,12 @@ class HighWizardryServer {
     this.app.get('/api/admin/restore/test/:timestamp', adminBackupLimiter, (req, res) => {
       try {
         const { timestamp } = req.params;
+        if (!/^\d{8}-\d{6}$/.test(timestamp)) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid backup timestamp format. Expected YYYYMMDD-HHmmss.'
+          });
+        }
         const restore = new RestoreManager(timestamp);
         const result = restore.testRestore();
         res.json(result);
@@ -559,6 +565,12 @@ class HighWizardryServer {
     this.app.post('/api/admin/restore/:timestamp', adminBackupLimiter, async (req, res) => {
       try {
         const { timestamp } = req.params;
+        if (!/^\d{8}-\d{6}$/.test(timestamp)) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid backup timestamp format. Expected YYYYMMDD-HHmmss.'
+          });
+        }
         const { confirmed, skipPreBackup } = req.body;
         
         if (!confirmed) {
