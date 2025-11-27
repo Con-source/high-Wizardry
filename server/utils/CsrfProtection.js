@@ -57,10 +57,21 @@ class CsrfProtection {
     }
 
     // Constant-time comparison to prevent timing attacks
-    return crypto.timingSafeEqual(
-      Buffer.from(token, 'hex'),
-      Buffer.from(storedToken.token, 'hex')
-    );
+    // Use try-catch to handle invalid hex tokens gracefully
+    try {
+      const tokenBuffer = Buffer.from(token, 'hex');
+      const storedBuffer = Buffer.from(storedToken.token, 'hex');
+      
+      // Buffers must be same length for timing-safe comparison
+      if (tokenBuffer.length !== storedBuffer.length) {
+        return false;
+      }
+      
+      return crypto.timingSafeEqual(tokenBuffer, storedBuffer);
+    } catch (error) {
+      // Invalid hex string - token is invalid
+      return false;
+    }
   }
 
   /**
