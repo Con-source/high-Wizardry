@@ -2,6 +2,18 @@
 
 A web-based wizard/RPG game with online multiplayer support, achievements system, and consumable items.
 
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| **[Player Manual](docs/manual.md)** | Complete guide for players - gameplay, features, tips |
+| **[API Reference](docs/API.md)** | WebSocket & HTTP API documentation for developers |
+| **[Contributing Guide](docs/CONTRIBUTING.md)** | How to contribute, code style, architecture |
+| **[Event System](docs/EVENTS.md)** | Real-time event system documentation |
+| **[Security Guide](docs/SECURITY_QUICK_REFERENCE.md)** | Security best practices for developers |
+| **[Deployment Checklist](docs/DEPLOYMENT_SECURITY_CHECKLIST.md)** | Production deployment guide |
+| **[Black Market](docs/BLACK_MARKET.md)** | Black market and smuggling system |
+
 ## ✨ Features
 
 ### Core Systems
@@ -13,6 +25,9 @@ A web-based wizard/RPG game with online multiplayer support, achievements system
 - **Location-based Gameplay**: Travel between various magical locations
 - **Chat System**: Communicate with other players globally or locally
 - **Event System**: Experience real-time game world events that affect players
+- **Trading System**: Player-to-player trading with secure transactions
+- **Auction House**: Buy and sell items through timed auctions
+- **Black Market**: Underground trading with risk/reward mechanics
 
 ### 🎮 NEW Features (v2.0)
 - **🏆 Achievements System**: Track your progress with 20+ achievements across 7 categories
@@ -25,6 +40,7 @@ A web-based wizard/RPG game with online multiplayer support, achievements system
   - Food items with multiple benefits
   - Legendary elixirs with powerful permanent effects
   - Cooldown and duration system for balanced gameplay
+- **💱 Trading & Auctions**: Complete player economy with secure transactions
 - **📊 Enhanced Player Stats**: New tracking for crafting, exploration, and more
 - **🎨 Improved UI**: Better organization and user experience
 
@@ -405,7 +421,8 @@ node admin-inject-event.js --custom --name "Test" --scope global --description "
 - [ ] Equipment system (weapons, armor)
 - [ ] Spell system with multiple magic schools
 - [ ] Property ownership and upgrades
-- [ ] Trading system between players
+- [x] Trading system between players (v2.0)
+- [x] Auction house system (v2.0)
 - [ ] More locations and areas to explore
 - [ ] Mobile-responsive UI improvements
 - [ ] Sound effects and background music
@@ -414,15 +431,30 @@ node admin-inject-event.js --custom --name "Test" --scope global --description "
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests.
+Contributions are welcome! Please see our **[Contributing Guide](docs/CONTRIBUTING.md)** for:
 
-### Development Guidelines
+- Development setup and architecture
+- Code style and conventions
+- Module development patterns
+- API development guidelines
+- Testing requirements
+- Security best practices
+- Pull request process
 
-1. Follow existing code patterns and conventions
-2. Add JSDoc documentation to all public functions
-3. Test your changes in both single and multiplayer modes
-4. Ensure backwards compatibility with existing saves
-5. Update README if adding new features
+### Quick Start for Contributors
+
+```bash
+# Clone and setup
+git clone https://github.com/Con-source/high-Wizardry.git
+cd high-Wizardry
+npm install
+
+# Run development server
+npm run dev
+
+# Run tests
+npm test
+```
 
 ## Support
 
