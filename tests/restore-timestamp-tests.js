@@ -7,8 +7,10 @@
 
 const fs = require('fs');
 const path = require('path');
-const RestoreManager = require('../server/scripts/restore');
-const { isValidBackupTimestamp, validateBackupTimestampOrThrow } = require('../server/scripts/restore');
+const restoreModule = require('../server/scripts/restore');
+const RestoreManager = restoreModule;
+const isValidBackupTimestamp = restoreModule.isValidBackupTimestamp;
+const validateBackupTimestampOrThrow = restoreModule.validateBackupTimestampOrThrow;
 
 console.log('🕐 RestoreManager Timestamp Validation Tests\n');
 

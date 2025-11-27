@@ -147,17 +147,14 @@ class RestoreManager {
    */
   getLatestBackupTimestamp() {
     const backups = this.listBackups();
-    const validTimestamps = backups
-      .map(b => b.timestamp)
-      .filter(ts => isValidBackupTimestamp(ts));
     
-    if (validTimestamps.length === 0) {
+    if (backups.length === 0) {
       throw new Error('Invalid backup timestamp:');
     }
     
-    // Sort lexicographically and return the latest
-    validTimestamps.sort();
-    return validTimestamps[validTimestamps.length - 1];
+    // listBackups() already filters and sorts (newest first)
+    // The first element is the latest
+    return backups[0].timestamp;
   }
 
   /**
@@ -216,6 +213,11 @@ class RestoreManager {
    * @returns {Object} - Test result
    */
   testRestore() {
+    // Validate timestamp format first
+    if (!isValidBackupTimestamp(this.timestamp)) {
+      return { success: false, wouldRestore: [], error: 'Invalid timestamp format' };
+    }
+    
     const manifestPath = path.join(this.backupDir, `${this.timestamp}-manifest.json`);
     
     if (!fs.existsSync(manifestPath)) {
