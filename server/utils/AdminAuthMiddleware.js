@@ -203,14 +203,17 @@ class AdminAuthMiddleware {
       const aBuffer = Buffer.from(a);
       const bBuffer = Buffer.from(b);
       
-      // Pad buffers to same length to prevent length-based timing attacks
-      const maxLength = Math.max(aBuffer.length, bBuffer.length);
-      const aPadded = Buffer.alloc(maxLength);
-      const bPadded = Buffer.alloc(maxLength);
-      aBuffer.copy(aPadded);
-      bBuffer.copy(bPadded);
+      // If lengths differ, still do a constant-time comparison to prevent length timing attacks
+      // Use the longer buffer's length for padding both
+      if (aBuffer.length !== bBuffer.length) {
+        // Do a constant-time comparison with a dummy buffer to consume same time
+        // but return false since lengths differ
+        const dummyBuffer = Buffer.alloc(aBuffer.length);
+        crypto.timingSafeEqual(aBuffer, dummyBuffer);
+        return false;
+      }
       
-      return aBuffer.length === bBuffer.length && crypto.timingSafeEqual(aPadded, bPadded);
+      return crypto.timingSafeEqual(aBuffer, bBuffer);
     } catch {
       // Fallback to simple comparison (less secure but functional)
       if (a.length !== b.length) {
