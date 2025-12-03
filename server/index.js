@@ -19,6 +19,7 @@ const AuctionManager = require('./game/AuctionManager');
 const RateLimiter = require('./utils/RateLimiter');
 const InputValidator = require('./utils/InputValidator');
 const CsrfProtection = require('./utils/CsrfProtection');
+const AdminAuthMiddleware = require('./utils/AdminAuthMiddleware');
 
 class HighWizardryServer {
   constructor(port = 8080) {
@@ -43,6 +44,7 @@ class HighWizardryServer {
     
     // Initialize security utilities
     this.csrfProtection = new CsrfProtection();
+    this.adminAuth = new AdminAuthMiddleware();
     
     // WebSocket connection tracking for DDoS protection
     this.connectionAttempts = new Map(); // IP -> [timestamps]
@@ -248,7 +250,8 @@ class HighWizardryServer {
     });
     
     // Admin endpoints for ban/mute management
-    // TODO: Add admin authentication middleware for production
+    // Apply admin authentication middleware to all /api/admin/* routes
+    this.app.use('/api/admin', this.adminAuth.middleware());
     
     // Ban user by username
     this.app.post('/api/admin/ban-user', (req, res) => {
@@ -453,7 +456,7 @@ class HighWizardryServer {
     
     // =========================================================================
     // Backup & Restore Admin API
-    // TODO: Add admin authentication middleware for production
+    // Admin authentication is already applied via middleware on /api/admin/*
     // =========================================================================
     
     const BackupManager = require('./scripts/backup');

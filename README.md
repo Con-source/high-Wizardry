@@ -122,6 +122,80 @@ npm start
 - Gmail SMTP (requires app password)
 - Any SMTP service supported by Nodemailer
 
+#### Database Configuration
+
+High Wizardry supports two database backends:
+
+1. **JSON File Storage** (default): Simple file-based storage, ideal for development and small deployments
+2. **SQLite**: Recommended for production, provides better performance and reliability
+
+```bash
+# Use JSON file storage (default)
+export DATABASE_TYPE=json
+
+# Use SQLite for production
+export DATABASE_TYPE=sqlite
+```
+
+**Migrating from JSON to SQLite:**
+
+If you're upgrading from JSON storage to SQLite, use the migration script:
+
+```bash
+# Preview migration (dry run)
+node server/scripts/migrate-to-sqlite.js --dry-run
+
+# Migrate with backup
+node server/scripts/migrate-to-sqlite.js --backup
+
+# Force migration (overwrite existing database)
+node server/scripts/migrate-to-sqlite.js --force
+```
+
+#### Admin API Security
+
+All admin endpoints (`/api/admin/*`) are protected by API key authentication. **This is required for production deployments.**
+
+```bash
+# Generate a secure API key
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Set the API key
+export ADMIN_API_KEY=your-generated-key-here
+```
+
+**Using Admin Endpoints:**
+
+Include the API key in your requests:
+
+```bash
+# Via header (recommended)
+curl -X POST http://localhost:8080/api/admin/ban-user \
+  -H "X-Admin-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "baduser", "reason": "Violation"}'
+
+# Via query parameter
+curl "http://localhost:8080/api/admin/banned-users?admin_api_key=your-api-key"
+```
+
+**Available Admin Endpoints:**
+- `POST /api/admin/ban-user` - Ban a user
+- `POST /api/admin/unban-user` - Unban a user
+- `POST /api/admin/mute-user` - Mute a user
+- `POST /api/admin/unmute-user` - Unmute a user
+- `POST /api/admin/ban-ip` - Ban an IP address
+- `POST /api/admin/unban-ip` - Unban an IP address
+- `POST /api/admin/ban-device` - Ban a device
+- `POST /api/admin/unban-device` - Unban a device
+- `GET /api/admin/user-info` - Get user info
+- `GET /api/admin/banned-users` - List banned users
+- `GET /api/admin/muted-users` - List muted users
+- `GET /api/admin/backup/status` - Get backup status
+- `GET /api/admin/backup/list` - List all backups
+- `POST /api/admin/backup/trigger` - Trigger manual backup
+- `POST /api/admin/restore/:timestamp` - Restore from backup
+
 ## How to Play
 
 1. **Register/Login**: Create an account or login with existing credentials (for multiplayer) or just open the game (for single player)
