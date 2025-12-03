@@ -10,7 +10,9 @@
     "test:security": "node tests/security-tests.js",
     "test:restore": "node tests/restore-manager-tests.js",
     "test:pentest": "node tests/security-penetration-tests.js",
-    "test:all": "node tests/security-tests.js && node tests/security-penetration-tests.js && node tests/restore-manager-tests.js",
+    "test:admin": "node tests/admin-auth-tests.js",
+    "test:database": "node tests/database-adapter-tests.js",
+    "test:all": "node tests/security-tests.js && node tests/backup-tests.js && node tests/admin-auth-tests.js && node tests/database-adapter-tests.js",
     "backup": "node server/scripts/backup.js",
     "backup:schedule": "node server/scripts/backup.js --schedule",
     "backup:status": "node server/scripts/backup.js --status",
@@ -18,7 +20,8 @@
     "backup:cleanup": "node server/scripts/backup.js --cleanup",
     "restore": "node server/scripts/restore.js",
     "restore:list": "node server/scripts/restore.js --list",
-    "restore:latest": "node server/scripts/restore.js --latest"
+    "restore:latest": "node server/scripts/restore.js --latest",
+    "migrate:sqlite": "node server/scripts/migrate-to-sqlite.js"
   },
   "keywords": [
     "game",
@@ -30,6 +33,7 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "better-sqlite3": "^12.5.0",
     "crypto": "^1.0.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
