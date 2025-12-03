@@ -10,6 +10,15 @@ const path = require('path');
 const fs = require('fs');
 const DatabaseAdapter = require('./DatabaseAdapter');
 
+// Lazy load better-sqlite3 to avoid errors when not installed
+let Database = null;
+function getDatabase() {
+  if (!Database) {
+    Database = require('better-sqlite3');
+  }
+  return Database;
+}
+
 class SQLiteAdapter extends DatabaseAdapter {
   constructor(options = {}) {
     super(options);
@@ -29,11 +38,11 @@ class SQLiteAdapter extends DatabaseAdapter {
     }
     
     try {
-      // Import better-sqlite3
-      const Database = require('better-sqlite3');
+      // Get the Database class
+      const SqliteDatabase = getDatabase();
       
       // Open database
-      this.db = new Database(this.dbPath);
+      this.db = new SqliteDatabase(this.dbPath);
       
       // Enable WAL mode for better concurrent access
       this.db.pragma('journal_mode = WAL');
