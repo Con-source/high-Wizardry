@@ -282,10 +282,15 @@ const Performance = (() => {
       container.style.paddingTop = `${startIndex * itemHeight}px`;
       container.style.paddingBottom = `${(items.length - endIndex) * itemHeight}px`;
       
-      // Replace content
+      // Replace content efficiently
       requestAnimationFrame(() => {
-        container.innerHTML = '';
-        container.appendChild(fragment);
+        if (container.replaceChildren) {
+          container.replaceChildren(fragment);
+        } else {
+          // Fallback for older browsers
+          container.innerHTML = '';
+          container.appendChild(fragment);
+        }
       });
     }, 16, 'virtualScroll'); // ~60fps
 

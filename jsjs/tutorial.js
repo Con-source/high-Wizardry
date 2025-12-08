@@ -462,8 +462,13 @@ const Tutorial = (() => {
    * Add restart tutorial button to UI
    */
   function addRestartButton() {
-    // Add to quick actions if available
-    const quickActions = document.querySelector('.card.player-card:has(h5:contains("Quick Actions"))');
+    // Add to quick actions if available - use more compatible selector
+    const quickActionCards = Array.from(document.querySelectorAll('.card.player-card'));
+    const quickActions = quickActionCards.find(card => {
+      const heading = card.querySelector('h5');
+      return heading && heading.textContent.includes('Quick Actions');
+    });
+    
     if (quickActions) {
       const btn = document.createElement('button');
       btn.className = 'btn btn-sm btn-outline-info w-100 mb-2';

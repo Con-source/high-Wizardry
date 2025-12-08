@@ -8,6 +8,7 @@ class PerformanceMonitor {
   constructor(options = {}) {
     this.sampleInterval = options.sampleInterval || 60000; // 1 minute
     this.historySize = options.historySize || 60; // Keep 1 hour of history
+    this.emaAlpha = options.emaAlpha || 0.1; // Exponential moving average smoothing factor
     
     this.metrics = {
       cpu: [],
@@ -101,9 +102,8 @@ class PerformanceMonitor {
     this.counters.totalRequests++;
     
     // Update average request time (exponential moving average)
-    const alpha = 0.1;
     this.timings.avgRequestTime = 
-      this.timings.avgRequestTime * (1 - alpha) + duration * alpha;
+      this.timings.avgRequestTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
     
     this.addMetric('requests', {
       timestamp: Date.now(),
@@ -119,9 +119,8 @@ class PerformanceMonitor {
     this.counters.totalWebSocketMessages++;
     
     // Update average message processing time
-    const alpha = 0.1;
     this.timings.avgWebSocketMessageTime = 
-      this.timings.avgWebSocketMessageTime * (1 - alpha) + duration * alpha;
+      this.timings.avgWebSocketMessageTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
     
     this.addMetric('websockets', {
       timestamp: Date.now(),
@@ -138,9 +137,8 @@ class PerformanceMonitor {
     this.counters.totalDatabaseQueries++;
     
     // Update average query time
-    const alpha = 0.1;
     this.timings.avgDatabaseQueryTime = 
-      this.timings.avgDatabaseQueryTime * (1 - alpha) + duration * alpha;
+      this.timings.avgDatabaseQueryTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
     
     this.addMetric('database', {
       timestamp: Date.now(),

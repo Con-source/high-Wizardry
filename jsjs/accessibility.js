@@ -243,7 +243,7 @@ const Accessibility = (() => {
    * @returns {Array<Element>} Array of focusable elements
    */
   function getFocusableElements(container) {
-    const selector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const selector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
     return Array.from(container.querySelectorAll(selector));
   }
 

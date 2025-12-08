@@ -145,8 +145,9 @@ class WebSocketPoolManager {
       return this.queueMessage(clientId, message);
     }
 
-    // Check backpressure
-    if (ws.bufferedAmount > 0) {
+    // Check backpressure (use threshold to allow some buffering)
+    const BUFFER_THRESHOLD = 1024; // 1KB threshold
+    if (ws.bufferedAmount > BUFFER_THRESHOLD) {
       // WebSocket has buffered data, queue this message
       return this.queueMessage(clientId, message);
     }

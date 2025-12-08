@@ -316,7 +316,9 @@ class LocationCache extends CacheManager {
    * @param {string} locationId - Location ID
    */
   invalidateLocation(locationId) {
-    this.invalidatePattern(`^location:${locationId}:`);
+    // Escape special regex characters
+    const escapedId = locationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    this.invalidatePattern(new RegExp(`^location:${escapedId}:`));
   }
 }
 
