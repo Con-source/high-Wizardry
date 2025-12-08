@@ -1969,16 +1969,16 @@ class HighWizardryServer {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     
     // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
+    process.on('uncaughtException', async (error) => {
       console.error('💥 Uncaught Exception:', error);
       if (this.perfMonitor) {
         this.perfMonitor.trackError(error, { type: 'uncaughtException' });
       }
-      gracefulShutdown('UNCAUGHT_EXCEPTION');
+      await gracefulShutdown('UNCAUGHT_EXCEPTION');
     });
     
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
+    process.on('unhandledRejection', async (reason, promise) => {
       console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
       if (this.perfMonitor) {
         this.perfMonitor.trackError(
@@ -1986,6 +1986,8 @@ class HighWizardryServer {
           { type: 'unhandledRejection' }
         );
       }
+      // Log but don't exit on unhandled rejection - let the app continue
+      // await gracefulShutdown('UNHANDLED_REJECTION');
     });
   }
 }
