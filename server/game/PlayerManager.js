@@ -7,12 +7,20 @@ const fs = require('fs');
 const path = require('path');
 
 class PlayerManager {
-  constructor() {
+  constructor(options = {}) {
     this.players = new Map(); // playerId -> playerData
     this.dataDir = path.join(__dirname, '..', 'data', 'players');
     
     // Ensure data directory exists
     this.ensureDataDirectory();
+    
+    // Optionally load existing players
+    if (options.autoLoad !== false) {
+      const loaded = this.loadPlayers();
+      if (loaded > 0) {
+        console.log(`Loaded ${loaded} players from storage`);
+      }
+    }
   }
   
   ensureDataDirectory() {
@@ -98,9 +106,14 @@ class PlayerManager {
   }
   
   removePlayer(playerId) {
+    if (!this.players.has(playerId)) {
+      return false;
+    }
+    
     // Save before removing from memory
     this.savePlayer(playerId);
     this.players.delete(playerId);
+    return true;
   }
   
   loadPlayer(playerId) {
@@ -136,6 +149,48 @@ class PlayerManager {
   
   getAllPlayers() {
     return Array.from(this.players.values());
+  }
+  
+  /**
+   * Save all players to disk
+   * @returns {boolean} True if all saves successful
+   */
+  savePlayers() {
+    let allSuccess = true;
+    for (const playerId of this.players.keys()) {
+      if (!this.savePlayer(playerId)) {
+        allSuccess = false;
+      }
+    }
+    return allSuccess;
+  }
+  
+  /**
+   * Load all players from disk into memory
+   * @returns {number} Number of players loaded
+   */
+  loadPlayers() {
+    let count = 0;
+    try {
+      if (!fs.existsSync(this.dataDir)) {
+        return count;
+      }
+      
+      const files = fs.readdirSync(this.dataDir);
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const playerId = file.replace('.json', '');
+          const playerData = this.loadPlayer(playerId);
+          if (playerData) {
+            this.players.set(playerId, playerData);
+            count++;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading players:', error);
+    }
+    return count;
   }
 }
 
