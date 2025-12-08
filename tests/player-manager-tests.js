@@ -38,6 +38,7 @@ class PlayerManagerTests {
     for (const test of this.tests) {
       try {
         // Create fresh PlayerManager for each test without auto-loading
+        // This prevents interference from previously saved test data
         this.playerManager = new PlayerManager({ autoLoad: false });
         
         await test.fn.call(this);

@@ -43,7 +43,8 @@ class PerformanceMonitor {
       this.logMetrics();
     }, this.metricsInterval);
 
-    // Keep process alive but allow exit
+    // Allow process to exit gracefully even if this timer is active
+    // unref() ensures this timer doesn't prevent the process from exiting
     this.metricsTimer.unref();
   }
 

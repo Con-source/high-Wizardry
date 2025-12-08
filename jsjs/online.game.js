@@ -24,6 +24,17 @@ const onlineGame = {
         items: [],
         lastUpdate: 0
     },
+    
+    /**
+     * Clear reconnect timeout if exists
+     * @private
+     */
+    _clearReconnectTimeout: function() {
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+    },
 
     // Initialize the online game
     init: function() {
@@ -98,10 +109,7 @@ const onlineGame = {
     // Reconnect logic
     attemptReconnect: function() {
         // Clear any existing reconnect timeout
-        if (this.reconnectTimeout) {
-            clearTimeout(this.reconnectTimeout);
-            this.reconnectTimeout = null;
-        }
+        this._clearReconnectTimeout();
         
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
@@ -871,10 +879,7 @@ const onlineGame = {
         }
         
         // Clear any reconnect timeouts
-        if (this.reconnectTimeout) {
-            clearTimeout(this.reconnectTimeout);
-            this.reconnectTimeout = null;
-        }
+        this._clearReconnectTimeout();
         
         // Clear data
         this.players = {};
