@@ -182,7 +182,7 @@ async function runEmailValidationTests() {
     console.log('✅ PASS: Registration rejected for overly long email\n');
     testsPassed++;
   } else {
-    console.log(`❌ FAIL: Long email not properly rejected: ${longResult.message}\n`);
+    console.log(`❌ FAIL: Long email not properly rejected. Check AuthManager validation message for details.\n`);
     testsFailed++;
   }
   
@@ -194,7 +194,7 @@ async function runEmailValidationTests() {
     console.log('✅ PASS: Registration rejected for non-string email\n');
     testsPassed++;
   } else {
-    console.log(`❌ FAIL: Non-string email not properly rejected: ${nonStringResult.message}\n`);
+    console.log(`❌ FAIL: Non-string email not properly rejected. Check AuthManager validation message for details.\n`);
     testsFailed++;
   }
   
@@ -206,7 +206,7 @@ async function runEmailValidationTests() {
     console.log('✅ PASS: Registration rejected for invalid email format\n');
     testsPassed++;
   } else {
-    console.log(`❌ FAIL: Invalid email format not properly rejected: ${invalidResult.message}\n`);
+    console.log(`❌ FAIL: Invalid email format not properly rejected. Check AuthManager validation message for details.\n`);
     testsFailed++;
   }
   
@@ -219,7 +219,7 @@ async function runEmailValidationTests() {
     console.log('✅ PASS: Valid email added to legacy account\n');
     testsPassed++;
   } else {
-    console.log(`❌ FAIL: Failed to add valid email: ${addEmailResult.message}\n`);
+    console.log(`❌ FAIL: Failed to add valid email. Check AuthManager validation message for details.\n`);
     testsFailed++;
   }
   
