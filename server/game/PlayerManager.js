@@ -124,7 +124,7 @@ class PlayerManager {
         return JSON.parse(data);
       }
     } catch (error) {
-      console.error(`Error loading player ${playerId}:`, error);
+      console.error('Error loading player %s:', playerId, error);
     }
     return null;
   }
