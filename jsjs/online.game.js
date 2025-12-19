@@ -7,6 +7,7 @@ const onlineGame = {
     serverTimeOffset: 0,
     lastPing: 0,
     pingInterval: null,
+    reconnectTimeout: null,
     reconnectAttempts: 0,
     maxReconnectAttempts: 5,
 
@@ -22,6 +23,17 @@ const onlineGame = {
     market: {
         items: [],
         lastUpdate: 0
+    },
+    
+    /**
+     * Clear reconnect timeout if exists
+     * @private
+     */
+    _clearReconnectTimeout: function() {
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
     },
 
     // Initialize the online game
@@ -51,6 +63,11 @@ const onlineGame = {
         this.showMessage("Connected to High Wizardry Online!");
         this.updateConnectionStatus('connected', 'connected');
         
+        // Clear any existing ping interval before starting a new one
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+        }
+        
         // Start ping interval (every 30 seconds)
         this.pingInterval = setInterval(() => this.sendPing(), 30000);
         
@@ -75,6 +92,13 @@ const onlineGame = {
     onSocketClose: function() {
         this.showMessage("Disconnected from server. Attempting to reconnect...");
         this.updateConnectionStatus('disconnected', 'disconnected');
+        
+        // Clear ping interval to prevent memory leak
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
         this.attemptReconnect();
     },
 
@@ -84,13 +108,16 @@ const onlineGame = {
 
     // Reconnect logic
     attemptReconnect: function() {
+        // Clear any existing reconnect timeout
+        this._clearReconnectTimeout();
+        
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff
             
             this.showMessage(`Reconnecting in ${delay/1000} seconds... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             
-            setTimeout(() => {
+            this.reconnectTimeout = setTimeout(() => {
                 this.setupSocket();
             }, delay);
         } else {
@@ -822,8 +849,58 @@ const onlineGame = {
             
             statusEl.innerHTML = `<i class="fas fa-circle"></i> ${messages[status] || status}`;
         }
+    },
+    
+    /**
+     * Cleanup method to prevent memory leaks
+     * Call this when navigating away or reloading
+     */
+    cleanup: function() {
+        // Clear ping interval
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
+        // Close WebSocket connection
+        if (this.socket) {
+            // Remove event listeners to prevent memory leaks
+            this.socket.onopen = null;
+            this.socket.onmessage = null;
+            this.socket.onclose = null;
+            this.socket.onerror = null;
+            
+            // Close connection if open
+            if (this.socket.readyState === WebSocket.OPEN) {
+                this.socket.close(1000, 'Client cleanup');
+            }
+            
+            this.socket = null;
+        }
+        
+        // Clear any reconnect timeouts
+        this._clearReconnectTimeout();
+        
+        // Clear data
+        this.players = {};
+        this.npcs = {};
+        this.chat = {
+            global: [],
+            local: [],
+            trade: [],
+            guild: []
+        };
     }
 };
+
+// Setup cleanup on page unload
+if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+        if (onlineGame && typeof onlineGame.cleanup === 'function') {
+            onlineGame.cleanup();
+        }
+    });
+}
 
 // Note: onlineGame is now initialized from main.js
 // Do not auto-initialize here to avoid conflicts

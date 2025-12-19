@@ -1,349 +1,319 @@
 /**
  * Performance Monitor
- * Tracks server performance metrics and provides monitoring capabilities
- * @module PerformanceMonitor
+ * Tracks and logs performance metrics for the server
  */
 
 class PerformanceMonitor {
   constructor(options = {}) {
-    this.sampleInterval = options.sampleInterval || 60000; // 1 minute
-    this.historySize = options.historySize || 60; // Keep 1 hour of history
-    this.emaAlpha = options.emaAlpha || 0.1; // Exponential moving average smoothing factor
-    
+    this.enabled = options.enabled !== false;
+    this.metricsInterval = options.metricsInterval || 60000; // 1 minute
     this.metrics = {
-      cpu: [],
-      memory: [],
-      requests: [],
-      websockets: [],
-      database: [],
-      cache: []
+      requests: {
+        total: 0,
+        byEndpoint: new Map(),
+        byStatus: new Map()
+      },
+      websocket: {
+        connections: 0,
+        messages: 0,
+        errors: 0
+      },
+      performance: {
+        requestTimes: [],
+        memoryUsage: [],
+        cpuUsage: []
+      },
+      errors: []
     };
     
-    this.counters = {
-      totalRequests: 0,
-      totalWebSocketMessages: 0,
-      totalDatabaseQueries: 0,
-      totalCacheHits: 0,
-      totalCacheMisses: 0
-    };
+    this.startTime = Date.now();
     
-    this.timings = {
-      avgRequestTime: 0,
-      avgWebSocketMessageTime: 0,
-      avgDatabaseQueryTime: 0
-    };
-    
-    // Start monitoring
-    this.startMonitoring();
+    if (this.enabled) {
+      this.startMonitoring();
+    }
   }
 
   /**
-   * Start performance monitoring
+   * Start periodic monitoring
    */
   startMonitoring() {
-    // Sample metrics at regular intervals
-    this.monitoringInterval = setInterval(() => {
-      this.sampleMetrics();
-    }, this.sampleInterval);
-    
-    console.log('📊 Performance monitoring started');
-  }
+    // Collect metrics every interval
+    this.metricsTimer = setInterval(() => {
+      this.collectSystemMetrics();
+      this.logMetrics();
+    }, this.metricsInterval);
 
-  /**
-   * Sample current metrics
-   */
-  sampleMetrics() {
-    const timestamp = Date.now();
-    
-    // CPU and Memory usage
-    const memUsage = process.memoryUsage();
-    const cpuUsage = process.cpuUsage();
-    
-    this.addMetric('memory', {
-      timestamp,
-      heapUsed: memUsage.heapUsed,
-      heapTotal: memUsage.heapTotal,
-      external: memUsage.external,
-      rss: memUsage.rss,
-      heapUsedMB: (memUsage.heapUsed / 1024 / 1024).toFixed(2),
-      heapTotalMB: (memUsage.heapTotal / 1024 / 1024).toFixed(2)
-    });
-    
-    this.addMetric('cpu', {
-      timestamp,
-      user: cpuUsage.user,
-      system: cpuUsage.system
-    });
-  }
-
-  /**
-   * Add metric to history
-   * @param {string} type - Metric type
-   * @param {Object} data - Metric data
-   */
-  addMetric(type, data) {
-    if (!this.metrics[type]) {
-      this.metrics[type] = [];
-    }
-    
-    this.metrics[type].push(data);
-    
-    // Keep only recent history
-    if (this.metrics[type].length > this.historySize) {
-      this.metrics[type].shift();
-    }
-  }
-
-  /**
-   * Track HTTP request
-   * @param {number} duration - Request duration in ms
-   */
-  trackRequest(duration) {
-    this.counters.totalRequests++;
-    
-    // Update average request time (exponential moving average)
-    this.timings.avgRequestTime = 
-      this.timings.avgRequestTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
-    
-    this.addMetric('requests', {
-      timestamp: Date.now(),
-      duration
-    });
-  }
-
-  /**
-   * Track WebSocket message
-   * @param {number} duration - Processing duration in ms
-   */
-  trackWebSocketMessage(duration) {
-    this.counters.totalWebSocketMessages++;
-    
-    // Update average message processing time
-    this.timings.avgWebSocketMessageTime = 
-      this.timings.avgWebSocketMessageTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
-    
-    this.addMetric('websockets', {
-      timestamp: Date.now(),
-      duration
-    });
-  }
-
-  /**
-   * Track database query
-   * @param {string} query - Query type
-   * @param {number} duration - Query duration in ms
-   */
-  trackDatabaseQuery(query, duration) {
-    this.counters.totalDatabaseQueries++;
-    
-    // Update average query time
-    this.timings.avgDatabaseQueryTime = 
-      this.timings.avgDatabaseQueryTime * (1 - this.emaAlpha) + duration * this.emaAlpha;
-    
-    this.addMetric('database', {
-      timestamp: Date.now(),
-      query,
-      duration
-    });
-  }
-
-  /**
-   * Track cache hit
-   */
-  trackCacheHit() {
-    this.counters.totalCacheHits++;
-  }
-
-  /**
-   * Track cache miss
-   */
-  trackCacheMiss() {
-    this.counters.totalCacheMisses++;
-  }
-
-  /**
-   * Get current metrics
-   * @returns {Object} Current metrics
-   */
-  getCurrentMetrics() {
-    const memUsage = process.memoryUsage();
-    const uptime = process.uptime();
-    
-    return {
-      timestamp: Date.now(),
-      uptime: {
-        seconds: Math.floor(uptime),
-        formatted: this.formatUptime(uptime)
-      },
-      memory: {
-        heapUsed: (memUsage.heapUsed / 1024 / 1024).toFixed(2) + ' MB',
-        heapTotal: (memUsage.heapTotal / 1024 / 1024).toFixed(2) + ' MB',
-        rss: (memUsage.rss / 1024 / 1024).toFixed(2) + ' MB',
-        external: (memUsage.external / 1024 / 1024).toFixed(2) + ' MB'
-      },
-      counters: this.counters,
-      timings: {
-        avgRequestTime: this.timings.avgRequestTime.toFixed(2) + ' ms',
-        avgWebSocketMessageTime: this.timings.avgWebSocketMessageTime.toFixed(2) + ' ms',
-        avgDatabaseQueryTime: this.timings.avgDatabaseQueryTime.toFixed(2) + ' ms'
-      },
-      cache: {
-        hitRate: this.getCacheHitRate()
-      }
-    };
-  }
-
-  /**
-   * Get metric history
-   * @param {string} type - Metric type
-   * @param {number} count - Number of recent entries
-   * @returns {Array} Metric history
-   */
-  getMetricHistory(type, count = 10) {
-    const metrics = this.metrics[type] || [];
-    return metrics.slice(-count);
-  }
-
-  /**
-   * Get cache hit rate
-   * @returns {string} Cache hit rate percentage
-   */
-  getCacheHitRate() {
-    const total = this.counters.totalCacheHits + this.counters.totalCacheMisses;
-    if (total === 0) return '0.00%';
-    
-    const rate = (this.counters.totalCacheHits / total * 100).toFixed(2);
-    return rate + '%';
-  }
-
-  /**
-   * Format uptime in human-readable format
-   * @param {number} seconds - Uptime in seconds
-   * @returns {string} Formatted uptime
-   */
-  formatUptime(seconds) {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    
-    const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0) parts.push(`${hours}h`);
-    if (minutes > 0) parts.push(`${minutes}m`);
-    parts.push(`${secs}s`);
-    
-    return parts.join(' ');
-  }
-
-  /**
-   * Get performance report
-   * @returns {string} Formatted performance report
-   */
-  getReport() {
-    const metrics = this.getCurrentMetrics();
-    
-    return `
-📊 Performance Report
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⏱  Uptime: ${metrics.uptime.formatted}
-
-💾 Memory Usage:
-   Heap Used: ${metrics.memory.heapUsed}
-   Heap Total: ${metrics.memory.heapTotal}
-   RSS: ${metrics.memory.rss}
-
-📈 Request Stats:
-   Total Requests: ${metrics.counters.totalRequests}
-   Avg Request Time: ${metrics.timings.avgRequestTime}
-   WebSocket Messages: ${metrics.counters.totalWebSocketMessages}
-   Avg Message Time: ${metrics.timings.avgWebSocketMessageTime}
-
-💽 Database Stats:
-   Total Queries: ${metrics.counters.totalDatabaseQueries}
-   Avg Query Time: ${metrics.timings.avgDatabaseQueryTime}
-
-🗄  Cache Stats:
-   Hits: ${metrics.counters.totalCacheHits}
-   Misses: ${metrics.counters.totalCacheMisses}
-   Hit Rate: ${metrics.cache.hitRate}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    `.trim();
-  }
-
-  /**
-   * Log performance report
-   */
-  logReport() {
-    console.log(this.getReport());
-  }
-
-  /**
-   * Check if performance is healthy
-   * @returns {Object} Health check result
-   */
-  healthCheck() {
-    const metrics = this.getCurrentMetrics();
-    const memUsage = process.memoryUsage();
-    const heapPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-    
-    const issues = [];
-    
-    // Check memory usage
-    if (heapPercent > 90) {
-      issues.push('High memory usage (>90%)');
-    }
-    
-    // Check average request time
-    if (this.timings.avgRequestTime > 1000) {
-      issues.push('Slow request times (>1s)');
-    }
-    
-    // Check average WebSocket message time
-    if (this.timings.avgWebSocketMessageTime > 100) {
-      issues.push('Slow WebSocket message processing (>100ms)');
-    }
-    
-    // Check cache hit rate
-    const cacheHitRate = parseFloat(metrics.cache.hitRate);
-    if (cacheHitRate < 50 && this.counters.totalCacheHits + this.counters.totalCacheMisses > 100) {
-      issues.push('Low cache hit rate (<50%)');
-    }
-    
-    return {
-      healthy: issues.length === 0,
-      issues,
-      metrics: this.getCurrentMetrics()
-    };
+    // Allow process to exit gracefully even if this timer is active
+    // unref() ensures this timer doesn't prevent the process from exiting
+    this.metricsTimer.unref();
   }
 
   /**
    * Stop monitoring
    */
-  stop() {
-    if (this.monitoringInterval) {
-      clearInterval(this.monitoringInterval);
+  stopMonitoring() {
+    if (this.metricsTimer) {
+      clearInterval(this.metricsTimer);
+      this.metricsTimer = null;
     }
-    console.log('📊 Performance monitoring stopped');
   }
 
   /**
-   * Reset counters
+   * Track an HTTP request
    */
-  resetCounters() {
-    this.counters = {
-      totalRequests: 0,
-      totalWebSocketMessages: 0,
-      totalDatabaseQueries: 0,
-      totalCacheHits: 0,
-      totalCacheMisses: 0
+  trackRequest(endpoint, statusCode, duration) {
+    if (!this.enabled) return;
+
+    this.metrics.requests.total++;
+
+    // Track by endpoint
+    const endpointCount = this.metrics.requests.byEndpoint.get(endpoint) || 0;
+    this.metrics.requests.byEndpoint.set(endpoint, endpointCount + 1);
+
+    // Track by status code
+    const statusCount = this.metrics.requests.byStatus.get(statusCode) || 0;
+    this.metrics.requests.byStatus.set(statusCode, statusCount + 1);
+
+    // Track request duration
+    if (duration !== undefined) {
+      this.metrics.performance.requestTimes.push({
+        endpoint,
+        duration,
+        timestamp: Date.now()
+      });
+
+      // Keep only last 1000 requests
+      if (this.metrics.performance.requestTimes.length > 1000) {
+        this.metrics.performance.requestTimes.shift();
+      }
+    }
+  }
+
+  /**
+   * Track WebSocket events
+   */
+  trackWebSocket(event, data = {}) {
+    if (!this.enabled) return;
+
+    switch (event) {
+      case 'connection':
+        this.metrics.websocket.connections++;
+        break;
+      case 'message':
+        this.metrics.websocket.messages++;
+        break;
+      case 'error':
+        this.metrics.websocket.errors++;
+        this.trackError(data.error || new Error('WebSocket error'));
+        break;
+    }
+  }
+
+  /**
+   * Track an error
+   */
+  trackError(error, context = {}) {
+    if (!this.enabled) return;
+
+    this.metrics.errors.push({
+      message: error.message,
+      stack: error.stack,
+      context,
+      timestamp: Date.now()
+    });
+
+    // Keep only last 100 errors
+    if (this.metrics.errors.length > 100) {
+      this.metrics.errors.shift();
+    }
+  }
+
+  /**
+   * Collect system metrics
+   */
+  collectSystemMetrics() {
+    if (!this.enabled) return;
+
+    // Memory usage
+    const memUsage = process.memoryUsage();
+    this.metrics.performance.memoryUsage.push({
+      heapUsed: memUsage.heapUsed,
+      heapTotal: memUsage.heapTotal,
+      rss: memUsage.rss,
+      external: memUsage.external,
+      timestamp: Date.now()
+    });
+
+    // Keep only last 60 samples (1 hour at 1 min intervals)
+    if (this.metrics.performance.memoryUsage.length > 60) {
+      this.metrics.performance.memoryUsage.shift();
+    }
+
+    // CPU usage
+    const cpuUsage = process.cpuUsage();
+    this.metrics.performance.cpuUsage.push({
+      user: cpuUsage.user,
+      system: cpuUsage.system,
+      timestamp: Date.now()
+    });
+
+    if (this.metrics.performance.cpuUsage.length > 60) {
+      this.metrics.performance.cpuUsage.shift();
+    }
+  }
+
+  /**
+   * Get current metrics
+   */
+  getMetrics() {
+    return {
+      uptime: Date.now() - this.startTime,
+      ...this.metrics,
+      summary: this.getSummary()
     };
+  }
+
+  /**
+   * Get metrics summary
+   */
+  getSummary() {
+    const summary = {
+      uptime: Math.floor((Date.now() - this.startTime) / 1000),
+      requests: {
+        total: this.metrics.requests.total,
+        avgDuration: 0,
+        topEndpoints: []
+      },
+      websocket: {
+        ...this.metrics.websocket
+      },
+      memory: {
+        current: null,
+        avg: 0,
+        peak: 0
+      },
+      errors: {
+        total: this.metrics.errors.length,
+        recent: this.metrics.errors.slice(-5)
+      }
+    };
+
+    // Calculate average request duration
+    if (this.metrics.performance.requestTimes.length > 0) {
+      const totalDuration = this.metrics.performance.requestTimes.reduce(
+        (sum, req) => sum + req.duration,
+        0
+      );
+      summary.requests.avgDuration = Math.round(
+        totalDuration / this.metrics.performance.requestTimes.length
+      );
+    }
+
+    // Top endpoints
+    const sortedEndpoints = Array.from(this.metrics.requests.byEndpoint.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    summary.requests.topEndpoints = sortedEndpoints.map(([endpoint, count]) => ({
+      endpoint,
+      count
+    }));
+
+    // Memory stats
+    if (this.metrics.performance.memoryUsage.length > 0) {
+      const latest = this.metrics.performance.memoryUsage[
+        this.metrics.performance.memoryUsage.length - 1
+      ];
+      summary.memory.current = {
+        heapUsed: Math.round(latest.heapUsed / 1024 / 1024) + ' MB',
+        heapTotal: Math.round(latest.heapTotal / 1024 / 1024) + ' MB',
+        rss: Math.round(latest.rss / 1024 / 1024) + ' MB'
+      };
+
+      const avgHeap = this.metrics.performance.memoryUsage.reduce(
+        (sum, m) => sum + m.heapUsed,
+        0
+      ) / this.metrics.performance.memoryUsage.length;
+      summary.memory.avg = Math.round(avgHeap / 1024 / 1024) + ' MB';
+
+      const peakHeap = Math.max(
+        ...this.metrics.performance.memoryUsage.map(m => m.heapUsed)
+      );
+      summary.memory.peak = Math.round(peakHeap / 1024 / 1024) + ' MB';
+    }
+
+    return summary;
+  }
+
+  /**
+   * Log metrics to console
+   */
+  logMetrics() {
+    if (!this.enabled) return;
+
+    const summary = this.getSummary();
     
-    this.timings = {
-      avgRequestTime: 0,
-      avgWebSocketMessageTime: 0,
-      avgDatabaseQueryTime: 0
+    console.log('\n' + '='.repeat(50));
+    console.log('📊 Performance Metrics');
+    console.log('='.repeat(50));
+    console.log(`⏱️  Uptime: ${Math.floor(summary.uptime / 60)} minutes`);
+    console.log(`📨 Total Requests: ${summary.requests.total}`);
+    console.log(`⚡ Avg Response Time: ${summary.requests.avgDuration}ms`);
+    console.log(`🔌 WebSocket Connections: ${summary.websocket.connections}`);
+    console.log(`💬 WebSocket Messages: ${summary.websocket.messages}`);
+    
+    if (summary.memory.current) {
+      console.log(`💾 Memory (Current): ${summary.memory.current.heapUsed}`);
+      console.log(`💾 Memory (Average): ${summary.memory.avg}`);
+      console.log(`💾 Memory (Peak): ${summary.memory.peak}`);
+    }
+    
+    if (summary.errors.total > 0) {
+      console.log(`❌ Errors: ${summary.errors.total}`);
+    }
+    
+    console.log('='.repeat(50) + '\n');
+  }
+
+  /**
+   * Create Express middleware for request tracking
+   */
+  middleware() {
+    return (req, res, next) => {
+      const startTime = Date.now();
+      
+      // Track response
+      res.on('finish', () => {
+        const duration = Date.now() - startTime;
+        this.trackRequest(req.path, res.statusCode, duration);
+      });
+      
+      next();
     };
+  }
+
+  /**
+   * Reset metrics
+   */
+  reset() {
+    this.metrics = {
+      requests: {
+        total: 0,
+        byEndpoint: new Map(),
+        byStatus: new Map()
+      },
+      websocket: {
+        connections: 0,
+        messages: 0,
+        errors: 0
+      },
+      performance: {
+        requestTimes: [],
+        memoryUsage: [],
+        cpuUsage: []
+      },
+      errors: []
+    };
+    this.startTime = Date.now();
   }
 }
 

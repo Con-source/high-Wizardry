@@ -20,6 +20,7 @@ const RateLimiter = require('./utils/RateLimiter');
 const InputValidator = require('./utils/InputValidator');
 const CsrfProtection = require('./utils/CsrfProtection');
 const AdminAuthMiddleware = require('./utils/AdminAuthMiddleware');
+const PerformanceMonitor = require('./utils/PerformanceMonitor');
 
 class HighWizardryServer {
   constructor(port = 8080) {
@@ -27,6 +28,13 @@ class HighWizardryServer {
     this.app = express();
     this.server = http.createServer(this.app);
     this.wss = new WebSocket.Server({ server: this.server });
+    this.isShuttingDown = false;
+    
+    // Initialize performance monitor
+    this.perfMonitor = new PerformanceMonitor({
+      enabled: process.env.ENABLE_METRICS !== 'false',
+      metricsInterval: parseInt(process.env.METRICS_INTERVAL || '60000')
+    });
     
     // Initialize managers
     this.authManager = new AuthManager();
@@ -115,6 +123,9 @@ class HighWizardryServer {
   }
   
   setupExpress() {
+    // Performance monitoring middleware
+    this.app.use(this.perfMonitor.middleware());
+    
     // Security headers middleware
     this.app.use((req, res, next) => {
       // Content Security Policy (CSP) - Prevents XSS attacks
@@ -196,8 +207,24 @@ class HighWizardryServer {
       res.json({ 
         status: 'ok', 
         players: this.playerManager.getPlayerCount(),
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        memory: {
+          heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+          heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+        }
       });
+    });
+    
+    // Performance metrics endpoint (admin only)
+    this.app.get('/api/admin/metrics', this.adminAuth.middleware(), (req, res) => {
+      const metrics = this.perfMonitor.getMetrics();
+      res.json({ success: true, metrics });
+    });
+    
+    // Performance summary endpoint (admin only)
+    this.app.get('/api/admin/metrics/summary', this.adminAuth.middleware(), (req, res) => {
+      const summary = this.perfMonitor.getSummary();
+      res.json({ success: true, summary });
     });
     
     // Password reset request endpoint
@@ -662,6 +689,9 @@ class HighWizardryServer {
   
   setupWebSocket() {
     this.wss.on('connection', (ws, req) => {
+      // Track connection
+      this.perfMonitor.trackWebSocket('connection');
+      
       // Get client IP for connection flood protection
       const clientIp = req.socket.remoteAddress || req.headers['x-forwarded-for'];
       
@@ -704,6 +734,9 @@ class HighWizardryServer {
       // Handle messages
       ws.on('message', (message) => {
         try {
+          // Track message
+          this.perfMonitor.trackWebSocket('message');
+          
           // WebSocket message flood protection
           if (!this.checkMessageFlood(client)) {
             this.send(ws, {
@@ -725,6 +758,7 @@ class HighWizardryServer {
           this.handleMessage(client, data);
         } catch (error) {
           console.error('Error parsing message:', error);
+          this.perfMonitor.trackWebSocket('error', { error });
           this.send(ws, {
             type: 'error',
             message: 'Invalid message format'
@@ -750,6 +784,7 @@ class HighWizardryServer {
       // Handle errors
       ws.on('error', (error) => {
         console.error('WebSocket error:', error);
+        this.perfMonitor.trackWebSocket('error', { error });
       });
     });
     
@@ -1864,6 +1899,95 @@ class HighWizardryServer {
     this.server.listen(this.port, () => {
       console.log(`High Wizardry server running on port ${this.port}`);
       console.log(`Visit http://localhost:${this.port} to play`);
+      
+      // Setup graceful shutdown handlers
+      this.setupGracefulShutdown();
+    });
+  }
+  
+  /**
+   * Setup graceful shutdown handlers
+   */
+  setupGracefulShutdown() {
+    const gracefulShutdown = async (signal) => {
+      if (this.isShuttingDown) {
+        console.log('Shutdown already in progress...');
+        return;
+      }
+      
+      this.isShuttingDown = true;
+      console.log(`\n${signal} received, starting graceful shutdown...`);
+      
+      try {
+        // Stop accepting new connections
+        this.server.close(() => {
+          console.log('✅ HTTP server closed');
+        });
+        
+        // Close all WebSocket connections gracefully
+        console.log('Closing WebSocket connections...');
+        let closeCount = 0;
+        this.wss.clients.forEach((ws) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            this.send(ws, {
+              type: 'server_shutdown',
+              message: 'Server is shutting down for maintenance'
+            });
+            ws.close(1001, 'Server shutting down');
+            closeCount++;
+          }
+        });
+        console.log(`✅ Closed ${closeCount} WebSocket connection(s)`);
+        
+        // Save all player data
+        console.log('Saving player data...');
+        const saved = this.playerManager.savePlayers();
+        console.log(`✅ Player data saved: ${saved}`);
+        
+        // Stop performance monitoring
+        if (this.perfMonitor) {
+          this.perfMonitor.stopMonitoring();
+          console.log('✅ Performance monitoring stopped');
+        }
+        
+        // Final metrics log
+        if (this.perfMonitor) {
+          console.log('\n📊 Final Performance Metrics:');
+          this.perfMonitor.logMetrics();
+        }
+        
+        console.log('✅ Graceful shutdown complete');
+        process.exit(0);
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+        process.exit(1);
+      }
+    };
+    
+    // Handle different shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', async (error) => {
+      console.error('💥 Uncaught Exception:', error);
+      if (this.perfMonitor) {
+        this.perfMonitor.trackError(error, { type: 'uncaughtException' });
+      }
+      await gracefulShutdown('UNCAUGHT_EXCEPTION');
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', async (reason, promise) => {
+      console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+      if (this.perfMonitor) {
+        this.perfMonitor.trackError(
+          reason instanceof Error ? reason : new Error(String(reason)),
+          { type: 'unhandledRejection' }
+        );
+      }
+      // Log but don't exit on unhandled rejection - let the app continue
+      // await gracefulShutdown('UNHANDLED_REJECTION');
     });
   }
 }
