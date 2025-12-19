@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- UX Enhancements -->
+  <link rel="stylesheet" href="{css/enhancements.css" />
 
   <style>
     :root {
@@ -1068,6 +1070,20 @@
   </style>
 </head>
 <body>
+  <!-- Skip to Content Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner spinner-large"></div>
+      <div class="loading-text">Loading High Wizardry...</div>
+    </div>
+  </div>
+  
+  <!-- ARIA Live Region for Screen Readers -->
+  <div id="aria-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  
   <!-- Login/Register Modal -->
   <div id="login-screen" class="modal hidden">
     <div class="modal-dialog">
@@ -1337,7 +1353,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" id="main-content" role="main" aria-label="Game content">
       <div class="location-header">
         <h2 id="location-name">Town Square</h2>
         <p id="location-description">The bustling heart of the magical city. Wizards and adventurers gather here.</p>
@@ -2451,9 +2467,12 @@
   </script>
   <!-- Game Scripts -->
   <script src="jsjs/config.js"></script>
+  <script src="jsjs/performance.js"></script><!-- NEW: Performance optimization -->
+  <script src="jsjs/accessibility.js"></script><!-- NEW: Accessibility features -->
   <script src="jsjs/game-core.js"></script>
   <script src="jsjs/player.js"></script>
   <script src="jsjs/ui.js"></script>
+  <script src="jsjs/tutorial.js"></script><!-- NEW: Tutorial/onboarding system -->
   <script src="jsjs/chat.js"></script>
   <script src="jsjs/community.js"></script>
   <script src="jsjs/locations.js"></script>
@@ -2475,6 +2494,22 @@
         console.log('High Wizardry loaded successfully ✅');
       } else {
         console.error('GameCore not found! Attempting fallback initialization...');
+      }
+      
+      // Hide loading overlay
+      setTimeout(() => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove('active');
+        }
+      }, 500);
+    });
+    
+    // Show loading overlay on page load
+    window.addEventListener('load', () => {
+      const loadingOverlay = document.getElementById('loading-overlay');
+      if (loadingOverlay) {
+        loadingOverlay.classList.add('active');
       }
     });
   </script>
