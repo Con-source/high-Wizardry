@@ -294,54 +294,100 @@ const Chat = (() => {
     const time = new Date(message.timestamp);
     const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    let messageHTML = '';
-    
     switch (message.type) {
       case 'system':
       case 'error':
       case 'warning':
-      case 'info':
-        messageHTML = `
-          <div class="message-content ${message.type}">
-            <span class="message-time">[${timeString}]</span>
-            <span class="message-text">${message.message}</span>
-          </div>
-        `;
+      case 'info': {
+        const content = document.createElement('div');
+        content.className = `message-content ${message.type}`;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = `[${timeString}]`;
+        content.appendChild(timeSpan);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'message-text';
+        textSpan.textContent = message.message;
+        content.appendChild(textSpan);
+
+        messageElement.appendChild(content);
         break;
-        
-      case 'whisper':
-        messageHTML = `
-          <div class="message-header">
-            <span class="message-username whisper">${message.username}</span>
-            <span class="message-time">${timeString}</span>
-          </div>
-          <div class="message-content">${message.message}</div>
-        `;
+      }
+
+      case 'whisper': {
+        const header = document.createElement('div');
+        header.className = 'message-header';
+
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'message-username whisper';
+        usernameSpan.textContent = message.username;
+        header.appendChild(usernameSpan);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = timeString;
+        header.appendChild(timeSpan);
+
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = message.message;
+
+        messageElement.appendChild(header);
+        messageElement.appendChild(content);
         break;
-        
-      case 'emote':
-        messageHTML = `
-          <div class="message-content emote">
-            <span class="message-username">${message.username}</span>
-            <span class="message-text">${message.message}</span>
-            <span class="message-time">${timeString}</span>
-          </div>
-        `;
+      }
+
+      case 'emote': {
+        const content = document.createElement('div');
+        content.className = 'message-content emote';
+
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'message-username';
+        usernameSpan.textContent = message.username;
+        content.appendChild(usernameSpan);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'message-text';
+        textSpan.textContent = message.message;
+        content.appendChild(textSpan);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = timeString;
+        content.appendChild(timeSpan);
+
+        messageElement.appendChild(content);
         break;
-        
+      }
+
       case 'player':
       case 'other':
-      default:
-        messageHTML = `
-          <div class="message-header">
-            <span class="message-username">${message.username}</span>
-            <span class="message-time">${timeString}</span>
-          </div>
-          <div class="message-content">${message.message}</div>
-        `;
+      default: {
+        const header = document.createElement('div');
+        header.className = 'message-header';
+
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'message-username';
+        usernameSpan.textContent = message.username;
+        header.appendChild(usernameSpan);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = timeString;
+        header.appendChild(timeSpan);
+
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = message.message;
+
+        messageElement.appendChild(header);
+        messageElement.appendChild(content);
+        break;
+      }
     }
     
-    messageElement.innerHTML = messageHTML;
     return messageElement;
   }
   
