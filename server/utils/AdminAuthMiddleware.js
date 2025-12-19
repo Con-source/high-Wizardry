@@ -50,21 +50,15 @@ class AdminAuthMiddleware {
   
   /**
    * Get the API key from the request
-   * Checks X-Admin-API-Key header first, then admin_api_key query parameter
+   * Checks X-Admin-API-Key header
    * @param {Object} req - Express request object
    * @returns {string|null} - API key or null if not found
    */
   getApiKeyFromRequest(req) {
-    // Check header first (preferred method)
+    // Preferred and only supported method: header
     const headerKey = req.headers['x-admin-api-key'];
     if (headerKey) {
       return headerKey;
-    }
-    
-    // Fall back to query parameter
-    const queryKey = req.query.admin_api_key;
-    if (queryKey) {
-      return queryKey;
     }
     
     return null;
@@ -152,7 +146,7 @@ class AdminAuthMiddleware {
         
         return res.status(401).json({
           success: false,
-          message: 'Admin API key required. Provide via X-Admin-API-Key header or admin_api_key query parameter.'
+          message: 'Admin API key required. Provide it via the X-Admin-API-Key header.'
         });
       }
       
