@@ -1,0 +1,51 @@
+.enhancements {
+    background: url('path/to/worn-paper-texture.jpg'); /* Worn paper texture */
+    color: #f8f8f8; /* Light text for dark theme */
+    font-family: 'Cinzel', serif; /* A fantasy-like typeface */
+    padding: 20px;
+}
+
+body {
+    background-color: #1c1c1c; /* Dark theme background */
+    color: #e0e0e0;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.panel {
+    background-color: rgba(30, 30, 30, 0.8); /* Degraded UI panel effect */
+    border: 1px solid #444444;
+    border-radius: 5px;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.red-accent {
+    color: #d9534f; /* Red for crime/danger accents */
+}
+
+button {
+    background-color: #d9534f; /* Button background */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #c9302c; /* Darker red on hover */
+}
+
+@media (max-width: 768px) {
+    .enhancements {
+        padding: 15px;
+        font-size: 14px;
+    }
+    button {
+        padding: 8px 12px;
+    }
+}
