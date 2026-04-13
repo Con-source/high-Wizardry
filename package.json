@@ -39,7 +39,7 @@
     "crypto": "^1.0.1",
     "express": "^4.22.1",
     "express-rate-limit": "^7.1.5",
-    "nodemailer": "^8.0.4",
+    "nodemailer": "^8.0.5",
     "uuid": "^9.0.1",
     "ws": "^8.14.2"
   },
