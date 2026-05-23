@@ -37,7 +37,7 @@
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.5.0",
     "crypto": "^1.0.1",
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "express-rate-limit": "^7.1.5",
     "nodemailer": "^8.0.5",
     "uuid": "^14.0.0",
