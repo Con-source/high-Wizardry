@@ -1,8 +1,14 @@
 /**
- * UI Module
+ * UI Module - Fix for CONFIG reference
  * Handles all user interface interactions, notifications, modals, and theme management
  * @module UI
  */
+
+// Ensure CONFIG exists (graceful fallback)
+if (typeof CONFIG === 'undefined') {
+  window.CONFIG = { DEBUG: true, UI: { NOTIFICATION_DURATION: 5000 } };
+}
+
 const UI = (() => {
   /**
    * @typedef {Object} UIState
@@ -49,8 +55,8 @@ const UI = (() => {
     // Handle mobile view
     handleResize();
     
-    if (CONFIG.DEBUG) {
-      console.log('UI initialized');
+    if (CONFIG && CONFIG.DEBUG) {
+      console.log('✅ UI initialized');
     }
     
     return true;
@@ -175,7 +181,8 @@ const UI = (() => {
   }
   
   // Show a notification
-  function showNotification(message, type = 'info', duration = CONFIG?.UI?.NOTIFICATION_DURATION || 5000) {
+  function showNotification(message, type = 'info', duration = null) {
+    const notificationDuration = duration !== null ? duration : (CONFIG?.UI?.NOTIFICATION_DURATION || 5000);
     const id = `notification-${Date.now()}`;
     const notification = document.createElement('div');
     notification.id = id;
@@ -212,10 +219,10 @@ const UI = (() => {
     });
     
     // Auto-remove after duration
-    if (duration > 0) {
+    if (notificationDuration > 0) {
       const timeout = setTimeout(() => {
         removeNotification(id);
-      }, duration);
+      }, notificationDuration);
       
       // Store timeout ID
       const notif = state.notifications.find(n => n.id === id);
@@ -403,7 +410,7 @@ const UI = (() => {
   function initTooltips() {
     // This would initialize a tooltip library or set up event listeners
     // For now, we'll just log that tooltips are initialized
-    if (CONFIG.DEBUG) {
+    if (CONFIG && CONFIG.DEBUG) {
       console.log('Tooltips initialized');
     }
   }
@@ -525,7 +532,7 @@ const UI = (() => {
         Player.updateUI();
       }
       
-      if (CONFIG?.DEBUG) {
+      if (CONFIG && CONFIG.DEBUG) {
         console.log('Updating player stats in UI');
       }
     } catch (error) {
@@ -558,13 +565,6 @@ const UI = (() => {
     }
   };
 })();
-
-// Initialize UI when the DOM is loaded
-if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    UI.init();
-  });
-}
 
 // Export for Node.js/CommonJS
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
