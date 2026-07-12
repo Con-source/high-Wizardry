@@ -65,8 +65,8 @@
         </div>
     </div>
 
-    <!-- Script Loading Order (CRITICAL) -->
-    <!-- 1. Configuration must load first -->
+    <!-- Script Loading Order (CRITICAL - Load in this exact order) -->
+    <!-- 1. Configuration MUST load first -->
     <script src="jsjs/config.js"></script>
     
     <!-- 2. Core game module -->
@@ -75,16 +75,32 @@
     <!-- 3. UI module -->
     <script src="jsjs/ui.js"></script>
     
-    <!-- 4. Feature modules (these have graceful fallbacks if missing) -->
-    <script src="jsjs/script.js"></script>
+    <!-- 4. Player module (handles player data and UI updates) -->
+    <script src="jsjs/player.js" defer></script>
     
-    <!-- 5. Initialize everything -->
-    <script src="jsjs/main.js"></script>
+    <!-- 5. Feature modules (these have graceful fallbacks if missing) -->
+    <script src="jsjs/script.js" defer></script>
     
-    <!-- Optional modules that enhance gameplay -->
-    <script src="jsjs/travel.js"></script>
-    <script src="jsjs/trade.js"></script>
-    <script src="jsjs/auction.js"></script>
-    <script src="jsjs/admin.js"></script>
+    <!-- 6. Initialize everything after all modules are loaded -->
+    <script src="jsjs/main.js" defer></script>
+    
+    <!-- Optional modules that enhance gameplay (loaded after core) -->
+    <script src="jsjs/locations.js" defer></script>
+    <script src="jsjs/resources.js" defer></script>
+    <script src="jsjs/travel.js" defer></script>
+    <script src="jsjs/trade.js" defer></script>
+    <script src="jsjs/auction.js" defer></script>
+    <script src="jsjs/workshop.js" defer></script>
+    <script src="jsjs/guilds.js" defer></script>
+    <script src="jsjs/achievements.js" defer></script>
+    <script src="jsjs/consumables.js" defer></script>
+    <script src="jsjs/chat.js" defer></script>
+    <script src="jsjs/community.js" defer></script>
+    <script src="jsjs/black-market.js" defer></script>
+    <script src="jsjs/admin.js" defer></script>
+    <script src="jsjs/tutorial.js" defer></script>
+    <script src="jsjs/actions.js" defer></script>
+    <script src="jsjs/accessibility.js" defer></script>
+    <script src="jsjs/performance.js" defer></script>
 </body>
 </html>
